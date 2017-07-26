@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cf2299c8864afe4ab42466f546ae20d, type: 3}
+  m_Name: WorkshopItem
+  m_EditorClassIdentifier: 
+  WorkshopPublishedFileID: 945802775
+  Title: 6x6 Mega Bomb
+  Description: "If you thought the Quad Decker bomb was Insanity, you haven't seen
+    nothing yet.\r  Have fun going insane defusing 71 modules.\n\nIt is recommended
+    that you grab the Camera Zoom add-on as well.\n\r\nSource code at https://github.com/CaitSith2/KtaneQuadDeckerBomb
+    under the 6x6-Case branch"
+  PreviewImage: {fileID: 2800000, guid: 9c745812d604bf747a02479837495875, type: 3}
+  Tags:
+  - Bomb Casing
