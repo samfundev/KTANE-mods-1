@@ -84,12 +84,22 @@ public class FreeplayCommander
         _selectableManagerProperty = _inputManagerType.GetProperty("SelectableManager", BindingFlags.Public | BindingFlags.Instance);
 
         _inputManager = (MonoBehaviour)_instanceProperty.GetValue(null, null);
-        DebugLog("Static Constructor Initialization complete");
+
+        _multipleBombsType = ReflectionHelper.FindType("MultipleBombsAssembly.MultipleBombs");
+        if (_multipleBombsType == null)
+        {
+            DebugLog("Static Constructor Initialization complete - MultipleBombs service not present");
+            return;
+        }
+        _bombsCountField = _multipleBombsType.GetField("bombsCount", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        DebugLog("Static Constructor Initialization complete - MultipleBombs service present");
     }
 
-    public FreeplayCommander(MonoBehaviour freeplayDevice)
+    public FreeplayCommander(MonoBehaviour freeplayDevice, MonoBehaviour multipleBombs)
     {
         FreeplayDevice = freeplayDevice;
+        MultipleBombs = multipleBombs;
         Selectable = (MonoBehaviour)FreeplayDevice.GetComponent(_selectableType);
         DebugLog("Freeplay device: Attempting to get the Selectable list.");
         SelectableChildren = (MonoBehaviour[]) _childrenField.GetValue(Selectable);
@@ -102,7 +112,6 @@ public class FreeplayCommander
     #region Helper Methods
 
     private freeplaySelection _index = freeplaySelection.Timer;
-    private static int _bombCount = 1;
 
     public IEnumerator HandleInput()
     {
@@ -156,7 +165,7 @@ public class FreeplayCommander
                     handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementBombTimer() : IncrementBombTimer();
                     break;
                 case freeplaySelection.Bombs:
-                    handler = SetBombCount();
+                    handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementBombCount() : IncrementBombCount();
                     break;
                 case freeplaySelection.Modules:
                     handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementModuleCount() : IncrementModuleCount();
@@ -184,6 +193,7 @@ public class FreeplayCommander
     {
         object currentSettings = _currentSettingsField.GetValue(FreeplayDevice);
         int currentModuleCount = (int)_moduleCountField.GetValue(currentSettings);
+        int currentBombsCount = IsDualBombInstalled() ? (int) _bombsCountField.GetValue(MultipleBombs) : 1;
         float currentTime = (float) _timeField.GetValue(currentSettings);
         bool onlyMods = (bool) _onlyModsField.GetValue(currentSettings);
         switch (_index)
@@ -197,9 +207,16 @@ public class FreeplayCommander
                 SelectObject((MonoBehaviour)timerDown.GetComponent(_selectableType));
                 break;
             case freeplaySelection.Bombs:
-                SelectObject(SelectableChildren[_bombCount + 1]);
+                MonoBehaviour bombsUp = SelectableChildren[3];
+                MonoBehaviour bombsDown = SelectableChildren[2];
+                SelectObject(bombsUp);
+                if (currentBombsCount == (int) _bombsCountField.GetValue(MultipleBombs))
+                    break;
+                SelectObject(bombsDown);
                 break;
             case freeplaySelection.Modules:
+                if (!IsDualBombInstalled())
+                    break;
                 MonoBehaviour moduleUp = (MonoBehaviour) _moduleCountIncrementField.GetValue(FreeplayDevice);
                 MonoBehaviour moduleDown = (MonoBehaviour) _moduleCountDecrementField.GetValue(FreeplayDevice);
                 SelectObject((MonoBehaviour)moduleUp.GetComponent(_selectableType));
@@ -297,14 +314,46 @@ public class FreeplayCommander
 
     public bool IsDualBombInstalled()
     {
-        return SelectableChildren.Length == 11;
+        bool result = MultipleBombs != null;
+
+        if (_multipleBombsType == null)
+        {
+            _multipleBombsType = ReflectionHelper.FindType("MultipleBombsAssembly.MultipleBombs");
+            if (_multipleBombsType == null)
+            {
+                return false;
+            }
+            _bombsCountField = _multipleBombsType.GetField("bombsCount", BindingFlags.NonPublic | BindingFlags.Instance);
+            DebugLog("MultipleBombs appeared later - Its static variables are initialized now.");
+        }
+
+        return result;
     }
 
-    public IEnumerator SetBombCount()
+    public IEnumerator IncrementBombCount()
     {
-        _bombCount = Input.GetKeyDown(KeyCode.LeftArrow) ? 1 : 2;
-        SelectObject(Input.GetKeyDown(KeyCode.LeftArrow) ? SelectableChildren[2] : SelectableChildren[3]);
-        yield return null;
+        if (!IsDualBombInstalled())
+            yield break;
+        float delay = startDelay;
+        while (Input.GetKey(KeyCode.RightArrow))
+        {
+            SelectObject(SelectableChildren[3]);
+            yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
+            delay -= Acceleration;
+        }
+    }
+
+    public IEnumerator DecrementBombCount()
+    {
+        if (!IsDualBombInstalled())
+            yield break;
+        float delay = startDelay;
+        while (Input.GetKey(KeyCode.LeftArrow))
+        {
+            SelectObject(SelectableChildren[2]);
+            yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
+            delay -= Acceleration;
+        }
     }
 
     public IEnumerator SetNeedy()
@@ -419,6 +468,7 @@ public class FreeplayCommander
     public readonly MonoBehaviour[] SelectableChildren = null;
     public readonly MonoBehaviour FloatingHoldable = null;
     private readonly MonoBehaviour SelectableManager = null;
+    private readonly MonoBehaviour MultipleBombs = null;
     #endregion
 
     #region Private Static Fields
@@ -463,6 +513,9 @@ public class FreeplayCommander
     private static PropertyInfo _selectableManagerProperty = null;
 
     private static MonoBehaviour _inputManager = null;
+
+    private static Type _multipleBombsType = null;
+    private static FieldInfo _bombsCountField = null;
     #endregion
 }
 
