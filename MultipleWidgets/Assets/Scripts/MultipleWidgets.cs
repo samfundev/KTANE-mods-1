@@ -551,12 +551,10 @@ public class MultipleWidgets : MonoBehaviour
             {
                 _presentPorts |= port;
                 _portLookup[port].SetActive(true);
-                DebugLog("{0}.SetActive(true)", _portLookup[port].name);
                 _portList.Add(port.ToString());
                 if (_portFiller.ContainsKey(port))
                 {
                     _portFiller[port].SetActive(false);
-                    DebugLog("{0}.SetActive(false)", _portFiller[port].name);
                 }
             }
         }
