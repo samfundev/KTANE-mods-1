@@ -98,15 +98,11 @@ public class MultipleWidgets : MonoBehaviour
 
     private static ModSettings _modSettings;
 
-    private class PortSet
-    {
-        public string portSetName;
-        public GameObject port;
-        public GameObject portFiller = null;
-        public PortType type;
-    }
+    private List<List<PortType>> _portGroups;
+    private Dictionary<PortType, GameObject> _portLookup;
+    private Dictionary<PortType, GameObject> _portFiller;
+    private string[] _portGroupNames;
 
-    private List<List<PortSet>> _portGroups;
 
     private bool _indicator = false;
     private string _indicatorLabel;
@@ -478,60 +474,52 @@ public class MultipleWidgets : MonoBehaviour
     #region Ports
     void InitializePortSets()
     {
-        _portGroups = new List<List<PortSet>>
+        _portGroups = new List<List<PortType>>
         {
-            new List<PortSet> //Vanilla set 1
-            {
-                new PortSet {port = ParallelPort, type = PortType.Parallel, portSetName = "Vanilla Set 1" },
-                new PortSet {port = SerialPort, type = PortType.Serial },
-            },
-            new List<PortSet> //Vanilla set 2
-            {
-                new PortSet {port = PS2Port, type = PortType.PS2, portSetName = "Vanilla Set 2", portFiller = PS2PortFiller },
-                new PortSet {port = DVIPort, type = PortType.DVI },
-                new PortSet {port = RJ45Port, type = PortType.RJ45, portFiller = RJ45PortFiller },
-                new PortSet {port = StereoRCAPort, type = PortType.StereoRCA, portFiller = RCAPortFiller },
-            },
-            new List<PortSet> //New Port
-            {
-                new PortSet {port = HDMIPort, type = PortType.HDMI, portSetName = "New ports", portFiller = HDMIPortFiller },
-                new PortSet {port = USBPort, type = PortType.USB, portFiller = USBPortFiller },
-                new PortSet {port = ComponentVideoPort, type = PortType.ComponentVideo, portFiller = ComponentVideoPortFiller },
-                new PortSet {port = ACPort, type = PortType.AC, portFiller = ACPortFiller },
-                new PortSet {port = PCMCIAPort, type = PortType.PCMCIA },
-                new PortSet {port = VGAPort, type = PortType.VGA },
-                new PortSet {port = CompositeVideoPort, type = PortType.CompositeVideo, portFiller = CompositeVideoPortFiller },
-            },
-            new List<PortSet> //Monitor
-            {
-                new PortSet {port = DVIPort, type = PortType.DVI, portSetName = "Monitor ports" },
-                new PortSet {port = StereoRCAPort, type = PortType.StereoRCA, portFiller = RCAPortFiller },
-                new PortSet {port = HDMIPort, type = PortType.HDMI, portFiller = HDMIPortFiller },
-                new PortSet {port = ComponentVideoPort, type = PortType.ComponentVideo, portFiller = ComponentVideoPortFiller },
-                new PortSet {port = VGAPort, type = PortType.VGA },
-                new PortSet {port = CompositeVideoPort, type = PortType.CompositeVideo, portFiller = CompositeVideoPortFiller },
-                new PortSet {port = ACPort, type = PortType.AC, portFiller = ACPortFiller },
-            },
-            new List<PortSet> //Computer related
-            {
-                new PortSet {port = ParallelPort, type = PortType.Parallel, portSetName = "Computer ports" },
-                new PortSet {port = SerialPort, type = PortType.Serial },
-                new PortSet {port = PCMCIAPort, type = PortType.PCMCIA },
-                new PortSet {port = VGAPort, type = PortType.VGA },
-                new PortSet {port = PS2Port, type = PortType.PS2, portFiller = PS2PortFiller },
-                new PortSet {port = RJ45Port, type = PortType.RJ45, portFiller = RJ45PortFiller },
-                new PortSet {port = USBPort, type = PortType.USB, portFiller = USBPortFiller },
-                new PortSet {port = ACPort, type = PortType.AC, portFiller = ACPortFiller },
-            }
+            new List<PortType>{PortType.Serial, PortType.Parallel},
+            new List<PortType> {PortType.PS2,PortType.DVI,PortType.RJ45,PortType.StereoRCA },
+            new List<PortType> {PortType.HDMI,PortType.USB,PortType.ComponentVideo,PortType.AC,PortType.PCMCIA,PortType.VGA,PortType.CompositeVideo },
+            new List<PortType> {PortType.DVI,PortType.StereoRCA,PortType.HDMI,PortType.ComponentVideo,PortType.VGA,PortType.CompositeVideo,PortType.AC },
+            new List<PortType> {PortType.Parallel,PortType.Serial,PortType.PCMCIA,PortType.VGA,PortType.PS2,PortType.RJ45,PortType.USB,PortType.AC }
         };
 
-        foreach (var portGroup in _portGroups)
-            foreach (var set in portGroup)
-            {
-                set.port.SetActive(false);
-                if (set.portFiller != null)
-                    set.portFiller.SetActive(true);
-            }
+        _portFiller = new Dictionary<PortType, GameObject>
+        {
+            {PortType.HDMI, HDMIPortFiller},
+            {PortType.USB, USBPortFiller},
+            {PortType.ComponentVideo, ComponentVideoPortFiller},
+            {PortType.AC, ACPortFiller},
+            {PortType.CompositeVideo, CompositeVideoPortFiller},
+            {PortType.PS2, PS2PortFiller},
+            {PortType.StereoRCA, RCAPortFiller},
+            {PortType.RJ45,RJ45PortFiller }
+        };
+
+        _portLookup = new Dictionary<PortType, GameObject>
+        {
+            {PortType.Serial, SerialPort},
+            {PortType.Parallel, ParallelPort},
+            {PortType.PS2, PS2Port},
+            {PortType.DVI, DVIPort},
+            {PortType.RJ45, RJ45Port},
+            {PortType.StereoRCA, StereoRCAPort},
+            {PortType.HDMI, HDMIPort},
+            {PortType.USB, USBPort},
+            {PortType.ComponentVideo, ComponentVideoPort},
+            {PortType.AC, ACPort},
+            {PortType.PCMCIA, PCMCIAPort},
+            {PortType.VGA, VGAPort},
+            {PortType.CompositeVideo, CompositeVideoPort}
+        };
+
+        _portGroupNames = new[] { "Vanilla 1","Vanilla 2","New Ports","TV/Monitor Ports","Computer Ports"};
+
+        foreach (var port in _portLookup.Keys)
+            _portLookup[port].SetActive(false);
+
+        foreach (var portFiller in _portFiller.Keys)
+            _portFiller[portFiller].SetActive(true);
+
     }
 
     void SetPorts()
@@ -543,31 +531,32 @@ public class MultipleWidgets : MonoBehaviour
 
         if (!_modSettings.DebugModeForceAllPossiblePorts)
         {
-            var portset = _portGroups[Random.Range(0, _modSettings.EnableExtendedPorts ? _portGroups.Count : 2)];
-            foreach (var set in portset)
+            var portset = Random.Range(0, _modSettings.EnableExtendedPorts ? _portGroups.Count : 2);
+            foreach (var set in _portGroups[portset])
             {
                 if (!_modSettings.DebugModeForceAllPortsInCurrentSet && !(Random.value > 0.5f)) continue;
-                _presentPorts |= set.type;
-                set.port.SetActive(true);
-                if (set.portFiller != null)
-                    set.portFiller.SetActive(false);
-                _portList.Add(set.type.ToString());
+                _presentPorts |= set;
+                _portLookup[set].SetActive(true);
+                if (_portFiller.ContainsKey(set))
+                    _portFiller[set].SetActive(false);
+                _portList.Add(set.ToString());
             }
 
-            DebugLog("Using ports from the following port set: {0}", portset[0].portSetName);
+            DebugLog("Using ports from the following port set: {0}", _portGroupNames[portset]);
         }
         else
         {
             DebugLog("Forcing EVERY possible port.");
-            for (var i = 0; i < 3; i++)
+            foreach (var port in _portLookup.Keys)
             {
-                foreach (var set in _portGroups[i])
+                _presentPorts |= port;
+                _portLookup[port].SetActive(true);
+                DebugLog("{0}.SetActive(true)", _portLookup[port].name);
+                _portList.Add(port.ToString());
+                if (_portFiller.ContainsKey(port))
                 {
-                    _presentPorts |= set.type;
-                    set.port.SetActive(true);
-                    if (set.portFiller != null)
-                        set.portFiller.SetActive(false);
-                    _portList.Add(set.type.ToString());
+                    _portFiller[port].SetActive(false);
+                    DebugLog("{0}.SetActive(false)", _portFiller[port].name);
                 }
             }
         }
