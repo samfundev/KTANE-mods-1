@@ -42,11 +42,6 @@ public class AssetBundler
     public static string BUNDLE_FILENAME = "mod.bundle";
 
     /// <summary>
-    /// Name of the bundle used to exclude files without producing a warning.
-    /// </summary>
-    public static string BUNDLE_EXCLUDE_FILENAME = "exclude.bundle";
-
-    /// <summary>
     /// Folders which should not be included in the asset bundling process.
     /// </summary>
     public static string[] EXCLUDED_FOLDERS = new string[] { "Assets/Editor", "Assets/TestHarness" };
@@ -547,7 +542,7 @@ public class AssetBundler
             if (!path.StartsWith("Assets/Examples") && IsIncludedAssetPath(path))
             {
                 var importer = AssetImporter.GetAtPath(path);
-                if (!importer.assetBundleName.Equals(BUNDLE_FILENAME)  && !importer.assetBundleName.Equals(BUNDLE_EXCLUDE_FILENAME))
+                if (!importer.assetBundleName.Equals(BUNDLE_FILENAME))
                 {
                     Debug.LogWarningFormat("Asset \"{0}\" is not tagged for {1} and will not be included in the AssetBundle!", path, BUNDLE_FILENAME);
                 }
