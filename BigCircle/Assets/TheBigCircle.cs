@@ -21,7 +21,7 @@ public class TheBigCircle : MonoBehaviour
     #region Prviate Variables
     private bool _rotateCounterClockwise = false;
     private bool _solved = false;
-    private bool _allgray = false;
+    private bool _spinning = true;
     private bool _activated = false;
 
 
@@ -245,16 +245,30 @@ public class TheBigCircle : MonoBehaviour
             {
                 BombModule.LogFormat("Pressed {0} before module has activated", color);
                 BombModule.HandleStrike();
+                return;
             }
-            if (_currentSolution != null && _currentState == _currentSolution.Length)
+            if (_solved)
                 return;
 
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
 
-            if (BombInfo.GetBatteryCount() == 5 && BombInfo.GetBatteryHolderCount() == 3 && BombInfo.IsIndicatorOff("BOB"))
+            if (BombInfo.GetBatteryCount() == 5 && BombInfo.GetBatteryHolderCount() == 3 && BombInfo.IsIndicatorPresent(KMBombInfoExtensions.KnownIndicatorLabel.BOB))
             {
-                BombModule.LogFormat("BOB, our true Saviour has once again come to save the day. Module passed.");
-                StartCoroutine(FadeCircle(_wedgeColors[(int) WedgeColors.Black]));
+                var bobColors = BombInfo.GetColoredIndicators(KMBombInfoExtensions.KnownIndicatorLabel.BOB);
+                var enumerable = bobColors as string[] ?? bobColors.ToArray();
+                if (enumerable.Contains(color.ToString()) 
+                    || enumerable.Contains(KMBombInfoExtensions.KnownIndicatorColors.Gray.ToString())
+                    || (color == WedgeColors.Magenta && enumerable.Contains(KMBombInfoExtensions.KnownIndicatorColors.Purple.ToString())))
+                {
+                    BombModule.LogFormat("BOB, our true Saviour has once again come to save the day. Module passed.");
+                    StartCoroutine(FadeCircle(_wedgeColors[(int) color]));
+                }
+
+                else
+                {
+                    BombModule.LogFormat("BOB is expecting you to press one of his colors. Strike");
+                    BombModule.HandleStrike();
+                }
                 return;
             }
 
@@ -293,7 +307,6 @@ public class TheBigCircle : MonoBehaviour
         }
     }
 
-    private bool _spinning = true;
     private IEnumerator FadeCircle(Color solvedColor)
     {
         _solved = true;

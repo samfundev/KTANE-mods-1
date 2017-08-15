@@ -216,33 +216,56 @@ public static class KMBombInfoExtensions
         return GetIndicatorEntries(bombInfo).Where((x) => !x.IsOn()).Select((x) => x.label);
     }
 
+    public static IEnumerable<string> GetColoredIndicators(this KMBombInfo bombInfo, KnownIndicatorLabel label)
+    {
+        return GetColoredIndicators(bombInfo, null, label.ToString());
+    }
+
     public static IEnumerable<string> GetColoredIndicators(this KMBombInfo bombInfo, KnownIndicatorColors color)
     {
         return GetColoredIndicators(bombInfo, color.ToString());
     }
 
-    public static IEnumerable<string> GetColoredIndicators(this KMBombInfo bombInfo, string color)
+    public static IEnumerable<string> GetColoredIndicators(this KMBombInfo bombInfo, string color=null, string label=null)
     {
-        if (color.Equals("Black"))
+        var Colors = new List<string> { "Black", "White", "Blue", "Gray", "Green", "Magenta", "Orange", "Purple", "Red", "Yellow" };
+        if (color != null)
         {
-            return GetOffIndicators(bombInfo);
-        }
-        if (color.Equals("White"))
-        {
-            //Can't just return OnIndicators as is, due to the fact that would return ALL of them as White, even when some of them are not white.
-            List<string> OnIndicators = new List<string>(GetOnIndicators(bombInfo));
-            string[] Colors = {"Blue","Gray","Green","Magenta","Orange","Purple","Red","Yellow"};
-            foreach (string c in Colors)
+            Colors.RemoveAt(0);
+            Colors.RemoveAt(0);
+            if (color.Equals("Black"))
             {
-                foreach (string indicator in GetColoredIndicators(bombInfo, c))
-                {
-                    OnIndicators.Remove(indicator);
-                }
+                return GetOffIndicators(bombInfo);
             }
-            return OnIndicators;
-        }
+            if (color.Equals("White"))
+            {
+                //Can't just return OnIndicators as is, due to the fact that would return ALL of them as White, even when some of them are not white.
+                List<string> OnIndicators = new List<string>(GetOnIndicators(bombInfo));
 
-        return GetColorIndicatorEntries(bombInfo).Where((x) => x.color.Equals(color, StringComparison.InvariantCultureIgnoreCase)).Select((x) => x.label);
+                foreach (string c in Colors)
+                {
+                    foreach (string indicator in GetColoredIndicators(bombInfo, c))
+                    {
+                        OnIndicators.Remove(indicator);
+                    }
+                }
+                return OnIndicators;
+            }
+
+            return GetColorIndicatorEntries(bombInfo)
+                .Where((x) => x.color.Equals(color, StringComparison.InvariantCultureIgnoreCase))
+                .Select((x) => x.label);
+        }
+        if (label != null)
+        {
+            var colorList = new List<string>();
+            foreach (var c in Colors)
+            {
+                colorList.AddRange(from i in bombInfo.GetColoredIndicators(c) where label.Equals(i, StringComparison.InvariantCultureIgnoreCase) select c);
+            }
+            return colorList;
+        }
+        return new List<string>();
     }
 
     public static int GetBatteryCount(this KMBombInfo bombInfo)

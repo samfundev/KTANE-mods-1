@@ -91,15 +91,23 @@ public class FakeBombInfo : MonoBehaviour
             "BOB","FRK"
         };
 
+        private static string[] possibleColors =
+        {
+            "White", "Red", "Orange", "Yellow", "Green", "Blue", "Magenta", "Purple", "Gray", "Black"
+        };
+
         private string val;
         private bool on;
+        private string color;
 
         public IndicatorWidget(bool forceUnicorn=false)
         {
-            if (forceUnicorn && possibleValues.Contains("BOB"))
+            if (forceUnicorn)
             {
-                on = false;
+                var c = Random.Range(0, possibleColors.Length);
+                color = possibleColors[c];
                 val = "BOB";
+                on = color != "Black";
                 possibleValues.Remove("BOB");
             }
             else
@@ -108,9 +116,16 @@ public class FakeBombInfo : MonoBehaviour
                 val = possibleValues[pos];
                 possibleValues.RemoveAt(pos);
                 on = Random.value > 0.4f;
+                if (!on)
+                    color = "Black";
+                else
+                {
+                    int c = Random.Range(0, possibleColors.Length - 1);
+                    color = possibleColors[c];
+                }
             }
 
-            Debug.Log("Added indicator widget: " + val + " is " + (on ? "ON" : "OFF"));
+            Debug.Log("Added indicator widget: " + val + " is " + (on ? "ON" : "OFF") + ", Color is " + color);
         }
 
         public override string GetResult(string key, string data)
@@ -124,6 +139,18 @@ public class FakeBombInfo : MonoBehaviour
                     },
                     {
                         "on", on?bool.TrueString:bool.FalseString
+                    }
+                });
+            }
+            if (key == (KMBombInfo.QUERYKEY_GET_INDICATOR + "Color"))
+            {
+                return JsonConvert.SerializeObject((object)new Dictionary<string, string>()
+                {
+                    {
+                        "label", val
+                    },
+                    {
+                        "color", color
                     }
                 });
             }
@@ -175,7 +202,7 @@ public class FakeBombInfo : MonoBehaviour
                 if (Random.Range(0, 2) == 0)
                     widgets[4] = new PortWidget();
                 else
-                    widgets[4] = new IndicatorWidget();
+                    widgets[4] = new IndicatorWidget(true);
                 break;
             }
             int r = Random.Range(0, 3);
