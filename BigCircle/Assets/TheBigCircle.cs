@@ -8,6 +8,7 @@ using Rnd = UnityEngine.Random;
 public class TheBigCircle : MonoBehaviour
 {
 
+    #region Public Variables
     public GameObject Circle;
     public KMSelectable[] Wedges;
     public MeshRenderer[] WedgeRenderers;
@@ -15,7 +16,9 @@ public class TheBigCircle : MonoBehaviour
     public KMBombModule BombModule;
     public KMAudio Audio;
     public KMBombInfo BombInfo;
+    #endregion
 
+    #region Prviate Variables
     private bool _rotateCounterClockwise = false;
     private bool _solved = false;
     private bool _allgray = false;
@@ -37,47 +40,7 @@ public class TheBigCircle : MonoBehaviour
 
 
     private WedgeColors[] _colors = (WedgeColors[]) Enum.GetValues(typeof(WedgeColors));
-
-
-    private Dictionary<string, List<WedgeColors>> _colorLookup = new Dictionary<string, List<WedgeColors>>
-    {
-        {"0", new List<WedgeColors> {WedgeColors.Red, WedgeColors.Yellow, WedgeColors.Blue}},
-        {"1", new List<WedgeColors> {WedgeColors.Red, WedgeColors.Yellow, WedgeColors.Blue}},
-        {"2", new List<WedgeColors> {WedgeColors.Red, WedgeColors.Yellow, WedgeColors.Blue}},
-        {"3", new List<WedgeColors> {WedgeColors.Orange, WedgeColors.Green, WedgeColors.Magenta}},
-        {"4", new List<WedgeColors> {WedgeColors.Orange, WedgeColors.Green, WedgeColors.Magenta }},
-        {"5", new List<WedgeColors> {WedgeColors.Orange, WedgeColors.Green, WedgeColors.Magenta }},
-        {"6", new List<WedgeColors> {WedgeColors.Blue, WedgeColors.Black, WedgeColors.Red}},
-        {"7", new List<WedgeColors> {WedgeColors.Blue, WedgeColors.Black, WedgeColors.Red }},
-        {"8", new List<WedgeColors> {WedgeColors.Blue, WedgeColors.Black, WedgeColors.Red }},
-        {"9", new List<WedgeColors> {WedgeColors.Magenta, WedgeColors.White, WedgeColors.Orange}},
-        {"A", new List<WedgeColors> {WedgeColors.Magenta, WedgeColors.White, WedgeColors.Orange }},
-        {"B", new List<WedgeColors> {WedgeColors.Magenta, WedgeColors.White, WedgeColors.Orange }},
-        {"C", new List<WedgeColors> {WedgeColors.Orange, WedgeColors.Blue, WedgeColors.Black}},
-        {"D", new List<WedgeColors> {WedgeColors.Orange, WedgeColors.Blue, WedgeColors.Black }},
-        {"E", new List<WedgeColors> {WedgeColors.Orange, WedgeColors.Blue, WedgeColors.Black }},
-        {"F", new List<WedgeColors> {WedgeColors.Green, WedgeColors.Red, WedgeColors.White}},
-        {"G", new List<WedgeColors> {WedgeColors.Green, WedgeColors.Red, WedgeColors.White }},
-        {"H", new List<WedgeColors> {WedgeColors.Green, WedgeColors.Red, WedgeColors.White }},
-        {"I", new List<WedgeColors> {WedgeColors.Magenta, WedgeColors.Yellow, WedgeColors.Black}},
-        {"J", new List<WedgeColors> {WedgeColors.Magenta, WedgeColors.Yellow, WedgeColors.Black }},
-        {"K", new List<WedgeColors> {WedgeColors.Magenta, WedgeColors.Yellow, WedgeColors.Black }},
-        {"L", new List<WedgeColors> {WedgeColors.Red, WedgeColors.Orange, WedgeColors.Yellow}},
-        {"M", new List<WedgeColors> {WedgeColors.Red, WedgeColors.Orange, WedgeColors.Yellow }},
-        {"N", new List<WedgeColors> {WedgeColors.Red, WedgeColors.Orange, WedgeColors.Yellow }},
-        {"O", new List<WedgeColors> {WedgeColors.Yellow, WedgeColors.Green, WedgeColors.Blue}},
-        {"P", new List<WedgeColors> {WedgeColors.Yellow, WedgeColors.Green, WedgeColors.Blue }},
-        {"Q", new List<WedgeColors> {WedgeColors.Yellow, WedgeColors.Green, WedgeColors.Blue }},
-        {"R", new List<WedgeColors> {WedgeColors.Blue, WedgeColors.Magenta, WedgeColors.Red}},
-        {"S", new List<WedgeColors> {WedgeColors.Blue, WedgeColors.Magenta, WedgeColors.Red }},
-        {"T", new List<WedgeColors> {WedgeColors.Blue, WedgeColors.Magenta, WedgeColors.Red }},
-        {"U", new List<WedgeColors> {WedgeColors.Black, WedgeColors.White, WedgeColors.Green}},
-        {"V", new List<WedgeColors> {WedgeColors.Black, WedgeColors.White, WedgeColors.Green }},
-        {"W", new List<WedgeColors> {WedgeColors.Black, WedgeColors.White, WedgeColors.Green }},
-        {"X", new List<WedgeColors> {WedgeColors.White, WedgeColors.Yellow, WedgeColors.Blue}},
-        {"Y", new List<WedgeColors> {WedgeColors.White, WedgeColors.Yellow, WedgeColors.Blue }},
-        {"Z", new List<WedgeColors> {WedgeColors.White, WedgeColors.Yellow, WedgeColors.Blue }},
-    };
+    #endregion
 
     // Use this for initialization
     void Start ()
@@ -93,11 +56,27 @@ public class TheBigCircle : MonoBehaviour
 	        Wedges[i].OnInteract += delegate { HandleWedge(j); return false; };
         }
         BombModule.LogFormat("Colors in Clockwise order: {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", _colors[0], _colors[1], _colors[2], _colors[3], _colors[4], _colors[5], _colors[6], _colors[7]);
-        BombModule.OnActivate += delegate { _activated = true; };
+        BombModule.OnActivate += delegate { _activated = true; StartCoroutine(SpinCircle()); };
     }
 
-    List<WedgeColors> GetSolution()
+    WedgeColors[] GetSolution()
     {
+        WedgeColors[][] colorLookup =
+        {
+            new[] {WedgeColors.Red, WedgeColors.Yellow, WedgeColors.Blue},
+            new[] {WedgeColors.Orange, WedgeColors.Green, WedgeColors.Magenta},
+            new[] {WedgeColors.Blue, WedgeColors.Black, WedgeColors.Red},
+            new[] {WedgeColors.Magenta, WedgeColors.White, WedgeColors.Orange},
+            new[] {WedgeColors.Orange, WedgeColors.Blue, WedgeColors.Black},
+            new[] {WedgeColors.Green, WedgeColors.Red, WedgeColors.White},
+            new[] {WedgeColors.Magenta, WedgeColors.Yellow, WedgeColors.Black},
+            new[] {WedgeColors.Red, WedgeColors.Orange, WedgeColors.Yellow},
+            new[] {WedgeColors.Yellow, WedgeColors.Green, WedgeColors.Blue},
+            new[] {WedgeColors.Blue, WedgeColors.Magenta, WedgeColors.Red},
+            new[] {WedgeColors.Black, WedgeColors.White, WedgeColors.Green},
+            new[] {WedgeColors.White, WedgeColors.Yellow, WedgeColors.Blue}
+        };
+
         var total = 0;
         foreach (var indicator in BombInfo.GetOnIndicators())
         {
@@ -165,11 +144,8 @@ public class TheBigCircle : MonoBehaviour
         }
         BombModule.LogFormat("Total after Adding Unlit Indicators: {0}", total);
 
-
-
         total += BombInfo.GetSolvedModuleNames().Count * 4;
         BombModule.LogFormat("Total after Adding Solved Modules: {0}", total);
-
 
         total += BombInfo.GetBatteryCount() % 2 == 0 ? -4 : 4;
         BombModule.LogFormat("Total after Batteries: {0}", total);
@@ -194,7 +170,21 @@ public class TheBigCircle : MonoBehaviour
                     continue;
                 }
                 if (port == KMBombInfoExtensions.KnownPortType.Serial.ToString()) continue;
-                if (port == KMBombInfoExtensions.KnownPortType.DVI.ToString()) continue;
+                if (port == KMBombInfoExtensions.KnownPortType.DVI.ToString())
+                {
+                    BombModule.Log("Port plate with DVI-D port found");
+                    if (plate.Contains(KMBombInfoExtensions.KnownPortType.StereoRCA.ToString()))
+                    {
+                        BombModule.Log("Paired with Stereo-RCA - Adding 5");
+                        total += 5;
+                    }
+                    else
+                    {
+                        BombModule.LogFormat("Not paired with Stereo-RCA - Subtracting 5");
+                        total -= 5;
+                    }
+                    continue;
+                }
                 if (port == KMBombInfoExtensions.KnownPortType.RJ45.ToString()) continue;
                 if (port == KMBombInfoExtensions.KnownPortType.StereoRCA.ToString()) continue;
                 if (port == KMBombInfoExtensions.KnownPortType.PS2.ToString()) continue;
@@ -217,9 +207,19 @@ public class TheBigCircle : MonoBehaviour
         var serial = BombInfo.GetSerialNumber().ToUpperInvariant();
         serial += serial.Substring(4, 1) + serial.Substring(3, 1) + serial.Substring(2, 1) + serial.Substring(1, 1);
 
-        BombModule.LogFormat("Extended Serial# = {0}. Using Character {1}, which is {2}", serial, total % 10, serial.Substring(total % 10, 1));
+        var index = serial.Substring(total % 10, 1);
+        BombModule.LogFormat("Extended Serial# = {0}. Using Character {1}, which is {2}", serial, total % 10, index);
 
-        var lookup = new List<WedgeColors>(_colorLookup[serial.Substring(total % 10, 1)]);
+        var colorIndex = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".IndexOf(index, StringComparison.Ordinal);
+
+        if (colorIndex < 0)
+        {
+            BombModule.LogFormat("Unrecognized Serial number character: {0} - Passing the module now", index);
+            StartCoroutine(FadeCircle(_wedgeColors[(int)WedgeColors.Red]));
+            return null;
+        }
+
+        var lookup = new List<WedgeColors>(colorLookup[colorIndex / 3]);
         BombModule.LogFormat("Current Solution: {0}, {1}, {2}", lookup[0], lookup[1], lookup[2]);
 
 
@@ -229,110 +229,140 @@ public class TheBigCircle : MonoBehaviour
             lookup.Reverse();
         }
 
-        return lookup;
+        return lookup.ToArray();
     }
 
 
 
     private int _currentState = 0;
-    private List<WedgeColors> _currentSolution;
+    private WedgeColors[] _currentSolution;
     void HandleWedge(WedgeColors color)
     {
-        if (!_activated)
+        try
         {
-            BombModule.LogFormat("Pressed {0} before module has activated",color);
-            BombModule.HandleStrike();
+
+            if (!_activated)
+            {
+                BombModule.LogFormat("Pressed {0} before module has activated", color);
+                BombModule.HandleStrike();
+            }
+            if (_currentSolution != null && _currentState == _currentSolution.Length)
+                return;
+
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
+
+            if (BombInfo.GetBatteryCount() == 5 && BombInfo.GetBatteryHolderCount() == 3 && BombInfo.IsIndicatorOff("BOB"))
+            {
+                BombModule.LogFormat("BOB, our true Saviour has once again come to save the day. Module passed.");
+                StartCoroutine(FadeCircle(_wedgeColors[(int) WedgeColors.Black]));
+                return;
+            }
+
+
+            if (_currentSolution == null)
+            {
+                _currentSolution = GetSolution();
+                if (_currentSolution == null)
+                    return;
+            }
+
+
+            BombModule.LogFormat("Stage {0}: Pressed {1}. I Expected {2}", _currentState + 1, color, _currentSolution[_currentState]);
+            if (color == _currentSolution[_currentState])
+            {
+                BombModule.LogFormat("Stage {0} Correct.", _currentState + 1);
+                _currentState++;
+                if (_currentState != _currentSolution.Length) return;
+                BombModule.LogFormat("Module Passed");
+                StartCoroutine(FadeCircle(new Color(160f / 255, 160f / 255, 160f / 255)));
+            }
+            else
+            {
+                BombModule.LogFormat("Stage {0} Incorrect. Strike", _currentState + 1);
+                _currentState = 0;
+                _currentSolution = null;
+
+                BombModule.HandleStrike();
+            }
         }
-        if (_solved)
-            return;
-
-        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
-
-        if (BombInfo.GetBatteryCount() == 5 && BombInfo.GetBatteryHolderCount() == 3 && BombInfo.IsIndicatorOff("BOB"))
+        catch (Exception ex)
         {
-            BombModule.LogFormat("BOB, our true Saviour has once again come to save the day. Module passed.");
-            _solved = true;
-        }
-
-        if (_currentSolution == null)
-            _currentSolution = GetSolution();
-
-
-        BombModule.LogFormat("Stage {0}: Pressed {1}. I Expected {2}", _currentState+1,color, _currentSolution[_currentState]);
-        if (color == _currentSolution[_currentState])
-        {
-            BombModule.LogFormat("Stage {0} Correct.",_currentState+1);
-            _currentState++;
-            if (_currentState != _currentSolution.Count) return;
-            BombModule.LogFormat("Module Passed");
-            _solved = true;
-        }
-        else
-        {
-            BombModule.LogFormat("Stage {0} Incorrect. Strike", _currentState + 1);
-            _currentState = 0;
-            _currentSolution = null;
-            BombModule.HandleStrike();
+            BombModule.LogFormat("Exception caused by {0}\n{1}", ex.Message, ex.StackTrace);
+            BombModule.Log("Module passed by exception");
+            StartCoroutine(FadeCircle(_wedgeColors[(int)WedgeColors.Red]));
         }
     }
 
-	
-	// Update is called once per frame
-	void Update ()
-	{
-	    if (_allgray)
-	        return;
-
-	    if (_solved)
-	    {
-	        var AllGray = true;
+    private bool _spinning = true;
+    private IEnumerator FadeCircle(Color solvedColor)
+    {
+        _solved = true;
+        bool faded;
+        do
+        {
+            faded = true;
             foreach (var wedge in WedgeRenderers)
-	        {
-	            var r = (int)(wedge.material.color.r * 255);
-	            var g = (int) (wedge.material.color.g * 255);
-	            var b = (int) (wedge.material.color.b * 255);
+            {
+                var r = (int) (wedge.material.color.r * 255);
+                var g = (int) (wedge.material.color.g * 255);
+                var b = (int) (wedge.material.color.b * 255);
+                var solvedR = (int) (solvedColor.r * 255);
+                var solvedG = (int) (solvedColor.g * 255);
+                var solvedB = (int) (solvedColor.b * 255);
 
-	            if (r < 0xA0)
-	                r++;
-                else if (r > 0xA0)
-	                r--;
+                if (r < solvedR)
+                    r++;
+                else if (r > solvedR)
+                    r--;
 
-	            if (g < 0xA0)
-	                g++;
-                else if (g > 0xA0)
-	                g--;
+                if (g < solvedG)
+                    g++;
+                else if (g > solvedG)
+                    g--;
 
-	            if (b < 0xA0)
-	                b++;
-                else if (b > 0xA0)
-	                b--;
+                if (b < solvedB)
+                    b++;
+                else if (b > solvedB)
+                    b--;
 
-	            AllGray &= r == 0xA0;
-	            AllGray &= b == 0xA0;
-	            AllGray &= g == 0xA0;
+                faded &= r == solvedR;
+                faded &= g == solvedG;
+                faded &= b == solvedB;
 
-	            wedge.material.color = new Color((float)r / 255, (float)g / 255, (float)b / 255);
-	        }
-	        if (AllGray)
-	        {
-	            _allgray = true;
-	            BombModule.HandlePass();
-	        }
-        }
-	    
-	    var y = Circle.transform.localEulerAngles.y;
-	    y += _rotateCounterClockwise ? -0.25f : 0.25f;
-	    Circle.transform.localEulerAngles = new Vector3(0, y, 0);
+                wedge.material.color = new Color((float) r / 255, (float) g / 255, (float) b / 255);
+            }
+            yield return null;
+        } while (!faded);
+        BombModule.HandlePass();
+        _spinning = false;
     }
+
+    private IEnumerator SpinCircle()
+    {
+        do
+        {
+            var framerate = 1f / Time.deltaTime;
+            var rotation = 6f / framerate; //6 degrees per second.
+            if (_rotateCounterClockwise)
+                rotation *= -1;
+
+            var y = Circle.transform.localEulerAngles.y;
+            y += rotation;
+            Circle.transform.localEulerAngles = new Vector3(0, y, 0);
+
+            yield return null;
+        } while (_spinning);
+    }
+
 
     public string TwitchHelpMessage = "Submit the correct response with !{0} press blue black red.  (Valid colors are Red, Orange, Yellow, Green, Blue, Magenta, White, blacK)";
-    private IEnumerator ProcessTwitchCommand(string command)
+    public IEnumerator ProcessTwitchCommand(string command)
     {
         if (!command.StartsWith("press ", StringComparison.InvariantCultureIgnoreCase))
             yield break;
         var split = command.ToLowerInvariant().Substring(6).Split(new[] {" "}, StringSplitOptions.RemoveEmptyEntries);
 
-        Dictionary<string, WedgeColors> buttons = new Dictionary<string, WedgeColors>
+        var buttons = new Dictionary<string, WedgeColors>
         {
             {"red", WedgeColors.Red},
             {"r", WedgeColors.Red},
