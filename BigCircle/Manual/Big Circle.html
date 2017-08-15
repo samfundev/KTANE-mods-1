@@ -1,12 +1,26 @@
 <!DOCTYPE html>
+    
 <html class="no-js"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Keep Talking and Nobody Explodes Example Manual Page</title>
+    <title>Big Circle - Keep Talking and Nobody Explodes Module</title>
     <meta name="viewport" content="initial-scale=1"> 
 	<link href='https://fonts.googleapis.com/css?family=Special+Elite' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
+	<style type="text/css">
+		.floater {
+		    margin: 5px;
+		    float: left;
+		}
+		.floater td {
+		    padding: 4px;
+		    border: 1px solid black;
+		}
+		.clear {
+			clear: left;
+		}
+	</style>
 </head>
 <body>
 <div class="section">
@@ -28,6 +42,7 @@
 			<li>Start with Table 1 below. Determine which rules apply to find the next number to be used. If your number is negative, multiply it by -1.</li>
 			<li>Count the position in the serial number as many times as your number. If you get to the end of the serial number, bounce back and continue to read the serial number backwards, and vice versa at the beginning. The first character of the serial number is considered to be position 0.</li>
 			<li>After you have determined the position in the serial number, look at Table 2 below to determine the sequence of button presses based on the chosen character in the serial number and press it.</li>
+			<li>Once the first correct color has been pressed, The solution will not change unless you incur a strike on this module.</li>
 			<li>BUT, if there are five batteries in three holders and an unlit BOB, ignore all rules. Bob came back to help you again. Simply click any one of the buttons. Thanks Bob.</li>
 			</ul>
         </div>
@@ -39,24 +54,28 @@
 			<span class="page-header-section-title">Big Circle</span>
 		</div>
 		<div class="page-content">
-    		<p><strong>Table 1</strong></p>
-			<table>
+			<br>
+    		<strong>Table 1</strong>
+    		<br>
+			<table class="floater">
 				<tbody>
-					<tr><td>For each BOB, CAR,  or CLR, indicator:</td><td>+1 if lit, -1 if unlit.</td></tr>
-					<tr><td>For each FRK, FRQ, MSA, or NSA indicator:</td><td>+2 if lit, -2 if unlit.</td></tr>
+					<tr><td>For each BOB, CAR,  or CLR<br>indicator:</td><td>+1 if lit, -1 if unlit.</td></tr>
+					<tr><td>For each FRK, FRQ, MSA, or NSA<br>indicator:</td><td>+2 if lit, -2 if unlit.</td></tr>
 					<tr><td>For SIG, SND, or TRN indicator:</td><td>+3 if lit, -3 if unlit.</td></tr>
 					<tr><td>For each solved modules:</td><td>+4 each.</td></tr>
 					<tr><td>For the number of batteries:</td><td>+4 for odd, -4 for even.</td></tr>
-					<tr><td>There are port plates with parallel ports:</td><td>+5 each, -5 if paired with serial port.</td></tr>
-					<tr><td>For each special* indicators:</td><td>+6 each.</td></tr>
-					<tr><td>For each special* ports:</td><td>-6 each.</td></tr>
-					<tr><td>For each Two Factor code:</td><td>Add the least significant digit.</td></tr>
+					<tr><td>There are port plates with<br>parallel ports:</td><td>+5 each, -5 if paired<br>with serial port.</td></tr>
+					<tr><td>There are port plates with<br>DVI-D ports:</td><td>-5 each, +5 if paired<br>with Stereo-RCA.</td></tr>
+					<tr><td>For each special* indicator:</td><td>+6 each.</td></tr>
+					<tr><td>For each special* port:</td><td>-6 each.</td></tr>
+					<tr><td>For each Two Factor code:</td><td>Add the least<br>significant digit.</td></tr>
 				</tbody>
 			</table>
 			<p>*Special ports or indicators are custom made, such as NLL or the USB port.</p>
+			<br class="clear">
 			<br>
-			<p><strong>Table 2*</strong></p>
-			<table>
+			<strong>Table 2*</strong><br>
+			<table class="floater">
 				<tbody>
 					<tr><td>0, 1, 2</td><td>Red, Yellow, Blue</td></tr>
 					<tr><td>3, 4, 5</td><td>Orange, Green, Magenta</td></tr>
@@ -73,7 +92,6 @@
 				</tbody>
 			</table>
 			<p>*If circle is spinning counter-clockwise, reverse order of button presses.</p>
-			<br>
 		</div>
     </div>
     
