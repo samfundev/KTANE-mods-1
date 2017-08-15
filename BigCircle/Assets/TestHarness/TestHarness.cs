@@ -94,12 +94,21 @@ public class FakeBombInfo : MonoBehaviour
         private string val;
         private bool on;
 
-        public IndicatorWidget()
+        public IndicatorWidget(bool forceUnicorn=false)
         {
-            int pos = Random.Range(0, possibleValues.Count);
-            val = possibleValues[pos];
-            possibleValues.RemoveAt(pos);
-            on = Random.value > 0.4f;
+            if (forceUnicorn && possibleValues.Contains("BOB"))
+            {
+                on = false;
+                val = "BOB";
+                possibleValues.Remove("BOB");
+            }
+            else
+            {
+                int pos = Random.Range(0, possibleValues.Count);
+                val = possibleValues[pos];
+                possibleValues.RemoveAt(pos);
+                on = Random.value > 0.4f;
+            }
 
             Debug.Log("Added indicator widget: " + val + " is " + (on ? "ON" : "OFF"));
         }
@@ -126,9 +135,11 @@ public class FakeBombInfo : MonoBehaviour
     {
         private int batt;
 
-        public BatteryWidget()
+        public BatteryWidget(int forceUnicorn = -1)
         {
             batt = Random.Range(1, 3);
+            if (forceUnicorn > -1)
+                batt = forceUnicorn;
 
             Debug.Log("Added battery widget: " + batt);
         }
@@ -149,11 +160,24 @@ public class FakeBombInfo : MonoBehaviour
     }
     public Widget[] widgets;
 
+    private bool _forceUnicorn = false;
     void Awake()
     {
         widgets = new Widget[5];
         for (int a = 0; a < 5; a++)
         {
+            if (a == 0 && _forceUnicorn)
+            {
+                widgets[0] = new IndicatorWidget(true);
+                widgets[1] = new BatteryWidget(4);
+                widgets[2] = new BatteryWidget(1);
+                widgets[3] = new BatteryWidget(0);
+                if (Random.Range(0, 2) == 0)
+                    widgets[4] = new PortWidget();
+                else
+                    widgets[4] = new IndicatorWidget();
+                break;
+            }
             int r = Random.Range(0, 3);
             if (r == 0) widgets[a] = new PortWidget();
             else if (r == 1) widgets[a] = new IndicatorWidget();
