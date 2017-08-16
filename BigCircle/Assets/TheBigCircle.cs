@@ -307,7 +307,6 @@ public class TheBigCircle : MonoBehaviour
             {
                 BombModule.LogFormat("Stage {0} Incorrect. Strike", _currentState + 1);
                 _currentState = 0;
-                _currentSolution = null;
 
                 BombModule.HandleStrike();
             }
