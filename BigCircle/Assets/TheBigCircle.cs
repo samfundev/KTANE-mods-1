@@ -56,26 +56,16 @@ public class TheBigCircle : MonoBehaviour
 	        Wedges[i].OnInteract += delegate { HandleWedge(j); return false; };
         }
         BombModule.LogFormat("Colors in Clockwise order: {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", _colors[0], _colors[1], _colors[2], _colors[3], _colors[4], _colors[5], _colors[6], _colors[7]);
-        BombModule.OnActivate += delegate { _activated = true; StartCoroutine(SpinCircle()); };
+        BombModule.OnActivate += delegate { _activated = true; StartCoroutine(SpinCircle()); StartCoroutine(UpdateSolution());};
     }
 
-    WedgeColors[] GetSolution()
+
+    private bool _baseOffsetGenerated;
+    private int _baseOffset;
+    int GetBaseOffset()
     {
-        WedgeColors[][] colorLookup =
-        {
-            new[] {WedgeColors.Red, WedgeColors.Yellow, WedgeColors.Blue},
-            new[] {WedgeColors.Orange, WedgeColors.Green, WedgeColors.Magenta},
-            new[] {WedgeColors.Blue, WedgeColors.Black, WedgeColors.Red},
-            new[] {WedgeColors.Magenta, WedgeColors.White, WedgeColors.Orange},
-            new[] {WedgeColors.Orange, WedgeColors.Blue, WedgeColors.Black},
-            new[] {WedgeColors.Green, WedgeColors.Red, WedgeColors.White},
-            new[] {WedgeColors.Magenta, WedgeColors.Yellow, WedgeColors.Black},
-            new[] {WedgeColors.Red, WedgeColors.Orange, WedgeColors.Yellow},
-            new[] {WedgeColors.Yellow, WedgeColors.Green, WedgeColors.Blue},
-            new[] {WedgeColors.Blue, WedgeColors.Magenta, WedgeColors.Red},
-            new[] {WedgeColors.Black, WedgeColors.White, WedgeColors.Green},
-            new[] {WedgeColors.White, WedgeColors.Yellow, WedgeColors.Blue}
-        };
+        if (_baseOffsetGenerated)
+            return _baseOffset;
 
         var total = 0;
         foreach (var indicator in BombInfo.GetOnIndicators())
@@ -109,7 +99,7 @@ public class TheBigCircle : MonoBehaviour
                     break;
             }
         }
-        BombModule.LogFormat("Total after Adding Lit Indicators: {0}",total);
+        BombModule.LogFormat("Total after Adding Lit Indicators: {0}", total);
 
         foreach (var indicator in BombInfo.GetOffIndicators())
         {
@@ -143,9 +133,6 @@ public class TheBigCircle : MonoBehaviour
             }
         }
         BombModule.LogFormat("Total after Adding Unlit Indicators: {0}", total);
-
-        total += BombInfo.GetSolvedModuleNames().Count * 4;
-        BombModule.LogFormat("Total after Adding Solved Modules: {0}", total);
 
         total += BombInfo.GetBatteryCount() % 2 == 0 ? -4 : 4;
         BombModule.LogFormat("Total after Batteries: {0}", total);
@@ -194,9 +181,40 @@ public class TheBigCircle : MonoBehaviour
         }
         BombModule.LogFormat("Total after Adding Ports: {0}", total);
 
-        total += BombInfo.GetTwoFactorCodes().Sum(twofactor => twofactor % 10);
-        BombModule.LogFormat("Total after Adding TwoFactors: {0}", total);
+        _baseOffset = total;
 
+        _baseOffsetGenerated = true;
+        return _baseOffset;
+    }
+
+
+    WedgeColors[] GetSolution(int solved, int twofactor)
+    {
+        WedgeColors[][] colorLookup =
+        {
+            new[] {WedgeColors.Red, WedgeColors.Yellow, WedgeColors.Blue},
+            new[] {WedgeColors.Orange, WedgeColors.Green, WedgeColors.Magenta},
+            new[] {WedgeColors.Blue, WedgeColors.Black, WedgeColors.Red},
+            new[] {WedgeColors.Magenta, WedgeColors.White, WedgeColors.Orange},
+            new[] {WedgeColors.Orange, WedgeColors.Blue, WedgeColors.Black},
+            new[] {WedgeColors.Green, WedgeColors.Red, WedgeColors.White},
+            new[] {WedgeColors.Magenta, WedgeColors.Yellow, WedgeColors.Black},
+            new[] {WedgeColors.Red, WedgeColors.Orange, WedgeColors.Yellow},
+            new[] {WedgeColors.Yellow, WedgeColors.Green, WedgeColors.Blue},
+            new[] {WedgeColors.Blue, WedgeColors.Magenta, WedgeColors.Red},
+            new[] {WedgeColors.Black, WedgeColors.White, WedgeColors.Green},
+            new[] {WedgeColors.White, WedgeColors.Yellow, WedgeColors.Blue}
+        };
+
+        var total = GetBaseOffset();
+        BombModule.LogFormat("Base Total for current solution: {0}", total);
+
+
+        total += solved * 4;
+        BombModule.LogFormat("Total after Adding Solved Modules: {0}", total);
+
+        total += twofactor;
+        BombModule.LogFormat("Total after Adding TwoFactors: {0}", total);
 
         if (total < 0)
         {
@@ -272,13 +290,8 @@ public class TheBigCircle : MonoBehaviour
                 return;
             }
 
-
             if (_currentSolution == null)
-            {
-                _currentSolution = GetSolution();
-                if (_currentSolution == null)
-                    return;
-            }
+                return;
 
 
             BombModule.LogFormat("Stage {0}: Pressed {1}. I Expected {2}", _currentState + 1, color, _currentSolution[_currentState]);
@@ -348,6 +361,30 @@ public class TheBigCircle : MonoBehaviour
         } while (!faded);
         BombModule.HandlePass();
         _spinning = false;
+    }
+
+    private IEnumerator UpdateSolution()
+    {
+        var solved = BombInfo.GetSolvedModuleNames().Count;
+        var twofactorsum = BombInfo.GetTwoFactorCodes().Sum(twofactor => twofactor % 10);
+        BombModule.LogFormat("Getting solution for 0 modules solved and Two Factor sum of {0}", twofactorsum);
+        _currentSolution = GetSolution(solved, twofactorsum);
+
+        do
+        {
+            yield return new WaitForSeconds(0.1f);
+            var solvedUpdate = BombInfo.GetSolvedModuleNames().Count;
+            var twofactorUpdate = BombInfo.GetTwoFactorCodes().Sum(twofactor => twofactor % 10);
+            if (_currentState > 0 || (solved == solvedUpdate && twofactorsum == twofactorUpdate))
+                continue;
+            if(solved != solvedUpdate)
+                BombModule.LogFormat("Updating solution for {0} modules solved",solvedUpdate);
+            if(twofactorsum != twofactorUpdate)
+                BombModule.LogFormat("Updating solution for new two factor sum of {0}",twofactorUpdate);
+            solved = solvedUpdate;
+            twofactorsum = twofactorUpdate;
+            _currentSolution = GetSolution(solved, twofactorsum);
+        } while (!_solved);
     }
 
     private IEnumerator SpinCircle()
