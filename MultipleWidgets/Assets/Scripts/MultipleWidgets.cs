@@ -61,7 +61,7 @@ public class MultipleWidgets : MonoBehaviour
     #endregion
 
     #region private variables
-    private readonly int _currentSettingsVersion = 1;
+    private readonly int _currentSettingsVersion = 2;
     private class ModSettings
     {
         public int SettingsVersion = 0;
@@ -75,7 +75,6 @@ public class MultipleWidgets : MonoBehaviour
         public string HowToUse2 = "If Enabled, The following battery counts in 1 holder can spawn: 0, 3, 4";
 
         public bool EnableIndicatorColors = true;
-
         public string HowToUse3 = "If Enabled, You will see Indicator light colors other than white. These are still treated as On indicators.";
 
         public bool EnableEncryptedIndicators = false;
@@ -85,6 +84,9 @@ public class MultipleWidgets : MonoBehaviour
         public string HowToUse4_2 = "http://steamcommunity.com/sharedfiles/filedetails/?id=1060194010 to see how Encrypted Indicators work.";
         public string HowToUse4_3 = "This also stacks with colors if enabled as well.";
         public string HowToUse4_4 = "EncryptionProbability is a number between 0.0f to 1.0f, and determines how likely the indicators will be encrypted.";
+
+        public bool EnableTwoFactor = true;
+        public string HowToUse7 = "If Enabled, Two factor has a possibilty to spawn.";
 
         public bool DebugModeForceAllPortsInCurrentSet = false;
         public string HowToUse5_1 = "This forces the port plates to have every type possible in the given set.";
@@ -214,6 +216,10 @@ public class MultipleWidgets : MonoBehaviour
 
         string[] widgetTypes = { "Indicator", "Ports", "Batteries", "TwoFactor" };
         var widgetSet = new List<int> { 0, 1, 2, 3 };
+
+        if (!_modSettings.EnableTwoFactor)
+            widgetSet.Remove(3);
+
         for (var i = 0; i < 2; i++)
         {
             var widget = widgetSet[Random.Range(0, widgetSet.Count)];

@@ -20,6 +20,9 @@
 	"HowToUse4_3": "This also stacks with colors if enabled as well.",
 	"HowToUse4_4": "EncryptionProbability is a number between 0.0 to 1.0, and determines how likely the indicators will be encrypted.",
 
+	"EnableTwoFactor": true,
+	"HowToUse7": "If Enabled, Two factor has a possibilty to spawn.",
+
 	"DebugModeForceAllPortsInCurrentSet": false,
 	"HowToUse5": "This forces the port plates to have every type possible in the given set.",
 

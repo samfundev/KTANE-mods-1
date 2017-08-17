@@ -3533,7 +3533,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &1000013699639494
 GameObject:
   m_ObjectHideFlags: 1
@@ -4263,13 +4263,14 @@ GameObject:
   - 4: {fileID: 4000012272694426}
   - 33: {fileID: 33000011992697062}
   - 23: {fileID: 23000014266109804}
+  - 114: {fileID: 114000012354953354}
   m_Layer: 0
   m_Name: Blue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &1000014266484108
 GameObject:
   m_ObjectHideFlags: 1
@@ -4346,10 +4347,10 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000014232594132}
-  m_LocalRotation: {x: 0.33430696, y: 0.6230882, z: 0.33430696, w: 0.6230882}
+  m_LocalRotation: {x: 0.06285776, y: 0.70430744, z: 0.06285776, w: 0.70430744}
   m_LocalPosition: {x: 0.022022223, y: 0.005211112, z: 0.002}
   m_LocalScale: {x: 1.6666673, y: 1.6666672, z: 2}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 56.43}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 10.2}
   m_Children: []
   m_Father: {fileID: 4000012967273250}
   m_RootOrder: 0
@@ -4498,10 +4499,10 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000012475895590}
-  m_LocalRotation: {x: -0.7032332, y: 0.07391278, z: -0.7032332, w: 0.07391278}
-  m_LocalPosition: {x: -0.030477779, y: -0.00888889, z: 0.01331111}
+  m_LocalRotation: {x: -0.66654825, y: -0.236037, z: -0.66654825, w: -0.236037}
+  m_LocalPosition: {x: -0.030477779, y: -0.00888889, z: 0.0126}
   m_LocalScale: {x: 1.666667, y: 1.666667, z: 2}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: -168}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: -219}
   m_Children: []
   m_Father: {fileID: 4000012230996200}
   m_RootOrder: 0
@@ -4557,7 +4558,7 @@ Transform:
   m_Children:
   - {fileID: 4000012168070624}
   m_Father: {fileID: 4000012807326142}
-  m_RootOrder: 1
+  m_RootOrder: 0
 --- !u!4 &4000010311729060
 Transform:
   m_ObjectHideFlags: 1
@@ -5312,10 +5313,10 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000013113448134}
-  m_LocalRotation: {x: -0.4225848, y: 0.566941, z: 0.4225848, w: -0.566941}
+  m_LocalRotation: {x: -0.5271312, y: 0.47130957, z: 0.5271312, w: -0.47130957}
   m_LocalPosition: {x: 0.031455554, y: 0.005211112, z: -0.0119222235}
   m_LocalScale: {x: 1.6666663, y: 1.6666663, z: 2}
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 286.6}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 263.6}
   m_Children: []
   m_Father: {fileID: 4000012967273250}
   m_RootOrder: 2
@@ -5483,7 +5484,7 @@ Transform:
   m_Children:
   - {fileID: 4000012029502566}
   m_Father: {fileID: 4000012807326142}
-  m_RootOrder: 0
+  m_RootOrder: 2
 --- !u!4 &4000011290200944
 Transform:
   m_ObjectHideFlags: 1
@@ -6234,10 +6235,10 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000010220162888}
-  m_LocalRotation: {x: 0.6815543, y: 0.18837136, z: 0.6815543, w: 0.18837136}
+  m_LocalRotation: {x: 0.66275847, y: 0.24647774, z: 0.66275847, w: 0.24647774}
   m_LocalPosition: {x: -0.02927778, y: 0.005211112, z: 0.002}
   m_LocalScale: {x: 1.666667, y: 1.666667, z: 2}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 149.1}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 139.2}
   m_Children: []
   m_Father: {fileID: 4000012967273250}
   m_RootOrder: 1
@@ -6544,10 +6545,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
-  - {fileID: 4000011290164900}
   - {fileID: 4000010302702336}
-  - {fileID: 4000013088201790}
   - {fileID: 4000013519414814}
+  - {fileID: 4000011290164900}
+  - {fileID: 4000013088201790}
   - {fileID: 4000012276577488}
   - {fileID: 4000010541434316}
   - {fileID: 4000013877823448}
@@ -6828,7 +6829,7 @@ Transform:
   m_Children:
   - {fileID: 4000014209079596}
   m_Father: {fileID: 4000012807326142}
-  m_RootOrder: 2
+  m_RootOrder: 3
 --- !u!4 &4000013109601482
 Transform:
   m_ObjectHideFlags: 1
@@ -6971,10 +6972,10 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000010084650390}
-  m_LocalRotation: {x: -0.4790776, y: 0.5200814, z: -0.4790776, w: 0.5200814}
+  m_LocalRotation: {x: -0.55184764, y: 0.44211334, z: -0.55184764, w: 0.44211334}
   m_LocalPosition: {x: 0.0146, y: -0.00888889, z: -0.0084}
   m_LocalScale: {x: 1.6666673, y: 1.6666672, z: 2.01}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: -85.3}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: -102.6}
   m_Children: []
   m_Father: {fileID: 4000012370859806}
   m_RootOrder: 0
@@ -7187,7 +7188,7 @@ Transform:
   m_Children:
   - {fileID: 4000011877410132}
   m_Father: {fileID: 4000012807326142}
-  m_RootOrder: 3
+  m_RootOrder: 1
 --- !u!4 &4000013548685228
 Transform:
   m_ObjectHideFlags: 1
@@ -15146,12 +15147,13 @@ MonoBehaviour:
     Encrypted Indicators work.\", \t\"HowToUse4_3\": \"This also stacks with colors
     if enabled as well.\", \t\"HowToUse4_4\": \"EncryptionProbability is a number
     between 0.0 to 1.0, and determines how likely the indicators will be encrypted.\",
-    \ \t\"DebugModeForceAllPortsInCurrentSet\": false, \t\"HowToUse5\": \"This forces
-    the port plates to have every type possible in the given set.\",  \t\"DebugModeForceAllPossiblePorts\":
-    false, \t\"HowToUse5_2\": \"This Forces every port from the first port plate sets
-    to spwan. (This overrides DebugModeForceAllPortsInCurrentSet)\",  \t\"DebugModeBatteries\":
-    false, \t\"HowToUse6\": \"This forces the battery count to be 0, 3 or 4. Never
-    1 or 2.\" }"
+    \ \t\"EnableTwoFactor\": true, \t\"HowToUse7\": \"If Enabled, Two factor has a
+    possibilty to spawn.\",  \t\"DebugModeForceAllPortsInCurrentSet\": false, \t\"HowToUse5\":
+    \"This forces the port plates to have every type possible in the given set.\",
+    \ \t\"DebugModeForceAllPossiblePorts\": false, \t\"HowToUse5_2\": \"This Forces
+    every port from the first port plate sets to spwan. (This overrides DebugModeForceAllPortsInCurrentSet)\",
+    \ \t\"DebugModeBatteries\": false, \t\"HowToUse6\": \"This forces the battery
+    count to be 0, 3 or 4. Never 1 or 2.\" }"
 --- !u!114 &114000012060962876
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -15256,6 +15258,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - KT/Mobile/Diffuse
+--- !u!114 &114000012354953354
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000014253783484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1005838349, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShaderNames:
+  - Legacy Shaders/Transparent/Diffuse
 --- !u!114 &114000012405058530
 MonoBehaviour:
   m_ObjectHideFlags: 1

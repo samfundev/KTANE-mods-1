@@ -32,13 +32,16 @@ MonoBehaviour:
     only be White.  (Enabled by default)
 
     [*] EnableEncryptedIndicators - Allows the Indicators to sometimes be encrypted.
-    (Disabled by Default)
+    (Disabled by default)
 
     [*] MaxEncryptedIndicators - Specifies the maximum number of indicators that can
     be encrypted per bomb. (default value of 2)
 
     [*] EncryptionProbability - Specifies the percent chance of the indicator being
     encrypted. (Default chance is 50%  (0.50))
+
+    [*] EnableTwoFactor - Controls whether Two Factors will spawn on Multiple Widgets.
+    (Enabled by default)
 
     [/list]
 
