@@ -8,15 +8,20 @@ ModelImporter:
     100000: connector
     100002: //RootNode
     100004: MeshBody3
+    100006: MeshBody4
     400000: connector
     400002: //RootNode
     400004: MeshBody3
+    400006: MeshBody4
     2300000: connector
     2300002: MeshBody3
+    2300004: MeshBody4
     3300000: connector
     3300002: MeshBody3
+    3300004: MeshBody4
     4300000: connector
     4300002: MeshBody3
+    4300004: MeshBody4
   materials:
     importMaterials: 1
     materialName: 0
