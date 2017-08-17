@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cf2299c8864afe4ab42466f546ae20d, type: 3}
+  m_Name: WorkshopItem
+  m_EditorClassIdentifier: 
+  WorkshopPublishedFileID: 1112930514
+  Title: Multiple Widgets
+  Description: 'Each widget plate will consist of two widgets, selected randomly from
+    Batteries, Indicators, Ports and Two Factor.
+
+
+    Configuration options
+
+    [list]
+
+    [*] EnableExtendedPorts - Enables HDMI, USB, PCMCIA, VGA, Component Video, Composite
+    Video, 120/240V AC. (Enabled by default)
+
+    [*] EnableExtendedBatteries - Enables battery holders that Have 0, 3 or 4 battereis.
+    (Enabled by default)
+
+    [*] EnableIndicatorColors - Allows Lit indicators to show up as Red, Orange, Yellow,
+    Green, Blue, Purple, Magenta, Gray, White.   If disabled, Lit Indicators will
+    only be White.  (Enabled by default)
+
+    [*] EnableEncryptedIndicators - Allows the Indicators to sometimes be encrypted.
+    (Disabled by Default)
+
+    [*] MaxEncryptedIndicators - Specifies the maximum number of indicators that can
+    be encrypted per bomb. (default value of 2)
+
+    [*] EncryptionProbability - Specifies the percent chance of the indicator being
+    encrypted. (Default chance is 50%  (0.50))
+
+    [/list]
+
+
+    Credits to TrainZack for the Encrypted Indicators code which is used here.
+
+
+    [url=https://drive.google.com/file/d/0BzdipTil_z3ANUFxOXJOc0lzRjA/view?usp=sharing]PDF
+    Manual[/url]'
+  PreviewImage: {fileID: 2800000, guid: 9d068ae4feb1cdc4894d8ad919c18a12, type: 3}
+  Tags:
+  - Widget
