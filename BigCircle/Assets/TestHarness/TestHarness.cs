@@ -187,7 +187,7 @@ public class FakeBombInfo : MonoBehaviour
     }
     public Widget[] widgets;
 
-    private bool _forceUnicorn = false;
+    private bool _forceUnicorn = true;
     void Awake()
     {
         widgets = new Widget[5];

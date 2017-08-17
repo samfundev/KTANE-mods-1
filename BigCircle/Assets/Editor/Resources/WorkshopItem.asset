@@ -13,16 +13,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WorkshopPublishedFileID: 1110997971
   Title: Big Circle
-  Description: 'The bomb presents a button in the shape of a big circle spinning around.  Based
-    on the tables below, determine which parts of the circle to press. If you press
-    a wrong part of the circle or press the parts of a circle in the wrong order,
-    a strike will be incurred.
-
-
-    Module idea by Zeke.
-
-
-    Twitch plays is supported.'
+  Description: "The bomb presents a button in the shape of a big circle spinning around.
+    \ Based on the tables below, determine which parts of the circle to press. If
+    you press a wrong part of the circle or press the parts of a circle in the wrong
+    order, a strike will be incurred.\n\nModule idea by Zeke.\n\nTwitch plays is supported.\n\r\nPDF
+    Manaul: https://ktane.timwi.de/PDF/Big%20Circle.pdf\r\nHTML Manual: https://ktane.timwi.de/HTML/Big%20Circle.html"
   PreviewImage: {fileID: 2800000, guid: 74dc825b0a2318b4490ef45ac04f408a, type: 3}
   Tags:
   - Regular Module
