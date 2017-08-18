@@ -15,7 +15,9 @@ public class MultipleWidgets : MonoBehaviour
     public Transform NineVoltCell;
 
     public GameObject TwoFactor;
-    public TextMesh[] TwoFactorDigits;
+    public TextMesh TwoFactorDigits;
+    public TextMesh TwoFactorTimeRemaining;
+    public MeshRenderer TwoFactorDisplay;
     public GameObject Ports;
 
     public GameObject ParallelPort;
@@ -61,7 +63,7 @@ public class MultipleWidgets : MonoBehaviour
     #endregion
 
     #region private variables
-    private readonly int _currentSettingsVersion = 2;
+    private readonly int _currentSettingsVersion = 3;
     private class ModSettings
     {
         public int SettingsVersion = 0;
@@ -86,7 +88,9 @@ public class MultipleWidgets : MonoBehaviour
         public string HowToUse4_4 = "EncryptionProbability is a number between 0.0f to 1.0f, and determines how likely the indicators will be encrypted.";
 
         public bool EnableTwoFactor = true;
+        public int TwoFactorDuration = 60;
         public string HowToUse7 = "If Enabled, Two factor has a possibilty to spawn.";
+        public string HowToUse7_2 ="TwoFactorDuration is a number between 30 and 120 seconds (half a minute to two minutes)";
 
         public bool DebugModeForceAllPortsInCurrentSet = false;
         public string HowToUse5_1 = "This forces the port plates to have every type possible in the given set.";
@@ -687,6 +691,12 @@ public class MultipleWidgets : MonoBehaviour
     #region TwoFactor
     void SetTwoFactor()
     {
+        if (_modSettings.TwoFactorDuration < 30)
+            _modSettings.TwoFactorDuration = 30;
+
+        if (_modSettings.TwoFactorDuration > 120)
+            _modSettings.TwoFactorDuration = 120;
+
         GenerateKey();
         TwoFactor.SetActive(true);
     }
@@ -699,13 +709,7 @@ public class MultipleWidgets : MonoBehaviour
 
     private void DisplayKey()
     {
-        var text = _key.ToString("000000");
-        var zero = true;
-        for (var i = 0; i < text.Length; i++)
-        {
-            zero &= text.Substring(i, 1) == "0";
-            TwoFactorDigits[i].text = zero ? "" : text.Substring(i, 1);
-        }
+        TwoFactorDigits.text = string.Format("{0,6}.", _key);
     }
 
     void UpdateKey()
@@ -721,13 +725,35 @@ public class MultipleWidgets : MonoBehaviour
         DisplayKey();
     }
 
+    void UpdateTwoFactorColor(Color color)
+    {
+        TwoFactorDisplay.material.color = color;
+    }
+
+    private const float FadeToRedTime = 10.0f;
     void TwoFactorUpdate()
     {
         if (!_twofactor) return;
         _timeElapsed += Time.deltaTime;
 
-        if (_timeElapsed < TimerLength) return;
+        TwoFactorTimeRemaining.text = string.Format("{0,3}",(int)(_modSettings.TwoFactorDuration - _timeElapsed));
+
+        if (_timeElapsed < (_modSettings.TwoFactorDuration - FadeToRedTime)) return;
+
+        var colorChange = _timeElapsed - (_modSettings.TwoFactorDuration - FadeToRedTime);
+        colorChange = (FadeToRedTime - colorChange) / FadeToRedTime;
+
+        var redDiff = 127f - (108f * colorChange);
+        var greenDiff = 255f * colorChange;
+
+        if (_timeElapsed < _modSettings.TwoFactorDuration)
+        {
+            UpdateTwoFactorColor(new Color(redDiff / 255, greenDiff / 255, 0f / 255));
+            return;
+        }
+
         _timeElapsed = 0f;
+        UpdateTwoFactorColor(new Color(19f / 255, 255f / 255, 0f / 255));
         UpdateKey();
     }
 

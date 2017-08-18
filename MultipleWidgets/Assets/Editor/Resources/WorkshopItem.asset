@@ -43,6 +43,10 @@ MonoBehaviour:
     [*] EnableTwoFactor - Controls whether Two Factors will spawn on Multiple Widgets.
     (Enabled by default)
 
+    [*] TwoFactorDuration - Controls how long in seconds it takes for the next Two
+    Factor code to be generated. Minimum 30 seconds, Maximum 120 seconds. (Default
+    value of 60)
+
     [/list]
 
 

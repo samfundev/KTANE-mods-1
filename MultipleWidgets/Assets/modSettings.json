@@ -21,7 +21,9 @@
 	"HowToUse4_4": "EncryptionProbability is a number between 0.0 to 1.0, and determines how likely the indicators will be encrypted.",
 
 	"EnableTwoFactor": true,
+	"TwoFactorDuration": 60,
 	"HowToUse7": "If Enabled, Two factor has a possibilty to spawn.",
+	"HowToUse7_2": "TwoFactorDuration is a number between 30 and 120 seconds (half a minute to two minutes)",
 
 	"DebugModeForceAllPortsInCurrentSet": false,
 	"HowToUse5": "This forces the port plates to have every type possible in the given set.",

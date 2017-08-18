@@ -13,5 +13,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: MultipleWidgets
   title: Multiple Widgets
-  version: v0.0.0
+  version: v1.0.2
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
