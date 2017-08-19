@@ -10,6 +10,7 @@ GameObject:
   - 4: {fileID: 439642}
   - 114: {fileID: 11405796}
   - 114: {fileID: 11497068}
+  - 114: {fileID: 114000013674786028}
   m_Layer: 0
   m_Name: TestHarness
   m_TagString: Untagged
@@ -44,6 +45,8 @@ MonoBehaviour:
   StatusLightPrefab: {fileID: 1000012373772858, guid: 6565c8153fb4f3f4eaafc1381b3d6c79,
     type: 2}
   HighlightPrefab: {fileID: 100000, guid: d78a484c6e87f1b47b6596ac080fe942, type: 2}
+  StrikeAudio: {fileID: 8300000, guid: dabf44b5afd601c4ca9241d563479970, type: 3}
+  Audio: {fileID: 114000013674786028}
 --- !u!114 &11497068
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -69,3 +72,14 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 101964}
   m_IsPrefabParent: 1
+--- !u!114 &114000013674786028
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 101964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1675560866, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

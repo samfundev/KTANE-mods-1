@@ -749,6 +749,9 @@ public class TestHarness : MonoBehaviour
 
     public GameObject StatusLightPrefab;
     public GameObject HighlightPrefab;
+    public AudioClip StrikeAudio;
+    public KMAudio Audio;
+
     TestSelectable currentSelectable;
     TestSelectableArea currentSelectableArea;
 
@@ -870,6 +873,7 @@ public class TestHarness : MonoBehaviour
             modules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
+                Audio.HandlePlaySoundAtTransform(StrikeAudio.name, transform);
                 StartCoroutine(StatusLightStrike(modules[j]));
                 fakeInfo.HandleStrike();
                 return false;
