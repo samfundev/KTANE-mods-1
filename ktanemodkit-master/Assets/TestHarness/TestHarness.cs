@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -14,17 +15,46 @@ public class FakeBombInfo : MonoBehaviour
 {
     //Used with code below to force a particular set of widgets to ALWAYS show up in the test harness
     //Useful for testing various rules, including unicorn rules you may have implemented into the module.
-    private bool _forceUnicorn = false;
+    private bool _forceUnicorn = true;
 
     //Modded Widgets
     private bool TwoFactor = false;
     private bool EncryptedIndicators = false;
     private bool MultipleWidgets = true;
 
+    //WidgetExpanderOptions
+    private bool EnableSerialNumberLettersOY = false;
+    private bool EnableCustomIndicators = false;
+    private int MinCustomIndicators = 1;
+    private bool EnableWidgetExpansion = false;
+    private int MinWidgets = 5;
+    private int MaxWidgets = 7;
+
     //Multiple Widgets configuration
     private bool _enableTwoFactorMultipleWidgets = true;
     private int _multipleWidgetsTwoFactoryExpiry = 60;
-    
+
+
+    //Write your custom widget testing rules here.
+    Widget GetUnicornWidget(int a)
+    {
+        switch (a)
+        {
+            case 0:
+                return new EncryptedIndicatorWidget(true, "BOB");
+            case 1:
+                return new BatteryWidget(true, 4);
+            case 2:
+                return new BatteryWidget(true, 1);
+            case 3:
+                return new BatteryWidget(true, 0);
+            default:
+                var multiWidgets = new Widget[2];
+                multiWidgets[0] = new IndicatorWidget();
+                multiWidgets[1] = new TwoFactorWidget();
+                return new MultipleWidget(_enableTwoFactorMultipleWidgets, _multipleWidgetsTwoFactoryExpiry, multiWidgets);
+        }
+    }
 
     #region Widgets
     public abstract class Widget : Object
@@ -222,16 +252,16 @@ public class FakeBombInfo : MonoBehaviour
             "Black", "White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Mangenta", "Gray"
         };
 
-        private string[] possibleValues = {"CLR, IND", "TRN", "FRK", "CAR", "FRQ", "NSA", "SIG", "MSA", "SND", "BOB"};
+        private readonly string[] _possibleValues = {"CLR, IND", "TRN", "FRK", "CAR", "FRQ", "NSA", "SIG", "MSA", "SND", "BOB"};
 
-        private int[][] columnInts = 
+        private readonly int[][] _columnInts = 
         {
-            new [] {0, 0, -1, 2, 1, 5, 1, 5, 4, 2, 3, -2, 0},
-            new [] {5, 4, 0, 0, 2, -2, 4, 3, 4, 3, -1, -1, 5},
-            new [] {4, 5, 4, 5, 2, 5, 2, 4, 2, 3, 4, 4, 5}
+            new [] {5, 4,  0, 0, 2, -2, 4, 3, 4, 3, -1, -1, 5},
+            new [] {0, 0, -1, 2, 1,  5, 1, 5, 4, 2,  3, -2, 0},
+            new [] {4, 5,  4, 5, 2,  5, 2, 4, 2, 3,  4,  4, 5}
         };
 
-        private string[] columnStrings =
+        private readonly string[] _columnStrings =
         {
             "GZCJVTLGFPKDQ",
             "DDSXBLAASOQNO",
@@ -264,15 +294,28 @@ public class FakeBombInfo : MonoBehaviour
             }
             else
             {
+
                 var val0 = Random.Range(0, 13);
                 var val1 = Random.Range(0, 13);
+                while (val1 == val0)
+                    val1 = Random.Range(0, 13);
                 var val2 = Random.Range(0, 13);
-                var totalval = columnInts[0][val0] + columnInts[1][val1] + columnInts[2][val2] - 1;
-                if (totalval >= 0 && totalval < 11)
-                    val = possibleValues[totalval];
-                else
-                    val = columnStrings[0].Substring(val0, 1) + columnStrings[1].Substring(val1, 1) +
-                          columnStrings[2].Substring(val2, 1);
+                while (val2 == val0 || val2 == val1)
+                    val2 = Random.Range(0, 13);
+                try
+                {
+                    var totalval = _columnInts[0][val0] + _columnInts[1][val1] + _columnInts[2][val2];
+                    if (totalval > 0 && totalval <= _possibleValues.Length)
+                        val = _possibleValues[totalval-1];
+                    else
+                        val = _columnStrings[0].Substring(val0, 1) + _columnStrings[1].Substring(val1, 1) +
+                              _columnStrings[2].Substring(val2, 1);
+                }
+                catch
+                {
+                    val = _possibleValues[Random.Range(0, _possibleValues.Length)];
+                }
+
             }
 
             if (enableColors)
@@ -414,9 +457,52 @@ public class FakeBombInfo : MonoBehaviour
     #endregion
     public Widget[] widgets;
 
+    private List<string> _customIndicators;
+    private void InitCustomIndicators()
+    {
+        string _letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        _customIndicators = new List<string>();
+
+        foreach (char x in _letters)
+        {
+            foreach (char y in _letters)
+            {
+                foreach (char z in _letters)
+                {
+                    _customIndicators.Add(x.ToString() + y + z);
+                }
+            }
+        }
+
+        foreach (string x in IndicatorWidget.possibleValues)
+        {
+            _customIndicators.Remove(x);
+        }
+        _customIndicators.Remove("NLL");
+
+        int n = _customIndicators.Count;
+        while (n-- > 0)
+        {
+            int k = UnityEngine.Random.Range(0, n + 1);
+            string value = _customIndicators[k];
+            _customIndicators[k] = _customIndicators[n];
+            _customIndicators[n] = value;
+        }
+    }
+
     void Awake()
     {
-        widgets = new Widget[5];
+        if (EnableCustomIndicators)
+        {
+            InitCustomIndicators();
+            var custom = Math.Max(MinCustomIndicators, MaxWidgets - 12);
+            custom = Math.Min(custom, _customIndicators.Count);
+            IndicatorWidget.possibleValues.Add("NLL");
+            for (var i = 0; i < custom; i++)
+                IndicatorWidget.possibleValues.Add(_customIndicators[i]);
+        }
+
+        widgets = EnableWidgetExpansion ? new Widget[Random.Range(MinWidgets, MaxWidgets + 1)] : new Widget[5]; 
         var choices = new List<int> { 0, 1, 2 };
         if (MultipleWidgets)
             choices.Add(3);
@@ -425,35 +511,12 @@ public class FakeBombInfo : MonoBehaviour
         if (EncryptedIndicators)
             choices.Add(5);
 
-        for (int a = 0; a < 5; a++)
+        for (int a = 0; a < widgets.Length; a++)
         {
             if (_forceUnicorn)
             {
-                switch (a)
-                {
-                    case 0:
-                        widgets[a] = new EncryptedIndicatorWidget(true, "BOB");
-                        continue;
-                    case 1:
-                        widgets[a] = new BatteryWidget(true, 4);
-                        continue;
-                    case 2:
-                        widgets[a] = new BatteryWidget(true, 1);
-                        continue;
-                    case 3:
-                        widgets[a] = new BatteryWidget(true, 0);
-                        continue;
-                    default:
-                        var multiWidgets = new Widget[2];
-                        multiWidgets[0] = new IndicatorWidget();
-                        multiWidgets[1] = new TwoFactorWidget();
-                        widgets[a] = new MultipleWidget(_enableTwoFactorMultipleWidgets,_multipleWidgetsTwoFactoryExpiry, multiWidgets);
-                        continue;
-
-
-                        //choices = new List<int> {1, 2};
-                        //break;
-                }
+                widgets[a] = GetUnicornWidget(a);
+                continue;
             }
 
             var choice = choices[Random.Range(0, choices.Count)];
@@ -480,15 +543,16 @@ public class FakeBombInfo : MonoBehaviour
             }
         }
 
-        char[] possibleCharArray = new char[35]
+        char[] possibleCharArray = EnableSerialNumberLettersOY ?
+        new [] {
+            'A','B','C','D','E','F','G','H','I','J','K','L',
+            'M','N','O','P','Q','R','S','T','U','V','W','X',
+            'Y','Z','0','1','2','3','4','5','6','7','8','9'
+        } : new []
         {
-            'A','B','C','D','E',
-            'F','G','H','I','J',
-            'K','L','M','N','E',
-            'P','Q','R','S','T',
-            'U','V','W','X','Z',
-            '0','1','2','3','4',
-            '5','6','7','8','9'
+            'A','B','C','D','E','F','G','H','I','J','K','L',
+            'M','N','E','P','Q','R','S','T','U','V','W','X',
+            'Z','0','1','2','3','4','5','6','7','8','9'
         };
         string str1 = string.Empty;
         for (int index = 0; index < 2; ++index) str1 = str1 + possibleCharArray[Random.Range(0, possibleCharArray.Length)];
@@ -683,6 +747,7 @@ public class TestHarness : MonoBehaviour
 {
     private FakeBombInfo fakeInfo;
 
+    public GameObject StatusLightPrefab;
     public GameObject HighlightPrefab;
     TestSelectable currentSelectable;
     TestSelectableArea currentSelectableArea;
@@ -771,6 +836,11 @@ public class TestHarness : MonoBehaviour
         {
             KMBombModule mod = modules[i];
 
+            KMStatusLightParent statuslightparent = modules[i].GetComponentInChildren<KMStatusLightParent>();
+            var statuslight = Instantiate(StatusLightPrefab);
+            statuslight.transform.parent = statuslightparent.transform;
+            statuslight.transform.localPosition = Vector3.zero;
+
             currentSelectable.Children[i] = modules[i].GetComponent<TestSelectable>();
             modules[i].GetComponent<TestSelectable>().Parent = currentSelectable;
 
@@ -778,6 +848,10 @@ public class TestHarness : MonoBehaviour
             modules[i].OnPass = delegate ()
             {
                 Debug.Log("Module Passed");
+                var meshrenderer = statuslight.GetComponentInChildren<MeshRenderer>();
+                meshrenderer.material.color = Color.green;
+                meshrenderer.material.SetColor("_EmissionColor", new Color(0,0.25f,0));
+
                 fakeInfo.modules.Remove(fakeInfo.modules.First(t => t.Key.Equals(mod)));
                 fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(mod, true));
                 bool allSolved = true;
@@ -792,9 +866,11 @@ public class TestHarness : MonoBehaviour
                 if (allSolved) fakeInfo.Solved();
                 return false;
             };
+            var j = i;
             modules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
+                StartCoroutine(StatusLightStrike(modules[j]));
                 fakeInfo.HandleStrike();
                 return false;
             };
@@ -841,6 +917,26 @@ public class TestHarness : MonoBehaviour
         {
             kmAudio.HandlePlaySoundAtTransform += PlaySoundHandler;
         }
+    }
+
+    IEnumerator StatusLightStrike(KMBombModule module)
+    {
+        KMStatusLightParent statuslightparent = module.GetComponentInChildren<KMStatusLightParent>();
+        MeshRenderer light = statuslightparent.GetComponentInChildren<MeshRenderer>();
+        
+        light.material.color = Color.red;
+        light.material.SetColor("_EmissionColor", new Color(0.25f, 0, 0));
+        yield return new WaitForSeconds(0.5f);
+
+        foreach (var m in fakeInfo.modules)
+        {
+            if (m.Key != module || !m.Value) continue;
+            light.material.color = Color.green;
+            light.material.SetColor("_EmissionColor", new Color(0, 0.25f, 0));
+            yield break;
+        }
+        light.material.color = Color.white;
+        light.material.SetColor("_EmissionColor", Color.black);
     }
 
     protected void PlaySoundHandler(string clipName, Transform t)
