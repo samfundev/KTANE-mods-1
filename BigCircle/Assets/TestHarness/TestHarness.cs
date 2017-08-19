@@ -1,70 +1,193 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Serialization;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 public class FakeBombInfo : MonoBehaviour
 {
+    //Used with code below to force a particular set of widgets to ALWAYS show up in the test harness
+    //Useful for testing various rules, including unicorn rules you may have implemented into the module.
+    private bool _forceUnicorn = false;
+
+    //Modded Widgets
+    private bool TwoFactor = false;
+    private bool EncryptedIndicators = false;
+    private bool MultipleWidgets = true;
+
+    //Multiple Widgets configuration
+    private bool _enableTwoFactorMultipleWidgets = true;
+    private int _multipleWidgetsTwoFactoryExpiry = 60;
+    
+
+    #region Widgets
     public abstract class Widget : Object
     {
         public abstract string GetResult(string key, string data);
+        public abstract void Update();
+    }
+
+    public class MultipleWidget : Widget
+    {
+        private Widget[] widgets = new Widget[2];
+
+        public MultipleWidget(bool enableTowFactor, int twoFactorExpiry=60, Widget[] unicornWidgets = null)
+        {
+            if (unicornWidgets != null && unicornWidgets.Length == 2)
+            {
+                Debug.Log("Defining Unicorn multiple widgets");
+                widgets = unicornWidgets;
+                return;
+            }
+            Debug.Log("Start of Multiple Widgets");
+            var choices = new List<int> {0, 1, 2};
+            if (enableTowFactor)
+                choices.Add(3);
+            for (var i = 0; i < 2; i++)
+            {
+                var choice = choices[Random.Range(0, choices.Count)];
+                choices.Remove(choice);
+                if(choice == 0)
+                    widgets[i] = new BatteryWidget(true);
+                else if (choice == 1)
+                    widgets[i] = new PortWidget(true);
+                else if (choice == 2)
+                    widgets[i] = new EncryptedIndicatorWidget(true);
+                else
+                    widgets[i] = new TwoFactorWidget(twoFactorExpiry);
+            }
+            Debug.Log("End of Multiple Widgets");
+        }
+
+        public override string GetResult(string key, string data)
+        {
+            return (from widget in widgets where widget.GetResult(key, data) != null select widget.GetResult(key, data)).FirstOrDefault();
+        }
+
+        public override void Update()
+        {
+            widgets[0].Update();
+            widgets[1].Update();
+        }
+
+    }
+
+    public class TwoFactorWidget : Widget
+    {
+        private int _expiryTime;
+        private float _elapsedTime;
+        private int _key;
+        private static int _increment = 1;
+        private int _id;
+
+        public TwoFactorWidget(int ExpiryTime = 60)
+        {
+            if (ExpiryTime < 30)
+                ExpiryTime = 30;
+            if (ExpiryTime > 120)
+                ExpiryTime = 120;
+
+            _id = _increment;
+            _increment++;
+            _expiryTime = ExpiryTime;
+            UpdateKey();
+        }
+
+        public override string GetResult(string key, string data)
+        {
+            if (key == "twofactor")
+            {
+                return JsonConvert.SerializeObject((object)new Dictionary<string, int>()
+                {
+                    {
+                        "twofactor_key", _key
+                    }
+                });
+            }
+            return null;
+        }
+
+        private void UpdateKey()
+        {
+            _elapsedTime = 0;
+            _key = Random.Range(0, 1000000);
+            Debug.LogFormat("Two Factor Key #{0} = {1}", _id, _key);
+        }
+
+        public override void Update()
+        {
+            _elapsedTime += Time.deltaTime;
+            if (_elapsedTime < _expiryTime) return;
+            UpdateKey();
+        }
     }
 
     public class PortWidget : Widget
     {
+        [Flags]
+        public enum PortType
+        {
+            None           = 0,
+            DVI            = 1 << 0,
+            Parallel       = 1 << 1,
+            PS2            = 1 << 2,
+            RJ45           = 1 << 3,
+            Serial         = 1 << 4,
+            StereoRCA      = 1 << 5,
+            ComponentVideo = 1 << 6,
+            CompositeVideo = 1 << 7,
+            USB            = 1 << 8,
+            HDMI           = 1 << 9,
+            VGA            = 1 << 10,
+            AC             = 1 << 11,
+            PCMCIA         = 1 << 12
+        }
+
         List<string> ports;
 
-        public PortWidget()
+        public PortWidget(bool extended = false, List<PortType> unicornPorts = null)
         {
             ports = new List<string>();
-            string portList = "";
+            PortType portList = PortType.None;
 
-            if (Random.value > 0.5)
+            var portPlates = new List<List<PortType>>
+            {
+                new List<PortType> {PortType.Serial, PortType.Parallel},
+                new List<PortType> {PortType.PS2,PortType.DVI,PortType.RJ45,PortType.StereoRCA },
+                new List<PortType> {PortType.HDMI,PortType.USB,PortType.ComponentVideo,PortType.AC,PortType.PCMCIA,PortType.VGA,PortType.CompositeVideo },
+                new List<PortType> {PortType.DVI,PortType.StereoRCA,PortType.HDMI,PortType.ComponentVideo,PortType.VGA,PortType.CompositeVideo,PortType.AC },
+                new List<PortType> {PortType.Parallel,PortType.Serial,PortType.PCMCIA,PortType.VGA,PortType.PS2,PortType.RJ45,PortType.USB,PortType.AC }
+            };
+
+            var plate = portPlates[1];
+            if (!extended)
             {
                 if (Random.value > 0.5)
                 {
-                    ports.Add("Parallel");
-                    portList += "Parallel";
-                }
-                if (Random.value > 0.5)
-                {
-                    ports.Add("Serial");
-                    if (portList.Length > 0) portList += ", ";
-                    portList += "Serial";
+                    plate = portPlates[0];
                 }
             }
             else
             {
-                if (Random.value > 0.5)
-                {
-                    ports.Add("DVI");
-                    portList += "DVI";
-                }
-                if (Random.value > 0.5)
-                {
-                    ports.Add("PS2");
-                    if (portList.Length > 0) portList += ", ";
-                    portList += "PS2";
-                }
-                if (Random.value > 0.5)
-                {
-                    ports.Add("RJ45");
-                    if (portList.Length > 0) portList += ", ";
-                    portList += "RJ45";
-                }
-                if (Random.value > 0.5)
-                {
-                    ports.Add("StereoRCA");
-                    if (portList.Length > 0) portList += ", ";
-                    portList += "StereoRCA";
-                }
+                plate = portPlates[Random.Range(0, portPlates.Count)];
+            }
+            foreach (var port in plate)
+            {
+                if (!(Random.value > 0.5)) continue;
+                ports.Add(port.ToString());
+                portList |= port;
             }
 
-            if (portList.Length == 0) portList = "Empty plate";
-            Debug.Log("Added port widget: " + portList);
+            if (portList == PortType.None)
+                Debug.Log("Added port widget: Empty plate");
+            else
+                Debug.Log("Added port widget: " + portList);
         }
 
         public override string GetResult(string key, string data)
@@ -80,52 +203,157 @@ public class FakeBombInfo : MonoBehaviour
             }
             return null;
         }
+
+        public override void Update()
+        {
+
+        }
     }
+
+    public class EncryptedIndicatorWidget : Widget
+    {
+        private string val;
+        private bool on;
+        private string color;
+        private bool enableColors;
+
+        private static string[] PossibleColors =
+        {
+            "Black", "White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Mangenta", "Gray"
+        };
+
+        private string[] possibleValues = {"CLR, IND", "TRN", "FRK", "CAR", "FRQ", "NSA", "SIG", "MSA", "SND", "BOB"};
+
+        private int[][] columnInts = 
+        {
+            new [] {0, 0, -1, 2, 1, 5, 1, 5, 4, 2, 3, -2, 0},
+            new [] {5, 4, 0, 0, 2, -2, 4, 3, 4, 3, -1, -1, 5},
+            new [] {4, 5, 4, 5, 2, 5, 2, 4, 2, 3, 4, 4, 5}
+        };
+
+        private string[] columnStrings =
+        {
+            "GZCJVTLGFPKDQ",
+            "DDSXBLAASOQNO",
+            "GROYLJOSMFKLZ"
+        };
+
+        public EncryptedIndicatorWidget(bool enableColors = false, string unicornLabel = null, string unicornColor = null)
+        {
+            on = Random.value > 0.4;
+            if (enableColors)
+            {
+                if (unicornColor != null)
+                {
+                    color = unicornColor;
+                    @on = unicornColor != PossibleColors[0];
+                }
+                else
+                {
+                    if (!@on)
+                        color = PossibleColors[0];
+                    else
+                    {
+                        color = PossibleColors[Random.Range(1, PossibleColors.Length)];
+                    }
+                }
+            }
+            if (unicornLabel != null)
+            {
+                val = unicornLabel;
+            }
+            else
+            {
+                var val0 = Random.Range(0, 13);
+                var val1 = Random.Range(0, 13);
+                var val2 = Random.Range(0, 13);
+                var totalval = columnInts[0][val0] + columnInts[1][val1] + columnInts[2][val2] - 1;
+                if (totalval >= 0 && totalval < 11)
+                    val = possibleValues[totalval];
+                else
+                    val = columnStrings[0].Substring(val0, 1) + columnStrings[1].Substring(val1, 1) +
+                          columnStrings[2].Substring(val2, 1);
+            }
+
+            if (enableColors)
+                Debug.Log("Added indicator widget: " + val + " is " + (on ? "ON" : "OFF") + ", Color is " + color);
+            else
+                Debug.Log("Added indicator widget: " + val + " is " + (on ? "ON" : "OFF"));
+
+        }
+
+        public override string GetResult(string key, string data)
+        {
+            if (key == KMBombInfo.QUERYKEY_GET_INDICATOR)
+            {
+                return JsonConvert.SerializeObject((object)new Dictionary<string, string>()
+                {
+                    {
+                        "label", val
+                    },
+                    {
+                        "on", on?bool.TrueString:bool.FalseString
+                    }
+                });
+            }
+            if (key == (KMBombInfo.QUERYKEY_GET_INDICATOR + "Color") && enableColors)
+            {
+                return JsonConvert.SerializeObject((object)new Dictionary<string, string>()
+                {
+                    {
+                        "label", val
+                    },
+                    {
+                        "color", color
+                    }
+                });
+            }
+            return null;
+        }
+
+        public override void Update()
+        {
+
+        }
+    }
+
 
     public class IndicatorWidget : Widget
     {
-        static List<string> possibleValues = new List<string>(){
+        public static List<string> possibleValues = new List<string>(){
             "SND","CLR","CAR",
             "IND","FRQ","SIG",
             "NSA","MSA","TRN",
             "BOB","FRK"
         };
 
-        private static string[] possibleColors =
-        {
-            "White", "Red", "Orange", "Yellow", "Green", "Blue", "Magenta", "Purple", "Gray", "Black"
-        };
-
         private string val;
         private bool on;
-        private string color;
 
-        public IndicatorWidget(bool forceUnicorn=false)
+        public IndicatorWidget(string unicornLabel=null, string unicornValue=null)
         {
-            if (forceUnicorn)
-            {
-                var c = Random.Range(0, possibleColors.Length);
-                color = possibleColors[c];
-                val = "BOB";
-                on = color != "Black";
-                possibleValues.Remove("BOB");
-            }
-            else
-            {
-                int pos = Random.Range(0, possibleValues.Count);
-                val = possibleValues[pos];
-                possibleValues.RemoveAt(pos);
-                on = Random.value > 0.4f;
-                if (!on)
-                    color = "Black";
+           
+                if (unicornLabel != null)
+                {
+                    val = unicornLabel;
+                    possibleValues.Remove(val);
+                }
                 else
                 {
-                    int c = Random.Range(0, possibleColors.Length - 1);
-                    color = possibleColors[c];
+                    int pos = Random.Range(0, possibleValues.Count);
+                    val = possibleValues[pos];
+                    possibleValues.RemoveAt(pos);
                 }
-            }
 
-            Debug.Log("Added indicator widget: " + val + " is " + (on ? "ON" : "OFF") + ", Color is " + color);
+                if (unicornValue != null)
+                {
+                    on = unicornValue == "true";
+                }
+                else
+                {
+                    on = Random.value > 0.4f;
+                }
+            Debug.Log("Added indicator widget: " + val + " is " + (on ? "ON" : "OFF"));
         }
 
         public override string GetResult(string key, string data)
@@ -142,19 +370,12 @@ public class FakeBombInfo : MonoBehaviour
                     }
                 });
             }
-            if (key == (KMBombInfo.QUERYKEY_GET_INDICATOR + "Color"))
-            {
-                return JsonConvert.SerializeObject((object)new Dictionary<string, string>()
-                {
-                    {
-                        "label", val
-                    },
-                    {
-                        "color", color
-                    }
-                });
-            }
-            else return null;
+            return null;
+        }
+
+        public override void Update()
+        {
+
         }
     }
 
@@ -162,9 +383,9 @@ public class FakeBombInfo : MonoBehaviour
     {
         private int batt;
 
-        public BatteryWidget(int forceUnicorn = -1)
+        public BatteryWidget(bool extended=false, int forceUnicorn = -1)
         {
-            batt = Random.Range(1, 3);
+            batt = extended ? Random.Range(0,5) : Random.Range(1, 3);
             if (forceUnicorn > -1)
                 batt = forceUnicorn;
 
@@ -182,33 +403,81 @@ public class FakeBombInfo : MonoBehaviour
                     }
                 });
             }
-            else return null;
+            return null;
+        }
+
+        public override void Update()
+        {
+
         }
     }
+    #endregion
     public Widget[] widgets;
 
-    private bool _forceUnicorn = true;
     void Awake()
     {
         widgets = new Widget[5];
+        var choices = new List<int> { 0, 1, 2 };
+        if (MultipleWidgets)
+            choices.Add(3);
+        if (TwoFactor)
+            choices.Add(4);
+        if (EncryptedIndicators)
+            choices.Add(5);
+
         for (int a = 0; a < 5; a++)
         {
-            if (a == 0 && _forceUnicorn)
+            if (_forceUnicorn)
             {
-                widgets[0] = new IndicatorWidget(true);
-                widgets[1] = new BatteryWidget(4);
-                widgets[2] = new BatteryWidget(1);
-                widgets[3] = new BatteryWidget(0);
-                if (Random.Range(0, 2) == 0)
-                    widgets[4] = new PortWidget();
-                else
-                    widgets[4] = new IndicatorWidget(true);
-                break;
+                switch (a)
+                {
+                    case 0:
+                        widgets[a] = new EncryptedIndicatorWidget(true, "BOB");
+                        continue;
+                    case 1:
+                        widgets[a] = new BatteryWidget(true, 4);
+                        continue;
+                    case 2:
+                        widgets[a] = new BatteryWidget(true, 1);
+                        continue;
+                    case 3:
+                        widgets[a] = new BatteryWidget(true, 0);
+                        continue;
+                    default:
+                        var multiWidgets = new Widget[2];
+                        multiWidgets[0] = new IndicatorWidget();
+                        multiWidgets[1] = new TwoFactorWidget();
+                        widgets[a] = new MultipleWidget(_enableTwoFactorMultipleWidgets,_multipleWidgetsTwoFactoryExpiry, multiWidgets);
+                        continue;
+
+
+                        //choices = new List<int> {1, 2};
+                        //break;
+                }
             }
-            int r = Random.Range(0, 3);
-            if (r == 0) widgets[a] = new PortWidget();
-            else if (r == 1) widgets[a] = new IndicatorWidget();
-            else widgets[a] = new BatteryWidget();
+
+            var choice = choices[Random.Range(0, choices.Count)];
+            switch (choice)
+            {
+                case 0:
+                    widgets[a] = new BatteryWidget();
+                    break;
+                case 1:
+                    widgets[a] = new IndicatorWidget();
+                    break;
+                case 2:
+                    widgets[a] = new PortWidget();
+                    break;
+                case 4:
+                    widgets[a] = new TwoFactorWidget();
+                    break;
+                case 5:
+                    widgets[a] = new EncryptedIndicatorWidget();
+                    break;
+                default:
+                    widgets[a] = new MultipleWidget(_enableTwoFactorMultipleWidgets,_multipleWidgetsTwoFactoryExpiry);
+                    break;
+            }
         }
 
         char[] possibleCharArray = new char[35]
@@ -259,6 +528,9 @@ public class FakeBombInfo : MonoBehaviour
             timeLeft -= Time.fixedDeltaTime;
             if (timeLeft < 0) timeLeft = 0;
         }
+
+        foreach (var widget in widgets)
+            widget.Update();
     }
 
     public const int numStrikes = 3;
