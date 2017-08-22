@@ -735,14 +735,21 @@ public class MorseAMaze : MonoBehaviour
 
     }
 
+
+    public string TwitchHelpMessage = "!{0} move up down left right, !{0} move udlr [make a series of status light moves]";
     IEnumerator ProcessTwitchCommand(string command)
     {
-        if (Regex.IsMatch(command,"DEBUG [0-9]+"))
-        {
-            GetMazeSolution(int.Parse(command.Substring(5)));
+        if (!command.StartsWith("move ", StringComparison.InvariantCultureIgnoreCase))
             yield break;
-        }
 
+        yield return null;
+        command = command.Substring(5);
+
+        while (_movements.Count > 0)
+        {
+            yield return "trycancel";
+            yield return new WaitForSeconds(0.1f);
+        }
 
         foreach (Match move in Regex.Matches(command, @"[udlr]", RegexOptions.IgnoreCase))
         {
