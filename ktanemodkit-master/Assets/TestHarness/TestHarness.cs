@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using System.Xml.Serialization;
 using Microsoft.Win32;
 using Newtonsoft.Json;
@@ -13,6 +14,10 @@ using Random = UnityEngine.Random;
 
 public class FakeBombInfo : MonoBehaviour
 {
+    //Bomb Configuration
+    public float timeLeft = (10 * 60f) + 0f;
+    public const int numStrikes = 3;
+
     //Used with code below to force a particular set of widgets to ALWAYS show up in the test harness
     //Useful for testing various rules, including unicorn rules you may have implemented into the module.
     private bool _forceUnicorn = true;
@@ -33,6 +38,7 @@ public class FakeBombInfo : MonoBehaviour
     //Multiple Widgets configuration
     private bool _enableTwoFactorMultipleWidgets = true;
     private int _multipleWidgetsTwoFactoryExpiry = 60;
+    
 
 
     //Write your custom widget testing rules here.
@@ -41,18 +47,17 @@ public class FakeBombInfo : MonoBehaviour
         switch (a)
         {
             case 0:
-                return new EncryptedIndicatorWidget(true, "BOB");
+                return new EncryptedIndicatorWidget(true, "BOB", "Black");
             case 1:
-                return new BatteryWidget(true, 4);
+                return new BatteryWidget(true, 2);
             case 2:
                 return new BatteryWidget(true, 1);
             case 3:
-                return new BatteryWidget(true, 0);
+                return new BatteryWidget(true, 1);
+            case 4:
+                return new TwoFactorWidget(30);
             default:
-                var multiWidgets = new Widget[2];
-                multiWidgets[0] = new IndicatorWidget();
-                multiWidgets[1] = new TwoFactorWidget();
-                return new MultipleWidget(_enableTwoFactorMultipleWidgets, _multipleWidgetsTwoFactoryExpiry, multiWidgets);
+                return GetRandomWidget();
         }
     }
 
@@ -67,12 +72,12 @@ public class FakeBombInfo : MonoBehaviour
     {
         private Widget[] widgets = new Widget[2];
 
-        public MultipleWidget(bool enableTowFactor, int twoFactorExpiry=60, Widget[] unicornWidgets = null)
+        public MultipleWidget(bool enableTowFactor, int twoFactorExpiry=60, Widget widget1=null, Widget widget2=null)
         {
-            if (unicornWidgets != null && unicornWidgets.Length == 2)
+            if (widget1 != null && widget2 != null)
             {
-                Debug.Log("Defining Unicorn multiple widgets");
-                widgets = unicornWidgets;
+                widgets[0] = widget1;
+                widgets[1] = widget2;
                 return;
             }
             Debug.Log("Start of Multiple Widgets");
@@ -455,6 +460,33 @@ public class FakeBombInfo : MonoBehaviour
         }
     }
     #endregion
+    Widget GetRandomWidget()
+    {
+        var choices = new List<int> { 0, 1, 2 };
+        if (MultipleWidgets)
+            choices.Add(3);
+        if (TwoFactor)
+            choices.Add(4);
+        if (EncryptedIndicators)
+            choices.Add(5);
+        var choice = choices[Random.Range(0, choices.Count)];
+        switch (choice)
+        {
+            case 0:
+                return new BatteryWidget();
+            case 1:
+                return new IndicatorWidget();
+            case 2:
+                return new PortWidget();
+            case 4:
+                return new TwoFactorWidget();
+            case 5:
+                return new EncryptedIndicatorWidget();
+            default:
+                return new MultipleWidget(_enableTwoFactorMultipleWidgets, _multipleWidgetsTwoFactoryExpiry);
+        }
+    }
+
     public Widget[] widgets;
 
     private List<string> _customIndicators;
@@ -503,44 +535,10 @@ public class FakeBombInfo : MonoBehaviour
         }
 
         widgets = EnableWidgetExpansion ? new Widget[Random.Range(MinWidgets, MaxWidgets + 1)] : new Widget[5]; 
-        var choices = new List<int> { 0, 1, 2 };
-        if (MultipleWidgets)
-            choices.Add(3);
-        if (TwoFactor)
-            choices.Add(4);
-        if (EncryptedIndicators)
-            choices.Add(5);
-
+        
         for (int a = 0; a < widgets.Length; a++)
         {
-            if (_forceUnicorn)
-            {
-                widgets[a] = GetUnicornWidget(a);
-                continue;
-            }
-
-            var choice = choices[Random.Range(0, choices.Count)];
-            switch (choice)
-            {
-                case 0:
-                    widgets[a] = new BatteryWidget();
-                    break;
-                case 1:
-                    widgets[a] = new IndicatorWidget();
-                    break;
-                case 2:
-                    widgets[a] = new PortWidget();
-                    break;
-                case 4:
-                    widgets[a] = new TwoFactorWidget();
-                    break;
-                case 5:
-                    widgets[a] = new EncryptedIndicatorWidget();
-                    break;
-                default:
-                    widgets[a] = new MultipleWidget(_enableTwoFactorMultipleWidgets,_multipleWidgetsTwoFactoryExpiry);
-                    break;
-            }
+            widgets[a] = _forceUnicorn ? GetUnicornWidget(a) : GetRandomWidget();
         }
 
         char[] possibleCharArray = EnableSerialNumberLettersOY ?
@@ -571,6 +569,7 @@ public class FakeBombInfo : MonoBehaviour
     void FixedUpdate()
     {
         if (solved) return;
+        if (detonated) return;
         if (startupTime > 0)
         {
             startupTime -= Time.fixedDeltaTime;
@@ -589,18 +588,41 @@ public class FakeBombInfo : MonoBehaviour
         }
         else
         {
-            timeLeft -= Time.fixedDeltaTime;
-            if (timeLeft < 0) timeLeft = 0;
+            var multiplier = 1f;
+            switch (strikes)
+            {
+                case 0:
+                    multiplier = 1;
+                    break;
+                case 1:
+                    multiplier = 1.25f;
+                    break;
+                case 2:
+                    multiplier = 1.5f;
+                    break;
+                case 3:
+                    multiplier = 3f;
+                    break;
+                default:
+                    multiplier = 6f;
+                    break;
+            }
+
+            timeLeft -= Time.fixedDeltaTime * multiplier;
+            if (timeLeft < 0)
+            {
+                timeLeft = 0;
+                detonated = true;
+                Debug.Log("KABOOM!!! - Time Ran out");
+            }
         }
 
         foreach (var widget in widgets)
             widget.Update();
     }
 
-    public const int numStrikes = 3;
-
     public bool solved;
-    public float timeLeft = 600f;
+    public bool detonated;
     public int strikes = 0;
     public string serial;
 
@@ -708,6 +730,7 @@ public class FakeBombInfo : MonoBehaviour
         {
             if (Detonate != null) Detonate();
             Debug.Log("KABOOM!");
+            detonated = true;
         }
     }
 
@@ -747,7 +770,7 @@ public class TestHarness : MonoBehaviour
 {
     private FakeBombInfo fakeInfo;
 
-    public GameObject StatusLightPrefab;
+    public StatusLight StatusLightPrefab;
     public GameObject HighlightPrefab;
     public AudioClip StrikeAudio;
     public KMAudio Audio;
@@ -840,9 +863,12 @@ public class TestHarness : MonoBehaviour
             KMBombModule mod = modules[i];
 
             KMStatusLightParent statuslightparent = modules[i].GetComponentInChildren<KMStatusLightParent>();
-            var statuslight = Instantiate(StatusLightPrefab);
+            var statuslight = Instantiate<StatusLight>(StatusLightPrefab);
             statuslight.transform.parent = statuslightparent.transform;
             statuslight.transform.localPosition = Vector3.zero;
+            statuslight.transform.localScale = Vector3.one;
+            statuslight.transform.localRotation = Quaternion.identity;
+            statuslight.SetInActive();
 
             currentSelectable.Children[i] = modules[i].GetComponent<TestSelectable>();
             modules[i].GetComponent<TestSelectable>().Parent = currentSelectable;
@@ -851,20 +877,16 @@ public class TestHarness : MonoBehaviour
             modules[i].OnPass = delegate ()
             {
                 Debug.Log("Module Passed");
-                var meshrenderer = statuslight.GetComponentInChildren<MeshRenderer>();
-                meshrenderer.material.color = Color.green;
-                meshrenderer.material.SetColor("_EmissionColor", new Color(0,0.25f,0));
+                statuslight.SetPass();
 
                 fakeInfo.modules.Remove(fakeInfo.modules.First(t => t.Key.Equals(mod)));
                 fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(mod, true));
-                bool allSolved = true;
+                bool allSolved = !fakeInfo.detonated;
                 foreach (KeyValuePair<KMBombModule, bool> m in fakeInfo.modules)
                 {
-                    if (!m.Value)
-                    {
-                        allSolved = false;
+                    if (!allSolved)
                         break;
-                    }
+                    allSolved &= m.Value;
                 }
                 if (allSolved) fakeInfo.Solved();
                 return false;
@@ -874,7 +896,7 @@ public class TestHarness : MonoBehaviour
             {
                 Debug.Log("Strike");
                 Audio.HandlePlaySoundAtTransform(StrikeAudio.name, transform);
-                StartCoroutine(StatusLightStrike(modules[j]));
+                statuslight.FlashStrike();
                 fakeInfo.HandleStrike();
                 return false;
             };
@@ -921,26 +943,6 @@ public class TestHarness : MonoBehaviour
         {
             kmAudio.HandlePlaySoundAtTransform += PlaySoundHandler;
         }
-    }
-
-    IEnumerator StatusLightStrike(KMBombModule module)
-    {
-        KMStatusLightParent statuslightparent = module.GetComponentInChildren<KMStatusLightParent>();
-        MeshRenderer light = statuslightparent.GetComponentInChildren<MeshRenderer>();
-        
-        light.material.color = Color.red;
-        light.material.SetColor("_EmissionColor", new Color(0.25f, 0, 0));
-        yield return new WaitForSeconds(0.5f);
-
-        foreach (var m in fakeInfo.modules)
-        {
-            if (m.Key != module || !m.Value) continue;
-            light.material.color = Color.green;
-            light.material.SetColor("_EmissionColor", new Color(0, 0.25f, 0));
-            yield break;
-        }
-        light.material.color = Color.white;
-        light.material.SetColor("_EmissionColor", Color.black);
     }
 
     protected void PlaySoundHandler(string clipName, Transform t)
