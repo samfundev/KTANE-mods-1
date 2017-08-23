@@ -21,6 +21,7 @@ GameObject:
   - 4: {fileID: 4000011557292164}
   - 33: {fileID: 33000011889503248}
   - 23: {fileID: 23000013263723074}
+  - 114: {fileID: 114000012290467698}
   m_Layer: 0
   m_Name: Component_LED_PASS
   m_TagString: Untagged
@@ -72,6 +73,7 @@ GameObject:
   - 4: {fileID: 4000013475817154}
   - 33: {fileID: 33000010818722894}
   - 23: {fileID: 23000012846068264}
+  - 114: {fileID: 114000010652505692}
   m_Layer: 0
   m_Name: Component_LED_STRIKE
   m_TagString: Untagged
@@ -171,6 +173,7 @@ GameObject:
   - 4: {fileID: 4000011330244102}
   - 33: {fileID: 33000010870835460}
   - 23: {fileID: 23000012719306336}
+  - 114: {fileID: 114000013796889366}
   m_Layer: 0
   m_Name: Component_LED_OFF
   m_TagString: Untagged
@@ -714,6 +717,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - Legacy Shaders/Diffuse
+--- !u!114 &114000010652505692
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000011133323804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1005838349, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShaderNames:
+  - Legacy Shaders/Transparent/Diffuse
 --- !u!114 &114000010745654140
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -741,6 +757,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - Legacy Shaders/Diffuse
+--- !u!114 &114000012290467698
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000010539307820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1005838349, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShaderNames:
+  - Legacy Shaders/Transparent/Diffuse
 --- !u!114 &114000012787369562
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -754,3 +783,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - Legacy Shaders/Diffuse
+--- !u!114 &114000013796889366
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000013742919266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1005838349, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShaderNames:
+  - Legacy Shaders/Transparent/Diffuse

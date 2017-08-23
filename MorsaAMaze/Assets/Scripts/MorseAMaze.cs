@@ -171,12 +171,8 @@ public class MorseAMaze : MonoBehaviour
         var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
         for (var i = 0; i < (_statusLightMoveFrames * 2); i++)
         {
-            //StatusLightCorner.localPosition = new Vector3(StatusLightCorner.localPosition.x,
-            //    StatusLightCorner.localPosition.y - move, StatusLightCorner.localPosition.z);
             StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y - move,
                 StatusLight.localPosition.z);
-            //_destination.localPosition = new Vector3(_destination.localPosition.x,
-            //    _destination.localPosition.y - move, _destination.localPosition.z);
             yield return null;
         }
 
@@ -186,12 +182,8 @@ public class MorseAMaze : MonoBehaviour
 
         for (var i = 0; i < (_statusLightMoveFrames * 2); i++)
         {
-            //StatusLightCorner.localPosition = new Vector3(StatusLightCorner.localPosition.x,
-            //    StatusLightCorner.localPosition.y + move, StatusLightCorner.localPosition.z);
             StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y + move,
                 StatusLight.localPosition.z);
-            //_destination.localPosition = new Vector3(_destination.localPosition.x,
-            //    _destination.localPosition.y + move, _destination.localPosition.z);
             yield return null;
         }
         FakeStatusLight.HandlePass();
@@ -409,6 +401,20 @@ public class MorseAMaze : MonoBehaviour
         wall.material.color = color;
     }
 
+    bool ProcessMove(Transform wall, Transform newLocation)
+    {
+        if (wall != null)
+        {
+            _movements.Add(GiveStrike(wall, _currentLocation, newLocation));
+            return false;
+        }
+
+        _movements.Add(MoveToLocation(newLocation, _currentLocation));
+        _currentLocation = newLocation;
+        _solved |= GetCoordinates(newLocation) == GetCoordinates(_destination);
+        return true;
+    }
+
     #region buttons
     bool MoveLeft()
     {
@@ -422,18 +428,7 @@ public class MorseAMaze : MonoBehaviour
         var wall = destination + location.parent.name;
         var loc = location.parent.parent.FindChild(destination).FindChild(location.name);
 
-        var wallTransform = CheckVerticalWalls(location.name, wall);
-        if (wallTransform != null)
-        {
-            _movements.Add(GiveStrike(wallTransform, _currentLocation, loc));
-            return false;
-        }
-
-        
-        _movements.Add(MoveToLocation(loc, _currentLocation));
-        _currentLocation = loc;
-        _solved |= GetCoordinates(loc) == GetCoordinates(_destination);
-        return true;
+        return ProcessMove(CheckVerticalWalls(location.name, wall), loc);
     }
 
     bool MoveRight()
@@ -448,18 +443,7 @@ public class MorseAMaze : MonoBehaviour
         var wall = location.parent.name + destination;
         var loc = location.parent.parent.FindChild(destination).FindChild(location.name);
 
-        var wallTransform = CheckVerticalWalls(location.name, wall);
-        if (wallTransform != null)
-        {
-            _movements.Add(GiveStrike(wallTransform, _currentLocation, loc));
-            return false;
-        }
-
-
-        _movements.Add(MoveToLocation(loc, _currentLocation));
-        _currentLocation = loc;
-        _solved |= GetCoordinates(loc) == GetCoordinates(_destination);
-        return true;
+        return ProcessMove(CheckVerticalWalls(location.name, wall), loc);
     }
 
 
@@ -474,18 +458,7 @@ public class MorseAMaze : MonoBehaviour
         var wall = destination + location.name;
         var loc = location.parent.FindChild(destination);
 
-        var wallTransform = CheckHorizontalWall(location.parent.name, wall);
-        if (wallTransform != null)
-        {
-            _movements.Add(GiveStrike(wallTransform, _currentLocation, loc));
-            return false;
-        }
-
-
-        _movements.Add(MoveToLocation(loc, _currentLocation));
-        _currentLocation = loc;
-        _solved |= GetCoordinates(loc) == GetCoordinates(_destination);
-        return true;
+        return ProcessMove(CheckHorizontalWall(location.parent.name, wall), loc);
     }
 
     bool MoveDown()
@@ -499,18 +472,7 @@ public class MorseAMaze : MonoBehaviour
         var wall = location.name + destination;
         var loc = location.parent.FindChild(destination);
 
-        var wallTransform = CheckHorizontalWall(location.parent.name, wall);
-        if (wallTransform != null)
-        {
-            _movements.Add(GiveStrike(wallTransform, _currentLocation, loc));
-            return false;
-        }
-
-
-        _movements.Add(MoveToLocation(loc, _currentLocation));
-        _currentLocation = loc;
-        _solved |= GetCoordinates(loc) == GetCoordinates(_destination);
-        return true;
+        return ProcessMove(CheckHorizontalWall(location.parent.name, wall), loc);
     }
     #endregion
 
@@ -522,9 +484,10 @@ public class MorseAMaze : MonoBehaviour
         Left.OnInteract += delegate { MoveLeft(); return false; };
         Right.OnInteract += delegate { MoveRight(); return false; };
 
-        _unicorn = info.IsIndicatorOff("BOB") && info.GetBatteryHolderCount(2) == 1 && info.GetBatteryHolderCount(1) == 2;
-
         _rule = Random.Range(0, _morseCodeWords.Length);
+        _unicorn = info.IsIndicatorOff("BOB") && info.GetBatteryHolderCount(2) == 1 && info.GetBatteryHolderCount(1) == 2;
+        StartCoroutine(!_unicorn ? PlayWordLocation(_morseCodeWords[_rule]) : PlayWordLocation("Thank you BOB"));
+
 
         switch (_edgeworkRules[_rule])
         {
@@ -589,15 +552,6 @@ public class MorseAMaze : MonoBehaviour
                 GetMazeSolution(_rule);
                 break;
         }
-
-        module.LogFormat("Starting Location: {0}{1} - Destination Location: {2}{3}", _currentLocation.parent.name,
-            _currentLocation.name, _destination.parent.name, _destination.name);
-        module.LogFormat("Playing Morse code word: {0}", _morseCodeWords[_rule]);
-        module.LogFormat("Rule used to Look up the Maze = {0}", _edgeworkRules[_rule]);
-        if(_unicorn)
-            module.LogFormat("Bob came and painted all of the walls, making them visible.");
-
-        StartCoroutine(!_unicorn ? PlayWordLocation(_morseCodeWords[_rule]) : PlayWordLocation("Thank you BOB"));
     }
     #endregion
 
@@ -687,9 +641,32 @@ public class MorseAMaze : MonoBehaviour
                 sb.Append(", " + move);
             }
         } while (_firstGeneration && (moveLength < 3 || directions.Count < 2) && (locationNumber < Locations.Length));
-        _firstGeneration = false;
-        if(success)
-            module.LogFormat("Maze Solution from {0} to {1} in maze {2} is: {3}",GetCoordinates(_currentLocation), GetCoordinates(_destination), maze+1, sb);
+        if (!success) return;
+
+        if (_firstGeneration)
+        {
+            module.LogFormat("Starting Location: {0}{1} - Destination Location: {2}{3}", _currentLocation.parent.name,
+                _currentLocation.name, _destination.parent.name, _destination.name);
+            module.LogFormat("Rule used to Look up the Maze = {0}", _edgeworkRules[_rule]);
+
+            if (_unicorn)
+            {
+                module.LogFormat("Playing Morse code word: \"Thank you BOB\"");
+                module.LogFormat("Bob came and painted all of the walls, making them visible.");
+            }
+            else
+            {
+                module.LogFormat("Playing Morse code word: \"{0}\"", _morseCodeWords[_rule]);
+            }
+
+            _firstGeneration = false;
+        }
+        else
+        {
+            module.LogFormat("Updating the maze for rule {0}",_edgeworkRules[_rule]);
+        }
+        module.LogFormat("Maze Solution from {0} to {1} in maze \"{2} - {3}\" is: {4}", GetCoordinates(_currentLocation),
+            GetCoordinates(_destination), maze, _morseCodeWords[maze], sb);
     }
 
     #endregion
@@ -753,42 +730,35 @@ public class MorseAMaze : MonoBehaviour
 
         foreach (Match move in Regex.Matches(command, @"[udlr]", RegexOptions.IgnoreCase))
         {
+            bool safe;
+            switch (move.Value.ToLowerInvariant())
+            {
+                case "u":
+                    safe = MoveUp();
+                    break;
+                case "d":
+                    safe = MoveDown();
+                    break;
+                case "l":
+                    safe = MoveLeft();
+                    break;
+                case "r":
+                    safe = MoveRight();
+                    break;
+                default:
+                    continue;
+            }
+            if (!safe)
+            {
+                yield return "strike";
+                yield break;
+            }
             if (_solved)
             {
                 yield return "solve";
                 yield break;
             }
-            switch (move.Value.ToLowerInvariant())
-            {
-                case "u":
-                    if (!MoveUp())
-                    {
-                        yield return "strike";
-                        yield break;
-                    }
-                    break;
-                case "d":
-                    if (!MoveDown())
-                    {
-                        yield return "strike";
-                        yield break;
-                    }
-                    break;
-                case "l":
-                    if (!MoveLeft())
-                    {
-                        yield return "strike";
-                        yield break;
-                    }
-                    break;
-                case "r":
-                    if (!MoveRight())
-                    {
-                        yield return "strike";
-                        yield break;
-                    }
-                    break;
-            }
+            yield return "trycancel";
             yield return new WaitForSeconds(0.1f);
         }
     }

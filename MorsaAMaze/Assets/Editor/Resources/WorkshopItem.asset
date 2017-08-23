@@ -18,6 +18,12 @@ MonoBehaviour:
     it to the exit so that it can return to the upper right corner of the module.
 
 
+    Module ID is "MorseAMaze"
+
+
+    Twitch plays is supported.
+
+
     [url=https://drive.google.com/file/d/0BzdipTil_z3ATlZEd01XeUZHXzQ/view?usp=sharing]PDF
     Manual[/url]'
   PreviewImage: {fileID: 2800000, guid: cd4adcd895819624883d026cbad62568, type: 3}
