@@ -20,7 +20,7 @@ public class FakeBombInfo : MonoBehaviour
 
     //Used with code below to force a particular set of widgets to ALWAYS show up in the test harness
     //Useful for testing various rules, including unicorn rules you may have implemented into the module.
-    private bool _forceUnicorn = true;
+    private bool _forceUnicorn = false;
 
     //Modded Widgets
     private bool TwoFactor = false;
