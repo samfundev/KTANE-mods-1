@@ -493,7 +493,7 @@ public class MorseAMaze : MonoBehaviour
                 GetMazeSolution(BombInfo.GetOnIndicators().Count());
                 break;
             case EdgeworkRules.UnlitIndicators:
-                GetMazeSolution(BombInfo.GetOnIndicators().Count());
+                GetMazeSolution(BombInfo.GetOffIndicators().Count());
                 break;
             case EdgeworkRules.TotalIndicators:
                 GetMazeSolution(BombInfo.GetIndicators().Count());
