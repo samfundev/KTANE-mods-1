@@ -10353,7 +10353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ModuleType: MorseAMaze
-  ModuleDisplayName: Morse AMaze
+  ModuleDisplayName: Morse-A-Maze
   RequiresTimerVisibility: 0
 --- !u!114 &114000011243209812
 MonoBehaviour:
@@ -10439,9 +10439,10 @@ MonoBehaviour:
   Right: {fileID: 114000010132385154}
   Up: {fileID: 114000010035116612}
   Down: {fileID: 114000012476875352}
-  module: {fileID: 114000011239076824}
-  info: {fileID: 114000011369427668}
-  audio: {fileID: 114000010381780190}
+  BombModule: {fileID: 114000011239076824}
+  BombInfo: {fileID: 114000011369427668}
+  Audio: {fileID: 114000010381780190}
+  TwitchManualCode: Morse-A-Maze
   TwitchHelpMessage: '!{0} move up down left right, !{0} move udlr [make a series
     of status light moves]'
 --- !u!114 &114000011353193498

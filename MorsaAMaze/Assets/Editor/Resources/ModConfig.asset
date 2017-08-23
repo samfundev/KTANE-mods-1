@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Name: ModConfig
   m_EditorClassIdentifier: 
   id: MorseAMaze
-  title: Morse AMaze
-  version: v1.0.0
+  title: Morse-A-Maze
+  version: v1.0.2
   outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods

@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Serialization;
 using Random = UnityEngine.Random;
 
+// ReSharper disable once CheckNamespace
 public class MorseAMaze : MonoBehaviour
 {
     public FakeStatusLight FakeStatusLight;
@@ -24,17 +24,17 @@ public class MorseAMaze : MonoBehaviour
     public KMSelectable Up;
     public KMSelectable Down;
 
-    public KMBombModule module;
-    public KMBombInfo info;
-    public KMAudio audio;
+    public KMBombModule BombModule;
+    public KMBombInfo BombInfo;
+    public KMAudio Audio;
 
     private Transform _currentLocation;
     private Transform _destination;
 
-    private List<IEnumerator> _movements = new List<IEnumerator>();
+    private readonly List<IEnumerator> _movements = new List<IEnumerator>();
     private bool _solved;
 
-    readonly string[,,] _mazes =
+    private readonly string[,,] _mazes =
     {
         {{"rd","lr","ld","rd","lr","l"},{"ud","rd","ul","ur","lr","ld"},{"ud","ur","ld","rd","lr","uld"},{"ud","r","ulr","lu","r","uld"},{"urd","lr","ld","rd","l","ud"},{"ur","l","ur","ul","r","ul"}},
         {{"r","lrd","l","rd","lrd","l"},{"rd","ul","rd","ul","ur","ld"},{"ud","rd","ul","rd","lr","uld"},{"urd","ul","rd","ul","d","ud"},{"ud","d","ud","rd","ul","ud"},{"u","ur","ul","ur","lr","lu"}},
@@ -80,7 +80,7 @@ public class MorseAMaze : MonoBehaviour
     }
 
     private int _rule;
-    private string[] _morseCodeWords =
+    private readonly string[] _morseCodeWords =
     {
         //No Edgework
         "kaboom","unicorn","quebec","bashly","slick","vector","flick","timwi","strobe",
@@ -95,7 +95,7 @@ public class MorseAMaze : MonoBehaviour
         "manual","zulu","november"
     };
 
-    private EdgeworkRules[] _edgeworkRules =
+    private readonly EdgeworkRules[] _edgeworkRules =
     {
         EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None,
         EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None, EdgeworkRules.None,
@@ -111,9 +111,10 @@ public class MorseAMaze : MonoBehaviour
 
 
     // Use this for initialization
-    void Start ()
+    // ReSharper disable once UnusedMember.Local
+    private void Start ()
     {
-        module.GenerateLogFriendlyName();
+        BombModule.GenerateLogFriendlyName();
 	    Locations.Shuffle();
         SetMaze(0); //Hide the walls now.
 	    
@@ -122,31 +123,25 @@ public class MorseAMaze : MonoBehaviour
         StartCoroutine(MoveStatusLightToStart());
 
 
-        module.OnActivate += Activate;
+        BombModule.OnActivate += Activate;
 	    FakeStatusLight = Instantiate(FakeStatusLight);
 
 	    StartCoroutine(GetStatusLight());
 	}
 
     private Vector3 _originalStatusLightLocation;
-    private Vector3 _originalStatusLightCornerLocation;
     private float _statusLightMoveFrames;
-    IEnumerator MoveStatusLightToStart()
+    private IEnumerator MoveStatusLightToStart()
     {
         yield return null; yield return null; yield return null;
 
-        _originalStatusLightCornerLocation = StatusLightCorner.localPosition;
         _originalStatusLightLocation = StatusLight.localPosition;
         _statusLightMoveFrames = 1f / Time.deltaTime;
         var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
         for (var i = 0; i < (_statusLightMoveFrames*2); i++)
         {
-            //StatusLightCorner.localPosition = new Vector3(StatusLightCorner.localPosition.x,
-            //    StatusLightCorner.localPosition.y - move, StatusLightCorner.localPosition.z);
             StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y - move,
                 StatusLight.localPosition.z);
-            //_currentLocation.localPosition = new Vector3(_currentLocation.localPosition.x,
-            //    _currentLocation.localPosition.y - move, _currentLocation.localPosition.z);
             yield return null;
         }
 
@@ -156,17 +151,13 @@ public class MorseAMaze : MonoBehaviour
 
         for (var i = 0; i < (_statusLightMoveFrames * 2); i++)
         {
-            //StatusLightCorner.localPosition = new Vector3(StatusLightCorner.localPosition.x,
-            //    StatusLightCorner.localPosition.y + move, StatusLightCorner.localPosition.z);
             StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y + move,
                 StatusLight.localPosition.z);
-            //_currentLocation.localPosition = new Vector3(_currentLocation.localPosition.x,
-            //    _currentLocation.localPosition.y + move, _currentLocation.localPosition.z);
             yield return null;
         }
     }
 
-    IEnumerator MoveStatusLightToCorner()
+    private IEnumerator MoveStatusLightToCorner()
     {
         var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
         for (var i = 0; i < (_statusLightMoveFrames * 2); i++)
@@ -190,7 +181,7 @@ public class MorseAMaze : MonoBehaviour
     }
 
 
-    IEnumerator GetStatusLight()
+    private IEnumerator GetStatusLight()
     {
         FakeStatusLight.SetInActive();
         yield return null;
@@ -208,11 +199,11 @@ public class MorseAMaze : MonoBehaviour
         if (fail != null)
             FakeStatusLight.StrikeLight = fail.gameObject;
 
-        if (module != null)
-            FakeStatusLight.Module = module;
+        if (BombModule != null)
+            FakeStatusLight.Module = BombModule;
     }
 
-    void SetWall(int x, int y, bool right, bool active)
+    private void SetWall(int x, int y, bool right, bool active)
     {
         var letter = "ABCDEF".Substring(x, 1);
         var letters = letter + "BCDEFG".Substring(x, 1);
@@ -235,7 +226,7 @@ public class MorseAMaze : MonoBehaviour
         }
     }
 
-    void SetMaze(int maze)
+    private void SetMaze(int maze)
     {
         maze %= 18;
         for (var x = 0; x < 6; x++)
@@ -249,7 +240,7 @@ public class MorseAMaze : MonoBehaviour
     }
 
 
-    Transform CheckHorizontalWall(string x, string y)
+    private Transform CheckHorizontalWall(string x, string y)
     {
         var hwall = HorizontalWalls.FindChild(x);
         var wall = hwall.FindChild(y);
@@ -257,7 +248,7 @@ public class MorseAMaze : MonoBehaviour
         return wall.gameObject.activeSelf ? wall : null;
     }
 
-    Transform CheckVerticalWalls(string x, string y)
+    private Transform CheckVerticalWalls(string x, string y)
     {
         var hwall = VerticalWalls.FindChild(x);
         var wall = hwall.FindChild(y);
@@ -265,14 +256,14 @@ public class MorseAMaze : MonoBehaviour
         return wall.gameObject.activeSelf ? wall : null;
     }
 
-    string GetCoordinates(Transform location)
+    private static string GetCoordinates(Transform location)
     {
         return location.parent.name + location.name;
     }
 
-    IEnumerator GiveStrike(Transform wall, Transform from, Transform to)
+    private IEnumerator GiveStrike(Transform wall, Transform from, Transform to)
     {
-        module.LogFormat("Tried to move from {0} to {1}, but there was a wall in the way. Strike", GetCoordinates(from),
+        BombModule.LogFormat("Tried to move from {0} to {1}, but there was a wall in the way. Strike", GetCoordinates(from),
             GetCoordinates(to));
         FakeStatusLight.HandleStrike();
         if (_edgeworkRules[_rule] == EdgeworkRules.Strikes)
@@ -286,10 +277,11 @@ public class MorseAMaze : MonoBehaviour
     }
 
     private bool _moving;
-    IEnumerator MoveToLocation(Transform location, Transform from)
+
+    private IEnumerator MoveToLocation(Transform location, Transform from)
     {
         //yield return null;
-        module.LogFormat("Moving from {0} to {1}", GetCoordinates(from), GetCoordinates(location));
+        BombModule.LogFormat("Moving from {0} to {1}", GetCoordinates(from), GetCoordinates(location));
         var lx = location.parent.localPosition.x;
         var ly = location.localPosition.z;
         var sx = StatusLight.localPosition.x;
@@ -345,7 +337,7 @@ public class MorseAMaze : MonoBehaviour
         } while (notEqualX || notEqualY);
         if (location == _destination)
         {
-            module.LogFormat("Solved - Turning off the Status light Kappa");
+            BombModule.LogFormat("Solved - Turning off the Status light Kappa");
             StartCoroutine(MoveStatusLightToCorner());
             yield return null;
         }
@@ -353,8 +345,7 @@ public class MorseAMaze : MonoBehaviour
     }
 
 
-
-    IEnumerator ShowWall(MeshRenderer wall)
+    private static IEnumerator ShowWall(MeshRenderer wall)
     {
         if(wall == null)
             yield break;
@@ -379,7 +370,8 @@ public class MorseAMaze : MonoBehaviour
     }
 
     private bool _unicorn;
-    IEnumerator HideWall(MeshRenderer wall)
+
+    private IEnumerator HideWall(MeshRenderer wall)
     {
         if (wall == null)
             yield break;
@@ -401,7 +393,7 @@ public class MorseAMaze : MonoBehaviour
         wall.material.color = color;
     }
 
-    bool ProcessMove(Transform wall, Transform newLocation)
+    private bool ProcessMove(Transform wall, Transform newLocation)
     {
         if (wall != null)
         {
@@ -416,30 +408,30 @@ public class MorseAMaze : MonoBehaviour
     }
 
     #region buttons
-    bool MoveLeft()
+    private bool MoveLeft()
     {
-        audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, module.transform);
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
         if (_solved) return true;
-        var X = "ABCDEF";
+        const string x = "ABCDEF";
         var location = _currentLocation;
         if (location.parent.name == "A")
             return true;
-        var destination = X.Substring(X.IndexOf(location.parent.name, StringComparison.Ordinal) - 1, 1);
+        var destination = x.Substring(x.IndexOf(location.parent.name, StringComparison.Ordinal) - 1, 1);
         var wall = destination + location.parent.name;
         var loc = location.parent.parent.FindChild(destination).FindChild(location.name);
 
         return ProcessMove(CheckVerticalWalls(location.name, wall), loc);
     }
 
-    bool MoveRight()
+    private bool MoveRight()
     {
-        audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, module.transform);
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
         if (_solved) return true;
-        var X = "ABCDEF";
+        const string x = "ABCDEF";
         var location = _currentLocation;
         if (location.parent.name == "F")
             return true;
-        var destination = X.Substring(X.IndexOf(location.parent.name, StringComparison.Ordinal) + 1, 1);
+        var destination = x.Substring(x.IndexOf(location.parent.name, StringComparison.Ordinal) + 1, 1);
         var wall = location.parent.name + destination;
         var loc = location.parent.parent.FindChild(destination).FindChild(location.name);
 
@@ -447,9 +439,9 @@ public class MorseAMaze : MonoBehaviour
     }
 
 
-    bool MoveUp()
+    private bool MoveUp()
     {
-        audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, module.transform);
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
         if (_solved) return true;
         var location = _currentLocation;
         if (location.name == "1")
@@ -461,9 +453,9 @@ public class MorseAMaze : MonoBehaviour
         return ProcessMove(CheckHorizontalWall(location.parent.name, wall), loc);
     }
 
-    bool MoveDown()
+    private bool MoveDown()
     {
-        audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, module.transform);
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
         if (_solved) return true;
         var location = _currentLocation;
         if (location.name == "6")
@@ -477,7 +469,7 @@ public class MorseAMaze : MonoBehaviour
     #endregion
 
     #region Activate()
-    void Activate()
+    private void Activate()
     {
         Up.OnInteract += delegate { MoveUp(); return false; };
         Down.OnInteract += delegate { MoveDown(); return false; };
@@ -485,68 +477,69 @@ public class MorseAMaze : MonoBehaviour
         Right.OnInteract += delegate { MoveRight(); return false; };
 
         _rule = Random.Range(0, _morseCodeWords.Length);
-        _unicorn = info.IsIndicatorOff("BOB") && info.GetBatteryHolderCount(2) == 1 && info.GetBatteryHolderCount(1) == 2;
+        _unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2;
         StartCoroutine(!_unicorn ? PlayWordLocation(_morseCodeWords[_rule]) : PlayWordLocation("Thank you BOB"));
 
 
         switch (_edgeworkRules[_rule])
         {
             case EdgeworkRules.Batteries:
-                GetMazeSolution(info.GetBatteryCount());
+                GetMazeSolution(BombInfo.GetBatteryCount());
                 break;
             case EdgeworkRules.BatteryHolders:
-                GetMazeSolution(info.GetBatteryHolderCount());
+                GetMazeSolution(BombInfo.GetBatteryHolderCount());
                 break;
             case EdgeworkRules.LitIndicators:
-                GetMazeSolution(info.GetOnIndicators().Count());
+                GetMazeSolution(BombInfo.GetOnIndicators().Count());
                 break;
             case EdgeworkRules.UnlitIndicators:
-                GetMazeSolution(info.GetOnIndicators().Count());
+                GetMazeSolution(BombInfo.GetOnIndicators().Count());
                 break;
             case EdgeworkRules.TotalIndicators:
-                GetMazeSolution(info.GetIndicators().Count());
+                GetMazeSolution(BombInfo.GetIndicators().Count());
                 break;
             case EdgeworkRules.TotalPorts:
-                GetMazeSolution(info.GetPortCount());
+                GetMazeSolution(BombInfo.GetPortCount());
                 break;
             case EdgeworkRules.UniquePorts:
-                GetMazeSolution(info.CountUniquePorts());
+                GetMazeSolution(BombInfo.CountUniquePorts());
                 break;
             case EdgeworkRules.SerialLastDigit:
-                GetMazeSolution(int.Parse(info.GetSerialNumber().Substring(5, 1)));
+                GetMazeSolution(int.Parse(BombInfo.GetSerialNumber().Substring(5, 1)));
                 break;
             case EdgeworkRules.SerialSum:
-                GetMazeSolution(info.GetSerialNumberNumbers().Sum());
+                GetMazeSolution(BombInfo.GetSerialNumberNumbers().Sum());
                 break;
             case EdgeworkRules.PortPlates:
-                GetMazeSolution(info.GetPortPlateCount());
+                GetMazeSolution(BombInfo.GetPortPlateCount());
                 break;
             case EdgeworkRules.SolveCount:
-                _lastSolved = info.GetSolvedModuleNames().Count;
+                _lastSolved = BombInfo.GetSolvedModuleNames().Count;
                 GetMazeSolution(_lastSolved);
                 break;
             case EdgeworkRules.TwoFactor:
                 SetTwoFactor();
                 break;
             case EdgeworkRules.Strikes:
-                _lastStrikes = info.GetStrikes();
+                _lastStrikes = BombInfo.GetStrikes();
                 GetMazeSolution(_lastStrikes);
                 break;
             case EdgeworkRules.DayOfWeek:
                 GetMazeSolution((int) DateTime.Now.DayOfWeek);
                 break;
             case EdgeworkRules.EmptyPortPlates:
-                GetMazeSolution(info.GetPortPlates().Count(plate => plate.Length == 0));
+                GetMazeSolution(BombInfo.GetPortPlates().Count(plate => plate.Length == 0));
                 break;
             case EdgeworkRules.FirstSerialDigit:
-                GetMazeSolution(info.GetSerialNumberNumbers().ToArray()[0]);
+                GetMazeSolution(BombInfo.GetSerialNumberNumbers().ToArray()[0]);
                 break;
             case EdgeworkRules.SerialNumberLetter:
-                GetMazeSolution("ABCDEFGHIJKLMNOPQRSTUVWXYZ".IndexOf(info.GetSerialNumberLetters().ToArray()[0]));
+                GetMazeSolution("ABCDEFGHIJKLMNOPQRSTUVWXYZ".IndexOf(BombInfo.GetSerialNumberLetters().ToArray()[0]));
                 break;
             case EdgeworkRules.StartingTime:
-                GetMazeSolution((int)(info.GetTime() / 60));
+                GetMazeSolution((int)(BombInfo.GetTime() / 60));
                 break;
+            // ReSharper disable once RedundantCaseLabel
             case EdgeworkRules.None:
             default:
                 GetMazeSolution(_rule);
@@ -556,7 +549,7 @@ public class MorseAMaze : MonoBehaviour
     #endregion
 
     #region Solution Generator
-    private int GetXYfromLocation(Transform location)
+    private static int GetXYfromLocation(Transform location)
     {
         var ones = "ABCDEF".IndexOf(location.parent.name, StringComparison.Ordinal);
         var tens = "123456".IndexOf(location.name, StringComparison.Ordinal);
@@ -602,7 +595,7 @@ public class MorseAMaze : MonoBehaviour
 
 
     private bool _firstGeneration = true;
-    void GetMazeSolution(int maze)
+    private void GetMazeSolution(int maze)
     {
         maze %= 18;
         SetMaze(maze);
@@ -611,7 +604,7 @@ public class MorseAMaze : MonoBehaviour
         var directions = new List<string>();
         StringBuilder sb;
         int moveLength;
-        int locationNumber = 1;
+        var locationNumber = 1;
         bool success;
         do
         {
@@ -625,7 +618,7 @@ public class MorseAMaze : MonoBehaviour
             moveLength = _mazeStack.Count;
             if (!success)
             {
-                module.LogFormat("Failed to Generate the maze solution for going from {0} to {1} in maze {2}",
+                BombModule.LogFormat("Failed to Generate the maze solution for going from {0} to {1} in maze {2}",
                     GetCoordinates(_currentLocation), GetCoordinates(_destination), maze + 1);
                 continue;
             }
@@ -645,51 +638,50 @@ public class MorseAMaze : MonoBehaviour
 
         if (_firstGeneration)
         {
-            module.LogFormat("Starting Location: {0}{1} - Destination Location: {2}{3}", _currentLocation.parent.name,
+            BombModule.LogFormat("Starting Location: {0}{1} - Destination Location: {2}{3}", _currentLocation.parent.name,
                 _currentLocation.name, _destination.parent.name, _destination.name);
-            module.LogFormat("Rule used to Look up the Maze = {0}", _edgeworkRules[_rule]);
+            BombModule.LogFormat("Rule used to Look up the Maze = {0}", _edgeworkRules[_rule]);
 
             if (_unicorn)
             {
-                module.LogFormat("Playing Morse code word: \"Thank you BOB\"");
-                module.LogFormat("Bob came and painted all of the walls, making them visible.");
+                BombModule.LogFormat("Playing Morse code word: \"Thank you BOB\"");
+                BombModule.LogFormat("Bob came and painted all of the walls, making them visible.");
             }
             else
             {
-                module.LogFormat("Playing Morse code word: \"{0}\"", _morseCodeWords[_rule]);
+                BombModule.LogFormat("Playing Morse code word: \"{0}\"", _morseCodeWords[_rule]);
             }
 
             _firstGeneration = false;
         }
         else
         {
-            module.LogFormat("Updating the maze for rule {0}",_edgeworkRules[_rule]);
+            BombModule.LogFormat("Updating the maze for rule {0}",_edgeworkRules[_rule]);
         }
-        module.LogFormat("Maze Solution from {0} to {1} in maze \"{2} - {3}\" is: {4}", GetCoordinates(_currentLocation),
+        BombModule.LogFormat("Maze Solution from {0} to {1} in maze \"{2} - {3}\" is: {4}", GetCoordinates(_currentLocation),
             GetCoordinates(_destination), maze, _morseCodeWords[maze], sb);
     }
-
     #endregion
 
     private int _lastStrikes = -1;
     private int _lastSolved = -1;
     private int _lastTwoFactorSum = -1;
-    void SetTwoFactor()
+    private void SetTwoFactor()
     {
-        if (info.GetTwoFactorCounts() == 0)
+        if (BombInfo.GetTwoFactorCounts() == 0)
         {
-            _lastSolved = info.GetSolvedModuleNames().Count;
-            GetMazeSolution(info.GetSolvableModuleNames().Count - _lastSolved);
+            _lastSolved = BombInfo.GetSolvedModuleNames().Count;
+            GetMazeSolution(BombInfo.GetSolvableModuleNames().Count - _lastSolved);
         }
         else
         {
-            var sum = info.GetTwoFactorCodes().Select(twofactor => twofactor / 10).Select(code => code % 10).Sum();
+            var sum = BombInfo.GetTwoFactorCodes().Select(twofactor => twofactor / 10).Select(code => code % 10).Sum();
             GetMazeSolution(sum);
             _lastTwoFactorSum = sum;
         }
     }
 
-    IEnumerator PlayWordLocation(string word)
+    private IEnumerator PlayWordLocation(string word)
     {
         while (!_solved)
         {
@@ -712,9 +704,10 @@ public class MorseAMaze : MonoBehaviour
 
     }
 
-
+    #region TwitchPlays
+    public string TwitchManualCode = "Morse-A-Maze";
     public string TwitchHelpMessage = "!{0} move up down left right, !{0} move udlr [make a series of status light moves]";
-    IEnumerator ProcessTwitchCommand(string command)
+    public IEnumerator ProcessTwitchCommand(string command)
     {
         if (!command.StartsWith("move ", StringComparison.InvariantCultureIgnoreCase))
             yield break;
@@ -762,10 +755,11 @@ public class MorseAMaze : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
     }
+    #endregion
 
 
-    // Update is called once per frame
-	void Update ()
+    // ReSharper disable once UnusedMember.Local
+    private void Update ()
 	{
 	    if (_moving) return;
 
@@ -780,36 +774,37 @@ public class MorseAMaze : MonoBehaviour
 	    if (_solved) return;
         
         
+	    // ReSharper disable once SwitchStatementMissingSomeCases
 	    switch (_edgeworkRules[_rule])
 	    {
 	        case EdgeworkRules.SolveCount:
-	            if (_lastSolved != info.GetSolvedModuleNames().Count)
+	            if (_lastSolved != BombInfo.GetSolvedModuleNames().Count)
 	            {
-	                _lastSolved = info.GetSolvedModuleNames().Count;
+	                _lastSolved = BombInfo.GetSolvedModuleNames().Count;
 	                GetMazeSolution(_lastSolved);
-	                module.LogFormat("Maze updated for {0} modules Solved", _lastSolved);
+	                BombModule.LogFormat("Maze updated for {0} modules Solved", _lastSolved);
 
 	            }
 	            break;
 	        case EdgeworkRules.TwoFactor:
-	            if (_lastSolved != -1 && _lastSolved != info.GetSolvedModuleNames().Count)
+	            if (_lastSolved != -1 && _lastSolved != BombInfo.GetSolvedModuleNames().Count)
 	            {
 	                SetTwoFactor();
-	                module.LogFormat("Maze updated for {0} modules Unsolved", info.GetSolvableModuleNames().Count - _lastSolved);
+	                BombModule.LogFormat("Maze updated for {0} modules Unsolved", BombInfo.GetSolvableModuleNames().Count - _lastSolved);
 	            }
 	            if (_lastTwoFactorSum != -1 && _lastTwoFactorSum !=
-	                info.GetTwoFactorCodes().Select(twofactor => twofactor / 10).Select(code => code % 10).Sum())
+	                BombInfo.GetTwoFactorCodes().Select(twofactor => twofactor / 10).Select(code => code % 10).Sum())
 	            {
 	                SetTwoFactor();
-	                module.LogFormat("Maze updated for Two Factor 2nd least significant digit sum of {0}", _lastTwoFactorSum);
+	                BombModule.LogFormat("Maze updated for Two Factor 2nd least significant digit sum of {0}", _lastTwoFactorSum);
 	            }
 	            break;
             case EdgeworkRules.Strikes:
-                if (info.GetStrikes() != _lastStrikes)
+                if (BombInfo.GetStrikes() != _lastStrikes)
                 {
-                    _lastStrikes = info.GetStrikes();
+                    _lastStrikes = BombInfo.GetStrikes();
                     GetMazeSolution(_lastStrikes);
-                    module.LogFormat("Maze updated for {0} strikes", _lastStrikes);
+                    BombModule.LogFormat("Maze updated for {0} strikes", _lastStrikes);
                 }
                 break;
 	    }
