@@ -86,25 +86,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TimeLeft: 600
-  NumStrikes: 3
-  ForceUnicorn: 0
-  TwoFactor: 0
-  EncryptedIndicators: 0
-  MultipleWidgets: 0
-  EnableSerialNumberLettersOY: 0
-  EnableCustomIndicators: 0
-  MinCustomIndicators: 1
-  EnableWidgetExpansion: 0
-  MinWidgets: 5
-  MaxWidgets: 7
-  EnableTwoFactorMultipleWidgets: 1
-  MultipleWidgetsTwoFactoryExpiry: 60
-  widgets: []
+  NumStrikes: 10
+  ModdedWidgets:
+    TwoFactor: 0
+    EncryptedIndicators: 0
+    MultipleWidgets: 1
+  widgetExpander:
+    EnableSerialNumberLettersOY: 0
+    EnableCustomIndicators: 0
+    MinCustomIndicators: 1
+    EnableWidgetExpansion: 0
+    MinWidgets: 5
+    MaxWidgets: 7
+  mulpleWidgetConfiguration:
+    EnableTwoFactorMultipleWidgets: 1
+    MultipleWidgetsTwoFactoryExpiry: 60
   solved: 0
   detonated: 0
   strikes: 0
   serial: 
   needyModules: []
+  kmWidgets: []
+  widgets: []
 --- !u!114 &114000013674786028
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -98,8 +98,12 @@ public class TestHarness : MonoBehaviour
 
         KMBombModule[] modules = FindObjectsOfType<KMBombModule>();
         KMNeedyModule[] needyModules = FindObjectsOfType<KMNeedyModule>();
+        KMWidget[] widgets = FindObjectsOfType<KMWidget>();
         FakeInfo.needyModules = needyModules.ToList();
         currentSelectable.Children = new TestSelectable[modules.Length + needyModules.Length];
+
+        FakeInfo.kmWidgets.AddRange(widgets);
+
         for (int i = 0; i < modules.Length; i++)
         {
             KMBombModule mod = modules[i];
