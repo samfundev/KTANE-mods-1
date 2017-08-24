@@ -426,24 +426,28 @@ public class TestHarness : MonoBehaviour
     string command = "";
     void OnGUI()
     {
-        if (GUILayout.Button("Activate Needy Modules"))
+        var needyModules = GameObject.FindObjectsOfType<KMNeedyModule>();
+        if (needyModules.Length > 0)
         {
-            foreach (KMNeedyModule needyModule in GameObject.FindObjectsOfType<KMNeedyModule>())
+            if (GUILayout.Button("Activate Needy Modules"))
             {
-                if (needyModule.OnNeedyActivation != null)
+                foreach (KMNeedyModule needyModule in needyModules)
                 {
-                    needyModule.OnNeedyActivation();
+                    if (needyModule.OnNeedyActivation != null)
+                    {
+                        needyModule.OnNeedyActivation();
+                    }
                 }
             }
-        }
 
-        if (GUILayout.Button("Deactivate Needy Modules"))
-        {
-            foreach (KMNeedyModule needyModule in GameObject.FindObjectsOfType<KMNeedyModule>())
+            if (GUILayout.Button("Deactivate Needy Modules"))
             {
-                if (needyModule.OnNeedyDeactivation != null)
+                foreach (KMNeedyModule needyModule in needyModules)
                 {
-                    needyModule.OnNeedyDeactivation();
+                    if (needyModule.OnNeedyDeactivation != null)
+                    {
+                        needyModule.OnNeedyDeactivation();
+                    }
                 }
             }
         }
@@ -480,6 +484,21 @@ public class TestHarness : MonoBehaviour
                     if (method != null)
                     {
                         StartCoroutine(SimulateModule(component, module.transform, method, command));
+                    }
+                }
+            }
+
+            foreach (KMNeedyModule needyModule in needyModules)
+            {
+                Component[] allComponents = needyModule.gameObject.GetComponentsInChildren<Component>(true);
+                foreach (Component component in allComponents)
+                {
+                    System.Type type = component.GetType();
+                    MethodInfo method = type.GetMethod("ProcessTwitchCommand", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                    if (method != null)
+                    {
+                        StartCoroutine(SimulateModule(component, needyModule.transform, method, command));
                     }
                 }
             }

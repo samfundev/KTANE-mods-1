@@ -13,48 +13,45 @@ public class FakeBombInfo : MonoBehaviour
     public int NumStrikes = 3;
 
     [Serializable]
-    public class ModdedWidgetConfiguration
+    public static class ModdedWidgetConfiguration
     {
-        public bool TwoFactor = false;
-        public bool EncryptedIndicators = false;
-        public bool MultipleWidgets = true;
+        public static bool TwoFactor = false;
+        public static bool EncryptedIndicators = false;
+        public static bool MultipleWidgets = true;
     }
-    public ModdedWidgetConfiguration ModdedWidgets = new ModdedWidgetConfiguration();
 
     //WidgetExpanderOptions
 
     [Serializable]
-    public class WidgetExpander
+    public static class WidgetExpander
     {
-        public bool EnableSerialNumberLettersOY = false;
-        public bool EnableCustomIndicators = false;
-        public int MinCustomIndicators = 1;
-        public bool EnableWidgetExpansion = false;
-        public int MinWidgets = 5;
-        public int MaxWidgets = 7;
+        public static bool EnableSerialNumberLettersOY = false;
+        public static bool EnableCustomIndicators = false;
+        public static int MinCustomIndicators = 1;
+        public static bool EnableWidgetExpansion = false;
+        public static int MinWidgets = 5;
+        public static int MaxWidgets = 7;
     }
-    public WidgetExpander widgetExpander = new WidgetExpander();
 
     [Serializable]
-    public class MultipleWidgetConfiguration
+    public static class MultipleWidgetConfiguration
     {
-        public bool EnableTwoFactorMultipleWidgets = true;
-        public int MultipleWidgetsTwoFactoryExpiry = 60;
+        public static bool EnableTwoFactorMultipleWidgets = true;
+        public static int MultipleWidgetsTwoFactoryExpiry = 60;
     }
-    public MultipleWidgetConfiguration mulpleWidgetConfiguration = new MultipleWidgetConfiguration();
 
  
     Widget GetRandomWidget()
     {
-        MultipleWidget.EnableTowFactor = mulpleWidgetConfiguration.EnableTwoFactorMultipleWidgets;
-        MultipleWidget.TwoFactorExpiry = mulpleWidgetConfiguration.MultipleWidgetsTwoFactoryExpiry;
+        MultipleWidget.EnableTowFactor = MultipleWidgetConfiguration.EnableTwoFactorMultipleWidgets;
+        MultipleWidget.TwoFactorExpiry = MultipleWidgetConfiguration.MultipleWidgetsTwoFactoryExpiry;
 
         var choices = new List<int> { 0, 1, 2 };
-        if (ModdedWidgets.MultipleWidgets)
+        if (ModdedWidgetConfiguration.MultipleWidgets)
             choices.Add(3);
-        if (ModdedWidgets.TwoFactor)
+        if (ModdedWidgetConfiguration.TwoFactor)
             choices.Add(4);
-        if (ModdedWidgets.EncryptedIndicators)
+        if (ModdedWidgetConfiguration.EncryptedIndicators)
             choices.Add(5);
         var choice = choices[Random.Range(0, choices.Count)];
         switch (choice)
@@ -111,20 +108,36 @@ public class FakeBombInfo : MonoBehaviour
         }
     }
 
+    bool IsSerialNumberValid()
+    {
+        var allchars = WidgetExpander.EnableSerialNumberLettersOY 
+            ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+            : "ABCDEFGHIJKLMNEPQRSTUVWXZ0123456789";
+
+        var letters = allchars.Substring(0, allchars.Length - 10);
+        var numbers = allchars.Substring(allchars.Length - 10);
+        return serial.Length == 6 && allchars.Contains(serial.Substring(0, 1)) 
+            && allchars.Contains(serial.Substring(1, 1)) 
+            && numbers.Contains(serial.Substring(2, 1)) 
+            && letters.Contains(serial.Substring(3, 1)) 
+            && letters.Contains(serial.Substring(4, 1)) 
+            && numbers.Contains(serial.Substring(5, 1));
+    }
+
     void Awake()
     {
-        if (widgetExpander.EnableCustomIndicators)
+        if (WidgetExpander.EnableCustomIndicators)
         {
             InitCustomIndicators();
-            var custom = Math.Max(widgetExpander.MinCustomIndicators, widgetExpander.MaxWidgets - 12);
+            var custom = Math.Max(WidgetExpander.MinCustomIndicators, WidgetExpander.MaxWidgets - 12);
             custom = Math.Min(custom, _customIndicators.Count);
             IndicatorWidget.possibleValues.Add("NLL");
             for (var i = 0; i < custom; i++)
                 IndicatorWidget.possibleValues.Add(_customIndicators[i]);
         }
 
-        var widgetCount = widgetExpander.EnableWidgetExpansion
-            ? Random.Range(widgetExpander.MinWidgets, widgetExpander.MaxWidgets + 1)
+        var widgetCount = WidgetExpander.EnableWidgetExpansion
+            ? Random.Range(WidgetExpander.MinWidgets, WidgetExpander.MaxWidgets + 1)
             : 5;
 
 
@@ -135,22 +148,20 @@ public class FakeBombInfo : MonoBehaviour
             widgets.Add(GetRandomWidget());
         }
 
-        char[] possibleCharArray = widgetExpander.EnableSerialNumberLettersOY ?
-            new [] {
-                'A','B','C','D','E','F','G','H','I','J','K','L',
-                'M','N','O','P','Q','R','S','T','U','V','W','X',
-                'Y','Z','0','1','2','3','4','5','6','7','8','9'
-            } : new []
-            {
-                'A','B','C','D','E','F','G','H','I','J','K','L',
-                'M','N','E','P','Q','R','S','T','U','V','W','X',
-                'Z','0','1','2','3','4','5','6','7','8','9'
-            };
-        string str1 = string.Empty;
-        for (int index = 0; index < 2; ++index) str1 = str1 + possibleCharArray[Random.Range(0, possibleCharArray.Length)];
-        string str2 = str1 + (object) Random.Range(0, 10);
-        for (int index = 3; index < 5; ++index) str2 = str2 + possibleCharArray[Random.Range(0, possibleCharArray.Length - 10)];
-        serial = str2 + Random.Range(0, 10);
+
+        if (!IsSerialNumberValid())
+        {
+            char[] possibleCharArray = WidgetExpander.EnableSerialNumberLettersOY
+                ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".ToCharArray()
+                : "ABCDEFGHIJKLMNEPQRSTUVWXZ0123456789".ToCharArray();
+            string str1 = string.Empty;
+            for (int index = 0; index < 2; ++index)
+                str1 = str1 + possibleCharArray[Random.Range(0, possibleCharArray.Length)];
+            string str2 = str1 + (object) Random.Range(0, 10);
+            for (int index = 3; index < 5; ++index)
+                str2 = str2 + possibleCharArray[Random.Range(0, possibleCharArray.Length - 10)];
+            serial = str2 + Random.Range(0, 10);
+        }
 
         Debug.Log("Serial: " + serial);
     }
@@ -214,7 +225,7 @@ public class FakeBombInfo : MonoBehaviour
             }
 
             TimeLeft -= Time.fixedDeltaTime * multiplier;
-            if (!(TimeLeft < 0)) return;
+            if (TimeLeft > 0) return;
             TimeLeft = 0;
             detonated = true;
             Debug.Log("KABOOM!!! - Time Ran out");
