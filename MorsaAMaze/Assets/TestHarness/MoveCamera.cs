@@ -16,6 +16,13 @@ public class MoveCamera : MonoBehaviour
     private bool isRotating;    // Is the camera being rotated?
     private bool isZooming;     // Is the camera zooming?
 
+    private Transform _camera;
+
+    void Start()
+    {
+        _camera = FindObjectOfType<Camera>().transform;
+    }
+
     //
     // UPDATE
     //
@@ -47,8 +54,8 @@ public class MoveCamera : MonoBehaviour
         {
             Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
 
-            transform.RotateAround(transform.position, transform.right, -pos.y * turnSpeed);
-            transform.RotateAround(transform.position, Vector3.up, pos.x * turnSpeed);
+            _camera.RotateAround(_camera.position, _camera.right, -pos.y * turnSpeed);
+            _camera.RotateAround(_camera.position, Vector3.up, pos.x * turnSpeed);
             mouseOrigin = Input.mousePosition;
         }
 
@@ -58,15 +65,15 @@ public class MoveCamera : MonoBehaviour
             Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
 
             Vector3 move = new Vector3(pos.x * -panSpeed, pos.y * -panSpeed, 0);
-            transform.Translate(move, Space.Self);
+            _camera.Translate(move, Space.Self);
             mouseOrigin = Input.mousePosition;
         }
 
         float mouseWheel = Input.GetAxis("Mouse ScrollWheel");
         if (mouseWheel != 0)
         {
-            Vector3 move = mouseWheel * zoomSpeed * transform.forward;
-            transform.Translate(move, Space.World);
+            Vector3 move = mouseWheel * zoomSpeed * _camera.forward;
+            _camera.Translate(move, Space.World);
         }
     }
 }

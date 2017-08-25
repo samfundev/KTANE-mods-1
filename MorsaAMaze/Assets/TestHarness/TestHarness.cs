@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -14,11 +15,124 @@ public class TestHarness : MonoBehaviour
 
     public StatusLight StatusLightPrefab;
     public GameObject HighlightPrefab;
-    public AudioClip StrikeAudio;
-    public KMAudio Audio;
+
+    [Serializable]
+    public class BombSoundEffects
+    {
+        public List<AudioClip> ButtonPress = new List<AudioClip>();
+        public List<AudioClip> ButtonRelease = new List<AudioClip>();
+        public List<AudioClip> BigButtonPress = new List<AudioClip>();
+        public List<AudioClip> BigButtonRelease = new List<AudioClip>();
+        public List<AudioClip> WireSnip = new List<AudioClip>();
+        public List<AudioClip> Strike = new List<AudioClip>();
+        public List<AudioClip> AlarmClockBeep = new List<AudioClip>();
+        public List<AudioClip> AlarmClockSnooze = new List<AudioClip>();
+        public List<AudioClip> Switch = new List<AudioClip>();
+        public List<AudioClip> GameOverFanfare = new List<AudioClip>();
+        public List<AudioClip> BombDefused = new List<AudioClip>();
+        public List<AudioClip> BriefcaseOpen = new List<AudioClip>();
+        public List<AudioClip> BriefcaseClose = new List<AudioClip>();
+        public List<AudioClip> CorrectChime = new List<AudioClip>();
+        public List<AudioClip> BombExplode = new List<AudioClip>();
+        public List<AudioClip> NormalTimerBeep = new List<AudioClip>();
+        public List<AudioClip> FastTimerBeep = new List<AudioClip>();
+        public List<AudioClip> FastestTimerBeep = new List<AudioClip>();
+        public List<AudioClip> LightBuzz = new List<AudioClip>();
+        public List<AudioClip> LightBuzzShort = new List<AudioClip>();
+        public List<AudioClip> Stamp = new List<AudioClip>();
+        public List<AudioClip> TypewriterKey = new List<AudioClip>();
+        public List<AudioClip> NeedyActivated = new List<AudioClip>();
+        public List<AudioClip> WireSequenceMechanism = new List<AudioClip>();
+        public List<AudioClip> SelectionTick = new List<AudioClip>();
+        public List<AudioClip> PageTurn = new List<AudioClip>();
+        public List<AudioClip> DossierOptionPressed = new List<AudioClip>();
+        public List<AudioClip> FreeplayDeviceDrop = new List<AudioClip>();
+        public List<AudioClip> BombDrop = new List<AudioClip>();
+        public List<AudioClip> MenuDrop = new List<AudioClip>();
+        public List<AudioClip> BinderDrop = new List<AudioClip>();
+        public List<AudioClip> MenuButtonPressed = new List<AudioClip>();
+        public List<AudioClip> TitleMenuPressed = new List<AudioClip>();
+        public List<AudioClip> CapacitorPop = new List<AudioClip>();
+        public List<AudioClip> EmergencyAlarm = new List<AudioClip>();
+        public List<AudioClip> NeedyWarning = new List<AudioClip>();
+
+        private readonly Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>> _soundEffects =
+            new Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>>();
+
+        public BombSoundEffects()
+        {
+            _soundEffects.Add(KMSoundOverride.SoundEffect.ButtonPress, ButtonPress);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.ButtonRelease, ButtonRelease);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.BigButtonPress, BigButtonPress);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.BigButtonRelease, BigButtonRelease);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.WireSnip, WireSnip);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.Strike, Strike);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.AlarmClockBeep, AlarmClockBeep);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.AlarmClockSnooze, AlarmClockSnooze);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.Switch, Switch);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.GameOverFanfare, GameOverFanfare);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.BombDefused, BombDefused);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.BriefcaseOpen, BriefcaseOpen);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.BriefcaseClose, BriefcaseClose);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.CorrectChime, CorrectChime);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.BombExplode, BombExplode);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.NormalTimerBeep, NormalTimerBeep);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.FastTimerBeep, FastTimerBeep);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.FastestTimerBeep, FastestTimerBeep);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.LightBuzz, LightBuzz);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.LightBuzzShort, LightBuzzShort);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.Stamp, Stamp);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.TypewriterKey, TypewriterKey);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.NeedyActivated, NeedyActivated);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.WireSequenceMechanism, WireSequenceMechanism);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.SelectionTick, SelectionTick);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.PageTurn, PageTurn);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.DossierOptionPressed, DossierOptionPressed);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.FreeplayDeviceDrop, FreeplayDeviceDrop);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.BombDrop, BombDrop);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.MenuDrop, MenuDrop);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.BinderDrop, BinderDrop);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.MenuButtonPressed, MenuButtonPressed);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.TitleMenuPressed, TitleMenuPressed);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.CapacitorPop, CapacitorPop);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.EmergencyAlarm, EmergencyAlarm);
+            _soundEffects.Add(KMSoundOverride.SoundEffect.NeedyWarning, NeedyWarning);
+        }
+
+        public AudioClip GetAudioClip(KMSoundOverride.SoundEffect effect)
+        {
+            List<AudioClip> clips;
+            if (!_soundEffects.TryGetValue(effect, out clips))
+                return null;
+            if (clips == null || clips.Count == 0)
+                return null;
+            return clips[UnityEngine.Random.Range(0, clips.Count)];
+        }
+
+        public void OverwriteClips(KMSoundOverride clipsOverride)
+        {
+            List<AudioClip> clips;
+            if (!_soundEffects.TryGetValue(clipsOverride.OverrideEffect, out clips))
+            {
+                clips = new List<AudioClip>();
+                _soundEffects.Add(clipsOverride.OverrideEffect, clips);
+            }
+            else
+            {
+                clips.Clear();
+            }
+            clips.Add(clipsOverride.AudioClip);
+            clips.AddRange(clipsOverride.AdditionalVariants);
+            clips.RemoveAll(t => t == null);
+        }
+    }
+
+    public BombSoundEffects SoundEffects = new BombSoundEffects();
 
     TestSelectable currentSelectable;
     TestSelectableArea currentSelectableArea;
+
+    KMBombInfo BombInfo;
 
     AudioSource audioSource;
     List<AudioClip> audioClips;
@@ -30,6 +144,8 @@ public class TestHarness : MonoBehaviour
         {
             TurnLightsOn();
             FakeInfo.OnLightsOn();
+            StartCoroutine(TimerTick());
+            StartCoroutine(LastMinuteWarning());
         };
         TurnLightsOff();
 
@@ -76,6 +192,53 @@ public class TestHarness : MonoBehaviour
         }
     }
 
+    void OnBombExploded()
+    {
+        PlayGameSoundHandler(KMSoundOverride.SoundEffect.BombExplode, transform);
+    }
+
+    void OnBombSolved()
+    {
+        PlayGameSoundHandler(KMSoundOverride.SoundEffect.BombDefused, transform);
+        PlayGameSoundHandler(KMSoundOverride.SoundEffect.GameOverFanfare, transform);
+    }
+
+    private float _previousTimer;
+
+    IEnumerator TimerTick()
+    {
+        _previousTimer = FakeInfo.TimeLeft;
+        while (!FakeInfo.detonated)
+        {
+            yield return new WaitUntil(() => Mathf.FloorToInt(FakeInfo.TimeLeft) != Mathf.FloorToInt(_previousTimer) && !FakeInfo.detonated);
+            if (FakeInfo.detonated) yield break;
+            switch (FakeInfo.strikes)
+            {
+                case 0:
+                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.NormalTimerBeep, transform);
+                    break;
+                case 1:
+                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.FastTimerBeep, transform);
+                    break;
+                default:
+                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
+                    break;
+            }
+            _previousTimer = FakeInfo.TimeLeft;
+        }
+    }
+
+    IEnumerator LastMinuteWarning()
+    {
+        yield return new WaitUntil(() => (FakeInfo.TimeLeft <= 60) && !FakeInfo.detonated);
+        while (!FakeInfo.detonated)
+        {
+            PlayGameSoundHandler(KMSoundOverride.SoundEffect.EmergencyAlarm, transform);
+            yield return new WaitForSeconds(2.5f);
+        }
+    }
+
+
     void Start()
     {
         MonoBehaviour[] scripts = MonoBehaviour.FindObjectsOfType<MonoBehaviour>();
@@ -94,15 +257,22 @@ public class TestHarness : MonoBehaviour
             }
         }
 
+        FakeInfo.Detonate += OnBombExploded;
+        FakeInfo.HandleSolved += OnBombSolved;
+
         currentSelectable = GetComponent<TestSelectable>();
 
         KMBombModule[] modules = FindObjectsOfType<KMBombModule>();
         KMNeedyModule[] needyModules = FindObjectsOfType<KMNeedyModule>();
         KMWidget[] widgets = FindObjectsOfType<KMWidget>();
+        KMSoundOverride[] overrides = FindObjectsOfType<KMSoundOverride>();
         FakeInfo.needyModules = needyModules.ToList();
         currentSelectable.Children = new TestSelectable[modules.Length + needyModules.Length];
 
         FakeInfo.kmWidgets.AddRange(widgets);
+
+        foreach (KMSoundOverride sound in overrides)
+            SoundEffects.OverwriteClips(sound);
 
         for (int i = 0; i < modules.Length; i++)
         {
@@ -140,9 +310,10 @@ public class TestHarness : MonoBehaviour
             modules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
-                Audio.HandlePlaySoundAtTransform(StrikeAudio.name, transform);
                 statuslight.FlashStrike();
                 FakeInfo.HandleStrike();
+                if (!FakeInfo.detonated)
+                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.Strike, transform);
                 return false;
             };
         }
@@ -161,6 +332,8 @@ public class TestHarness : MonoBehaviour
             {
                 Debug.Log("Strike");
                 FakeInfo.HandleStrike();
+                if (!FakeInfo.detonated)
+                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.Strike, transform);
                 return false;
             };
         }
@@ -187,21 +360,58 @@ public class TestHarness : MonoBehaviour
         foreach (KMAudio kmAudio in kmAudios)
         {
             kmAudio.HandlePlaySoundAtTransform += PlaySoundHandler;
+            kmAudio.HandlePlayGameSoundAtTransform += PlayGameSoundHandler;
+            kmAudio.HandlePlaySoundAtTransformWithRef += PlaySoundwithRefHandler;
+            kmAudio.HandlePlayGameSoundAtTransformWithRef += PlayGameSoundHandlerWithRef;
         }
+    }
+
+    protected KMAudio.KMAudioRef PlaySoundwithRefHandler(string clipName, Transform t, bool loop)
+    {
+        KMAudio.KMAudioRef kmaudiorRef = new KMAudio.KMAudioRef();
+        if (audioClips.Count <= 0) return kmaudiorRef;
+        AudioClip clip = audioClips.Where(a => a.name == clipName).First();
+
+        if (clip == null) return kmaudiorRef;
+        if(t != null)
+            audioSource.transform.position = t.position;
+        audioSource.loop = loop;
+        audioSource.PlayOneShot(clip);
+        KMAudio.KMAudioRef kmaudioRef2 = kmaudiorRef;
+        kmaudioRef2.StopSound = (Action) Delegate.Combine(kmaudioRef2.StopSound, new Action(delegate
+        {
+            if (audioSource.isPlaying)
+                audioSource.Stop();
+        }));
+        return kmaudiorRef;
     }
 
     protected void PlaySoundHandler(string clipName, Transform t)
     {
-        if (audioClips.Count > 0)
-        {
-            AudioClip clip = audioClips.Where(a => a.name == clipName).First();
+        PlaySoundwithRefHandler(clipName, t, false);
+    }
 
-            if (clip != null)
-            {
-                audioSource.transform.position = t.position;
-                audioSource.PlayOneShot(clip);
-            }
-        }
+    protected void PlayGameSoundHandler(KMSoundOverride.SoundEffect sound, Transform t)
+    {
+        PlayGameSoundHandlerWithRef(sound, t);
+    }
+
+    protected KMAudio.KMAudioRef PlayGameSoundHandlerWithRef(KMSoundOverride.SoundEffect sound, Transform t)
+    {
+        KMAudio.KMAudioRef kmaudioRef = new KMAudio.KMAudioRef();
+        var clip = SoundEffects.GetAudioClip(sound);
+        if (clip == null) return kmaudioRef;
+        if(t != null)
+            audioSource.transform.position = t.position;
+        audioSource.loop = false;
+        audioSource.PlayOneShot(clip);
+        KMAudio.KMAudioRef kmaudioRef2 = kmaudioRef;
+        kmaudioRef2.StopSound = (Action)Delegate.Combine(kmaudioRef2.StopSound, new Action(delegate
+        {
+            if(audioSource.isPlaying)
+                audioSource.Stop();
+        }));
+        return kmaudioRef;
     }
 
     void Update()
@@ -473,6 +683,20 @@ public class TestHarness : MonoBehaviour
         {
             Debug.Log("Twitch Command: " + command);
 
+            //if(currentSelectable != )
+            Component[] allComponents = currentSelectable.gameObject.GetComponentsInChildren<Component>(true);
+            foreach (Component component in allComponents)
+            {
+                System.Type type = component.GetType();
+                MethodInfo method = type.GetMethod("ProcessTwitchCommand", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                if (method != null)
+                {
+                    StartCoroutine(SimulateModule(component, currentSelectable.transform, method, command));
+                }
+            }
+
+            /*
             foreach (KMBombModule module in FindObjectsOfType<KMBombModule>())
             {
                 Component[] allComponents = module.gameObject.GetComponentsInChildren<Component>(true);
@@ -501,7 +725,7 @@ public class TestHarness : MonoBehaviour
                         StartCoroutine(SimulateModule(component, needyModule.transform, method, command));
                     }
                 }
-            }
+            }*/
             command = "";
         }
     }

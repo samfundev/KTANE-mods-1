@@ -12,6 +12,7 @@ GameObject:
   - 114: {fileID: 11405796}
   - 114: {fileID: 11497068}
   - 114: {fileID: 114000013674786028}
+  - 114: {fileID: 114000012786126902}
   m_Layer: 0
   m_Name: TestHarness
   m_TagString: Untagged
@@ -47,8 +48,54 @@ MonoBehaviour:
   StatusLightPrefab: {fileID: 114000010745654140, guid: 6565c8153fb4f3f4eaafc1381b3d6c79,
     type: 2}
   HighlightPrefab: {fileID: 100000, guid: d78a484c6e87f1b47b6596ac080fe942, type: 2}
-  StrikeAudio: {fileID: 8300000, guid: dabf44b5afd601c4ca9241d563479970, type: 3}
-  Audio: {fileID: 114000013674786028}
+  SoundEffects:
+    ButtonPress:
+    - {fileID: 8300000, guid: e51f546fd6e9d3d43992d0690c1f31ff, type: 3}
+    ButtonRelease:
+    - {fileID: 8300000, guid: 030f767d3abd30540965a93ba0fdce78, type: 3}
+    BigButtonPress:
+    - {fileID: 8300000, guid: 04725107f744ea849bb2355c722a6499, type: 3}
+    BigButtonRelease:
+    - {fileID: 8300000, guid: 908ac21cc6be7734b87173ca1a6f671e, type: 3}
+    WireSnip: []
+    Strike:
+    - {fileID: 8300000, guid: 17299f876cf6d7e489b3f8771ad1d106, type: 3}
+    AlarmClockBeep: []
+    AlarmClockSnooze: []
+    Switch: []
+    GameOverFanfare:
+    - {fileID: 8300000, guid: 79b9c15c2a4321a4691a8ab834a50d09, type: 3}
+    BombDefused: []
+    BriefcaseOpen: []
+    BriefcaseClose: []
+    CorrectChime: []
+    BombExplode:
+    - {fileID: 8300000, guid: 681e459d950b89e42ada904dd4078b79, type: 3}
+    NormalTimerBeep:
+    - {fileID: 8300000, guid: 6af8ca417522ba14e838c524e93b9a18, type: 3}
+    FastTimerBeep:
+    - {fileID: 8300000, guid: 6af8ca417522ba14e838c524e93b9a18, type: 3}
+    FastestTimerBeep:
+    - {fileID: 8300000, guid: 6af8ca417522ba14e838c524e93b9a18, type: 3}
+    LightBuzz: []
+    LightBuzzShort: []
+    Stamp: []
+    TypewriterKey: []
+    NeedyActivated: []
+    WireSequenceMechanism: []
+    SelectionTick: []
+    PageTurn: []
+    DossierOptionPressed: []
+    FreeplayDeviceDrop: []
+    BombDrop: []
+    MenuDrop: []
+    BinderDrop: []
+    MenuButtonPressed: []
+    TitleMenuPressed: []
+    CapacitorPop: []
+    EmergencyAlarm:
+    - {fileID: 8300000, guid: 5ba4ffcfa7f32664e990e089c7068b16, type: 3}
+    NeedyWarning: []
 --- !u!114 &11497068
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -87,18 +134,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TimeLeft: 600
   NumStrikes: 10
-  ModdedWidgets:
+  ModdedWidget:
     TwoFactor: 0
     EncryptedIndicators: 0
     MultipleWidgets: 1
-  widgetExpander:
+  WidgetExpander:
     EnableSerialNumberLettersOY: 0
     EnableCustomIndicators: 0
     MinCustomIndicators: 1
     EnableWidgetExpansion: 0
     MinWidgets: 5
     MaxWidgets: 7
-  mulpleWidgetConfiguration:
+  MultipleWidget:
     EnableTwoFactorMultipleWidgets: 1
     MultipleWidgetsTwoFactoryExpiry: 60
   solved: 0
@@ -108,6 +155,20 @@ MonoBehaviour:
   needyModules: []
   kmWidgets: []
   widgets: []
+--- !u!114 &114000012786126902
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 101964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cd2ebeaef136224d892bde1b0f0a637, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  turnSpeed: 32
+  panSpeed: 1
+  zoomSpeed: 0.5
 --- !u!114 &114000013674786028
 MonoBehaviour:
   m_ObjectHideFlags: 1

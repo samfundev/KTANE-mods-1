@@ -13,45 +13,49 @@ public class FakeBombInfo : MonoBehaviour
     public int NumStrikes = 3;
 
     [Serializable]
-    public static class ModdedWidgetConfiguration
+    public class ModdedWidgetConfiguration
     {
-        public static bool TwoFactor = false;
-        public static bool EncryptedIndicators = false;
-        public static bool MultipleWidgets = true;
+        public bool TwoFactor = false;
+        public bool EncryptedIndicators = false;
+        public bool MultipleWidgets = true;
     }
+    public ModdedWidgetConfiguration ModdedWidget = new ModdedWidgetConfiguration();
+
 
     //WidgetExpanderOptions
 
     [Serializable]
-    public static class WidgetExpander
+    public class WidgetExpanderConfiguration
     {
-        public static bool EnableSerialNumberLettersOY = false;
-        public static bool EnableCustomIndicators = false;
-        public static int MinCustomIndicators = 1;
-        public static bool EnableWidgetExpansion = false;
-        public static int MinWidgets = 5;
-        public static int MaxWidgets = 7;
+        public bool EnableSerialNumberLettersOY = false;
+        public bool EnableCustomIndicators = false;
+        public int MinCustomIndicators = 1;
+        public bool EnableWidgetExpansion = false;
+        public int MinWidgets = 5;
+        public int MaxWidgets = 7;
     }
+    public WidgetExpanderConfiguration WidgetExpander = new WidgetExpanderConfiguration();
 
     [Serializable]
-    public static class MultipleWidgetConfiguration
+    public class MultipleWidgetConfiguration
     {
-        public static bool EnableTwoFactorMultipleWidgets = true;
-        public static int MultipleWidgetsTwoFactoryExpiry = 60;
+        public bool EnableTwoFactorMultipleWidgets = true;
+        public int MultipleWidgetsTwoFactoryExpiry = 60;
     }
+    public MultipleWidgetConfiguration MultipleWidget = new MultipleWidgetConfiguration();
 
  
     Widget GetRandomWidget()
     {
-        MultipleWidget.EnableTowFactor = MultipleWidgetConfiguration.EnableTwoFactorMultipleWidgets;
-        MultipleWidget.TwoFactorExpiry = MultipleWidgetConfiguration.MultipleWidgetsTwoFactoryExpiry;
+        global::MultipleWidget.EnableTowFactor = MultipleWidget.EnableTwoFactorMultipleWidgets;
+        global::MultipleWidget.TwoFactorExpiry = MultipleWidget.MultipleWidgetsTwoFactoryExpiry;
 
         var choices = new List<int> { 0, 1, 2 };
-        if (ModdedWidgetConfiguration.MultipleWidgets)
+        if (ModdedWidget.MultipleWidgets)
             choices.Add(3);
-        if (ModdedWidgetConfiguration.TwoFactor)
+        if (ModdedWidget.TwoFactor)
             choices.Add(4);
-        if (ModdedWidgetConfiguration.EncryptedIndicators)
+        if (ModdedWidget.EncryptedIndicators)
             choices.Add(5);
         var choice = choices[Random.Range(0, choices.Count)];
         switch (choice)
@@ -68,7 +72,7 @@ public class FakeBombInfo : MonoBehaviour
                 return gameObject.AddComponent<EncryptedIndicatorWidget>();
             default:
             {
-                var widget = gameObject.AddComponent<MultipleWidget>();
+                var widget = gameObject.AddComponent<global::MultipleWidget>();
                 widget.Init();
                 return widget;
             }
@@ -180,9 +184,6 @@ public class FakeBombInfo : MonoBehaviour
             startupTime -= Time.fixedDeltaTime;
             if (!(startupTime < 0)) return;
 
-            
-
-
             ActivateLights();
 
             foreach (Widget w in widgets)
@@ -228,6 +229,7 @@ public class FakeBombInfo : MonoBehaviour
             if (TimeLeft > 0) return;
             TimeLeft = 0;
             detonated = true;
+            if (Detonate != null) Detonate();
             Debug.Log("KABOOM!!! - Time Ran out");
         }
     }
