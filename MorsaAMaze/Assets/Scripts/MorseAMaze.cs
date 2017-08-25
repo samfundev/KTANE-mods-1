@@ -28,10 +28,12 @@ public class MorseAMaze : MonoBehaviour
     public KMBombInfo BombInfo;
     public KMAudio Audio;
 
+    public AudioClip GlassBreak;
+
     private Transform _currentLocation;
     private Transform _destination;
 
-    private readonly List<IEnumerator> _movements = new List<IEnumerator>();
+    private CoroutineQueue _movements;
     private bool _solved;
 
     private readonly string[,,] _mazes =
@@ -114,6 +116,7 @@ public class MorseAMaze : MonoBehaviour
     // ReSharper disable once UnusedMember.Local
     private void Start ()
     {
+        _movements = gameObject.AddComponent<CoroutineQueue>();
         BombModule.GenerateLogFriendlyName();
 	    Locations.Shuffle();
         SetMaze(0); //Hide the walls now.
@@ -265,18 +268,28 @@ public class MorseAMaze : MonoBehaviour
     {
         BombModule.LogFormat("Tried to move from {0} to {1}, but there was a wall in the way. Strike", GetCoordinates(from),
             GetCoordinates(to));
-        FakeStatusLight.HandleStrike();
-        if (_edgeworkRules[_rule] == EdgeworkRules.Strikes)
+        
+
+        var hitWall = 8;
+        var moveFrom = new Vector3(from.parent.transform.localPosition.x, StatusLight.localPosition.y, from.localPosition.z);
+        var moveto = new Vector3(to.parent.transform.localPosition.x, StatusLight.localPosition.y, to.localPosition.z);
+        var movement = (moveto - moveFrom) / 4 / hitWall;
+        for (var i = 0; i < hitWall; i++)
         {
-            _moving = false;
-            yield break;
+            StatusLight.localPosition += movement;
+            yield return null;
         }
         StartCoroutine(ShowWall(wall.gameObject.GetComponent<MeshRenderer>()));
+        FakeStatusLight.HandleStrike();
+        Audio.HandlePlaySoundAtTransform(GlassBreak.name, transform);
+        for (var i = 0; i < hitWall; i++)
+        {
+            StatusLight.localPosition -= movement;
+            yield return null;
+        }
+        
         yield return new WaitForSeconds(0.5f);
-        _moving = false;
     }
-
-    private bool _moving;
 
     private IEnumerator MoveToLocation(Transform location, Transform from)
     {
@@ -288,67 +301,56 @@ public class MorseAMaze : MonoBehaviour
         var sy = StatusLight.localPosition.z;
         var sz = StatusLight.localPosition.y;
 
-        var x = Mathf.Abs(lx - sx);
-        var y = Mathf.Abs(sy - ly);
+        var x = lx - sx;
+        var y = ly - sy;
 
-        float eta = 7.5f;
-        var notEqualX = true;
-        var notEqualY = true;
-        do
+        const float eta = 7.5f;
+        var fps = (1 / Time.deltaTime) * (eta / 36f);
+        var movex = x / fps;
+        var movey = y / fps;
+
+        if (Mathf.Abs(x) > Mathf.Abs(y))
         {
-            var fps = (1 / Time.deltaTime) * (eta / 36f);
-            var movex = x / fps;
-            var movey = y / fps;
-
-            if (sx < lx)
+            sy = ly;
+            do
             {
                 sx += movex;
-                if (sx > lx)
-                    sx = lx;
-            }
-            else if (sx > lx)
-            {
-                sx -= movex;
-                if (sx < lx)
-                    sx = lx;
-            }
-            else
-            {
-                notEqualX = false;
-            }
-            if (sy < ly)
+                StatusLight.transform.localPosition = new Vector3(sx, sz, sy);
+                yield return null;
+                fps = (1 / Time.deltaTime) * (eta / 36f);
+                movex = x / fps;
+            } while (Mathf.Abs(sx - lx) > Mathf.Abs(movex));
+            sx = lx;
+        }
+        else
+        {
+            sx = lx;
+            do
             {
                 sy += movey;
-                if (sy > ly)
-                    sy = ly;
-            }
-            else if (sy > ly)
-            {
-                sy -= movey;
-                if (sy < ly)
-                    sy = ly;
-            }
-            else
-            {
-                notEqualY = false;
-            }
-            StatusLight.transform.localPosition = new Vector3(sx, sz, sy);
-            yield return null;
-        } while (notEqualX || notEqualY);
+                StatusLight.transform.localPosition = new Vector3(sx, sz, sy);
+                yield return null;
+                fps = (1 / Time.deltaTime) * (eta / 36f);
+                movey = y / fps;
+            } while (Mathf.Abs(sy - ly) > Mathf.Abs(movey));
+            sy = ly;
+        }
+        StatusLight.transform.localPosition = new Vector3(sx, sz, sy);
+
         if (location == _destination)
         {
             BombModule.LogFormat("Solved - Turning off the Status light Kappa");
             StartCoroutine(MoveStatusLightToCorner());
-            yield return null;
         }
-        _moving = false;
+        yield return null;
     }
 
-
-    private static IEnumerator ShowWall(MeshRenderer wall)
+    private List<MeshRenderer> _showingWalls = new List<MeshRenderer>();
+    private IEnumerator ShowWall(MeshRenderer wall)
     {
         if(wall == null)
             yield break;
+        _showingWalls.Add(wall);
         var color = wall.material.color;
         for (var j = 0; j < 3; j++)
         {
@@ -365,14 +367,27 @@ public class MorseAMaze : MonoBehaviour
                 yield return null;
             }
         }
-        color = new Color(color.r, color.g, color.b, 1);
+        if (_edgeworkRules[_rule] == EdgeworkRules.Strikes && !_unicorn)
+        {
+            for (var i = color.a; i > 0; i -= 0.01f)
+            {
+                color = new Color(color.r, color.g, color.b, i);
+                wall.material.color = color;
+                yield return null;
+            }
+            color = new Color(color.r, color.g, color.b, 0);
+            wall.material.color = color;
+        }
         wall.material.color = color;
+        _showingWalls.Remove(wall);
     }
 
     private bool _unicorn;
 
     private IEnumerator HideWall(MeshRenderer wall)
     {
+        if (_showingWalls.Contains(wall))
+            yield break;
         if (wall == null)
             yield break;
 
@@ -397,11 +412,11 @@ public class MorseAMaze : MonoBehaviour
     {
         if (wall != null)
         {
-            _movements.Add(GiveStrike(wall, _currentLocation, newLocation));
+            _movements.AddToQueue(GiveStrike(wall, _currentLocation, newLocation));
             return false;
         }
 
-        _movements.Add(MoveToLocation(newLocation, _currentLocation));
+        _movements.AddToQueue(MoveToLocation(newLocation, _currentLocation));
         _currentLocation = newLocation;
         _solved |= GetCoordinates(newLocation) == GetCoordinates(_destination);
         return true;
@@ -442,7 +457,8 @@ public class MorseAMaze : MonoBehaviour
     private bool MoveUp()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
-        if (_solved) return true;
+        if (_solved)
+            return true;
         var location = _currentLocation;
         if (location.name == "1")
             return true;
@@ -475,7 +491,7 @@ public class MorseAMaze : MonoBehaviour
         Down.OnInteract += delegate { MoveDown(); return false; };
         Left.OnInteract += delegate { MoveLeft(); return false; };
         Right.OnInteract += delegate { MoveRight(); return false; };
-
+ 
         _rule = Random.Range(0, _morseCodeWords.Length);
         _unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2 && BombInfo.GetBatteryHolderCount() == 3;
         StartCoroutine(!_unicorn ? PlayWordLocation(_morseCodeWords[_rule]) : PlayWordLocation("Thank you BOB"));
@@ -715,7 +731,7 @@ public class MorseAMaze : MonoBehaviour
         yield return null;
         command = command.Substring(5);
 
-        while (_movements.Count > 0)
+        while (_movements.Processing)
         {
             yield return "trycancel";
             yield return new WaitForSeconds(0.1f);
@@ -757,21 +773,10 @@ public class MorseAMaze : MonoBehaviour
     }
     #endregion
 
-
     // ReSharper disable once UnusedMember.Local
     private void Update ()
-	{
-	    if (_moving) return;
-
-	    if (_movements.Count > 0)
-	    {
-	        _moving = true;
-	        StartCoroutine(_movements[0]);
-
-	        _movements.RemoveAt(0);
-	        return;
-	    }
-	    if (_solved) return;
+    {
+        if (_movements.Processing) return;
         
         
 	    // ReSharper disable once SwitchStatementMissingSomeCases
