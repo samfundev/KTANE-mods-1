@@ -77,10 +77,9 @@ MonoBehaviour:
     - {fileID: 8300000, guid: fa206699753d17b4ab668a196527ca4a, type: 3}
     - {fileID: 8300000, guid: 4613e5d9f50f53e459b96cfeca38a9ea, type: 3}
     - {fileID: 8300000, guid: f45e471db31a33b46b69435279c85c6b, type: 3}
-    - {fileID: 8300000, guid: 6b14e63d2b6a70643875d1a03f7df1f9, type: 3}
     - {fileID: 8300000, guid: c6ad677ec19fc2443821f9aec933a093, type: 3}
     - {fileID: 8300000, guid: a7e5899e4f94bb54ba4cbdc86f332a3f, type: 3}
-    - {fileID: 8300000, guid: 5d2524afc7e2eb743a383de5da3ca9f5, type: 3}
+    - {fileID: 8300000, guid: a7e5899e4f94bb54ba4cbdc86f332a3f, type: 3}
     BriefcaseClose:
     - {fileID: 8300000, guid: e1612c36f805e374f96b1b38843fcbf0, type: 3}
     BriefcaseOpen:

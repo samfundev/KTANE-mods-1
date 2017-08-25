@@ -231,10 +231,20 @@ public class TestHarness : MonoBehaviour
     IEnumerator LastMinuteWarning()
     {
         yield return new WaitUntil(() => (FakeInfo.TimeLeft <= 60) && !FakeInfo.detonated);
+        Dictionary<Light, Color> lightColors = FindObjectsOfType<Light>().ToDictionary(l => l, l => l.color);
         while (!FakeInfo.detonated)
         {
+            foreach (var l in lightColors.Keys)
+            {
+                l.color = Color.red;
+            }
             PlayGameSoundHandler(KMSoundOverride.SoundEffect.EmergencyAlarm, transform);
-            yield return new WaitForSeconds(2.5f);
+            yield return new WaitForSeconds(1.25f);
+            foreach (var l in lightColors.Keys)
+            {
+                l.color = lightColors[l];
+            }
+            yield return new WaitForSeconds(1.25f);
         }
     }
 
