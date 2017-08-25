@@ -355,6 +355,9 @@ public class TestHarness : MonoBehaviour
             }
         }
 
+        _alarmAudioSource = gameObject.AddComponent<AudioSource>();
+        _alarmAudioSource.transform.position = transform.position;
+        _alarmAudioSource.loop = true;
         audioSource = gameObject.AddComponent<AudioSource>();
         KMAudio[] kmAudios = FindObjectsOfType<KMAudio>();
         foreach (KMAudio kmAudio in kmAudios)
@@ -683,10 +686,10 @@ public class TestHarness : MonoBehaviour
 
         if (GUILayout.Button("Alarm Snooze"))
         {
-            if (!_alarmGoing)
+            if (!_alarmAudioSource.isPlaying)
                 StartCoroutine(AlarmClock());
             else
-                _alarmGoing = false;
+                _alarmAudioSource.Stop();
         }
 
         GUILayout.Label("Time remaining: " + FakeInfo.GetFormattedTime());
@@ -745,26 +748,19 @@ public class TestHarness : MonoBehaviour
         }
     }
 
-    private bool _alarmGoing;
+    private AudioSource _alarmAudioSource;
     IEnumerator AlarmClock()
     {
         float time = 0;
-        _alarmGoing = true;
-        var _alarmAudioSource = gameObject.AddComponent<AudioSource>();
-        _alarmAudioSource.loop = true;
         _alarmAudioSource.clip = SoundEffects.GetAudioClip(KMSoundOverride.SoundEffect.AlarmClockBeep);
         _alarmAudioSource.Play();
-        while (time < 20 && _alarmGoing)
+        while (time < 20 && _alarmAudioSource.isPlaying)
         {
             time += Time.deltaTime;
             yield return null;
         }
         _alarmAudioSource.Stop();
-        _alarmAudioSource.loop = false;
-        _alarmAudioSource.PlayOneShot(SoundEffects.GetAudioClip(KMSoundOverride.SoundEffect.AlarmClockSnooze));
-        yield return new WaitUntil(() => !_alarmAudioSource.isPlaying);
-        Destroy(_alarmAudioSource);
-        _alarmGoing = false;
+        PlayGameSoundHandler(KMSoundOverride.SoundEffect.AlarmClockSnooze, transform);
     }
 
     private KMSoundOverride.SoundEffect _lightsOnEffect = KMSoundOverride.SoundEffect.Switch;
