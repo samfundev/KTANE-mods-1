@@ -1,0 +1,15 @@
+{
+  "SettingsVersion": 1,
+  "HowToUse0": "Don't Touch this value. It is used by the mod internally to determine if there are new settings to be saved.",
+
+  "ResetToDefault": false,
+  "HowToReset": "Changing this setting to true will reset ALL your setting back to default.",
+
+  "SolvedState": 0,
+  "StrikeState": 0,
+  "OffState": 1,
+  "MorseXmitState": 2,
+  "HowToUse1": "Sets the color of the various States. 0 = Off, 1 = Green, 2 = Red, 3 = Random",
+  "HowToUse2": "The Default settings are: Solved = 0, Strike = 0, Off = 1, MorseXmitState = 2",
+  "HowToUse3": "If MorseXmitState is the same as OffState or either are set to Random, Both colors will be set randomly."
+}

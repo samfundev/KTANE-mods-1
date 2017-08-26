@@ -2380,6 +2380,7 @@ GameObject:
   - 114: {fileID: 114000011307034502}
   - 114: {fileID: 114000010381780190}
   - 114: {fileID: 114000011369427668}
+  - 114: {fileID: 114000013553721246}
   m_Layer: 0
   m_Name: MorseAMaze
   m_TagString: Untagged
@@ -10443,6 +10444,7 @@ MonoBehaviour:
   BombInfo: {fileID: 114000011369427668}
   Audio: {fileID: 114000010381780190}
   GlassBreak: {fileID: 8300000, guid: 4f1e0267b9f3d624cbaa7ab90273cc99, type: 3}
+  ModSettings: {fileID: 114000013553721246}
   TwitchManualCode: Morse-A-Maze
   TwitchHelpMessage: '!{0} move up down left right, !{0} move udlr [make a series
     of status light moves]'
@@ -11278,6 +11280,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spaceBetweenElements: {x: 0, y: 0, z: -0.0254}
+--- !u!114 &114000013553721246
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000013873985696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -289456416, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Settings: '{   "SettingsVersion": 1,   "HowToUse0": "Don''t Touch this value. It
+    is used by the mod internally to determine if there are new settings to be saved.",    "ResetToDefault":
+    false,   "HowToReset": "Changing this setting to true will reset ALL your setting
+    back to default.",    "SolvedState": 0,   "StrikeState": 0,   "OffState": 1,   "MorseXmitState":
+    2,   "HowToUse1": "Sets the color of the various States. 0 = Off, 1 = Green, 2
+    = Red, 3 = Random",   "HowToUse2": "The Default settings are: Solved = 0, Strike
+    = 0, Off = 1, MorseXmitState = 2",   "HowToUse3": "If MorseXmitState is the same
+    as OffState or either are set to Random, Both colors will be set randomly." }'
 --- !u!114 &114000013579952268
 MonoBehaviour:
   m_ObjectHideFlags: 1

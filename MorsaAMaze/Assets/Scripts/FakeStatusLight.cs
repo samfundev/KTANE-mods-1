@@ -5,21 +5,83 @@ using System.Collections.Generic;
 public class FakeStatusLight : MonoBehaviour
 {
 
-    public GameObject InactiveLight;
-    public GameObject StrikeLight;
-    public GameObject PassLight;
+    public GameObject GreenLight;
+    public GameObject RedLight;
+    public GameObject OffLight;
+
+    public StatusLightState PassColor = StatusLightState.Green;
+    public StatusLightState FailColor = StatusLightState.Red;
+    public StatusLightState OffColor = StatusLightState.Off;
+    public StatusLightState MorseTransmitColor = StatusLightState.Green;
 
     public KMBombModule Module;
 
-    private bool _off = false;
-    private bool _pass = false;
-    private bool _fail = false;
+    private bool _green;
+    private bool _off;
+    private bool _red;
 
-    public void HandlePass()
+    private bool _flashingStrike;
+    private bool _passedForReal;
+
+    public StatusLightState HandlePass(StatusLightState state = StatusLightState.Off)
     {
-        if (Module == null) return;
+        _passedForReal = true;
+        _flashingStrike = false;
+        if (Module == null) return SetLightColor(state);
         Module.HandlePass();
-        SetPass();
+        return SetLightColor(state);
+    }
+
+    public StatusLightState SetLightColor(StatusLightState color)
+    {
+        switch (color)
+        {
+            case StatusLightState.Random:
+                color = (StatusLightState) Random.Range(0, 3);
+                if (color == StatusLightState.Red) goto case StatusLightState.Red;
+                if (color == StatusLightState.Green) goto case StatusLightState.Green;
+                goto case StatusLightState.Off;
+            case StatusLightState.Red:
+                _red = true;
+                _green = false;
+                _off = false;
+                break;
+            case StatusLightState.Green:
+                _red = false;
+                _green = true;
+                _off = false;
+                break;
+            case StatusLightState.Off:
+            default:
+                _red = false;
+                _green = false;
+                _off = true;
+                break;
+        }
+        return color;
+    }
+
+    public void GetStatusLights(Transform statusLightParent)
+    {
+        StartCoroutine(GetStatusLight(statusLightParent));
+    }
+
+    protected IEnumerator GetStatusLight(Transform statusLightParent)
+    {
+        for (var i = 0; i < 60; i++)
+        {
+            var off = statusLightParent.FindDeepChild("Component_LED_OFF");
+            var pass = statusLightParent.FindDeepChild("Component_LED_PASS");
+            var fail = statusLightParent.FindDeepChild("Component_LED_STRIKE");
+            if (off == null || pass == null || fail == null)
+            {
+                yield return null;
+                continue;
+            }
+            OffLight = off.gameObject;
+            GreenLight = pass.gameObject;
+            RedLight = fail.gameObject;
+        }
     }
 
     public void HandleStrike()
@@ -32,54 +94,56 @@ public class FakeStatusLight : MonoBehaviour
 
     void Update()
     {
-        if (InactiveLight != null)
-            InactiveLight.SetActive(_off);
-        if (PassLight != null)
-            PassLight.SetActive(_pass);
-        if (StrikeLight != null)
-            StrikeLight.SetActive(_fail);
+        if (_flashingStrike) return;
+        if (GreenLight != null)
+            GreenLight.SetActive(_green);
+        if (OffLight != null)
+            OffLight.SetActive(_off);
+        if (RedLight != null)
+            RedLight.SetActive(_red);
     }
 
     public void SetPass()
     {
-        _pass = true;
-        _fail = _off = false;
+        SetLightColor(PassColor);
     }
 
     public void SetInActive()
     {
-        _pass = _fail = false;
-        _off = true;
-    }
-
-    public void FlashStrike()
-    {
-        if (_pass) return;
-        _off = true;
-        _fail = false;
-        if (gameObject.activeInHierarchy)
-            StartCoroutine(StrikeFlash(1f));
+        SetLightColor(OffColor);
     }
 
     public void SetStrike()
     {
-        _pass = _off = false;
-        _fail = true;
+        SetLightColor(FailColor);
+    }
+
+    private IEnumerator _flashingStrikeCoRoutine;
+    public void FlashStrike()
+    {
+        if (_passedForReal) return;
+        if (!gameObject.activeInHierarchy) return;
+        if (_flashingStrikeCoRoutine != null)
+            StopCoroutine(_flashingStrikeCoRoutine);
+        _flashingStrike = false;
+        _flashingStrikeCoRoutine = StrikeFlash(1f);
+        StartCoroutine(_flashingStrikeCoRoutine);
     }
 
     protected IEnumerator StrikeFlash(float blinkTime)
     {
-        _off = false;
-        _fail = true;
+        SetStrike();
+        Update();
+        _flashingStrike = true;
         yield return new WaitForSeconds(blinkTime);
-        _off = true;
-        _fail = false;
+        _flashingStrike = false;
+        _flashingStrikeCoRoutine = null;
     }
 
-    private static int[] Morsify(string text)
+    private static IEnumerable<int> Morsify(string text)
     {
-        char[] values = text.ToUpperInvariant().ToCharArray();
-        List<int> data = new List<int>();
+        var values = text.ToUpperInvariant().ToCharArray();
+        var data = new List<int>();
         for (int a = 0; a < values.Length; a++)
         {
             if (a > 0) data.Add(-1);
@@ -90,238 +154,153 @@ public class FakeStatusLight : MonoBehaviour
                     data.Add(-1);
                     break;*/
                 case 'A':
-                    data.Add(0);
-                    data.Add(1);
+                    data.AddRange(new [] {0,1});
                     break;
                 case 'B':
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,0,0,0 });
                     break;
                 case 'C':
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,0,1,0 });
                     break;
                 case 'D':
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,0,0 });
                     break;
                 case 'E':
-                    data.Add(0);
+                    data.AddRange(new[] { 0 });
                     break;
                 case 'F':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(0);
+                    data.AddRange(new[] { 0,0,1,0 });
                     break;
                 case 'G':
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,1,0 });
                     break;
                 case 'H':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 0,0,0,0 });
                     break;
                 case 'I':
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 0,0 });
                     break;
                 case 'J':
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 0,1,1,1 });
                     break;
                 case 'K':
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(1);
+                    data.AddRange(new[] { 1,0,1 });
                     break;
                 case 'L':
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 0,1,0,0 });
                     break;
                 case 'M':
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 1,1 });
                     break;
                 case 'N':
-                    data.Add(1);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,0 });
                     break;
                 case 'O':
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 1,1,1 });
                     break;
                 case 'P':
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(0);
+                    data.AddRange(new[] { 0,1,1,0 });
                     break;
                 case 'Q':
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(1);
+                    data.AddRange(new[] { 1,1,0,1 });
                     break;
                 case 'R':
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(0);
+                    data.AddRange(new[] { 0,1,0 });
                     break;
                 case 'S':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 0,0,0 });
                     break;
                 case 'T':
-                    data.Add(1);
+                    data.AddRange(new[] { 1 });
                     break;
                 case 'U':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(1);
+                    data.AddRange(new[] { 0,0,1 });
                     break;
                 case 'V':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(1);
+                    data.AddRange(new[] { 0,0,0,1 });
                     break;
                 case 'W':
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 0,1,1 });
                     break;
                 case 'X':
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(1);
+                    data.AddRange(new[] { 1,0,0,1 });
                     break;
                 case 'Y':
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 1,0,1,1 });
                     break;
                 case 'Z':
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,1,0,0 });
                     break;
                 case '1':
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 0,1,1,1,1 });
                     break;
                 case '2':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 0,0,1,1,1 });
                     break;
                 case '3':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 0,0,0,1,1 });
                     break;
                 case '4':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(1);
+                    data.AddRange(new[] { 0,0,0,0,1 });
                     break;
                 case '5':
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 0,0,0,0,0 });
                     break;
                 case '6':
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,0,0,0,0 });
                     break;
                 case '7':
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,1,0,0,0 });
                     break;
                 case '8':
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(0);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,1,1,0,0 });
                     break;
                 case '9':
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(0);
+                    data.AddRange(new[] { 1,1,1,1,0 });
                     break;
                 case '0':
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
-                    data.Add(1);
+                    data.AddRange(new[] { 1,1,1,1,1 });
+                    break;
+                case '-':
+                    data.AddRange(new[] { 1,0,0,0,0,1 });
                     break;
             }
         }
         return data.ToArray();
     }
 
+    //private bool _transmitting;
     public IEnumerator PlayWord(string word)
     {
-        SetInActive();
+        //_transmitting = true;
+        while (MorseTransmitColor == OffColor || MorseTransmitColor == StatusLightState.Random || OffColor == StatusLightState.Random)
+        {
+            if (MorseTransmitColor == OffColor || MorseTransmitColor == StatusLightState.Random)
+                MorseTransmitColor = (StatusLightState) Random.Range(0, 3);
+            if (OffColor == MorseTransmitColor || OffColor == StatusLightState.Random)
+                OffColor = (StatusLightState)Random.Range(0, 3);
+        }
+        SetLightColor(OffColor);
         foreach (var d in Morsify(word))
         {
             if (d == -1)
             {
                 yield return new WaitForSeconds(0.75f);
+                continue;
             }
-            else if (d == 0)
-            {
-                SetStrike();
-                yield return new WaitForSeconds(0.25f);
-                SetInActive();
-                yield return new WaitForSeconds(0.25f);
-            }
-            else
-            {
-                SetStrike();
-                yield return new WaitForSeconds(0.75f);
-                SetInActive();
-                yield return new WaitForSeconds(0.25f);
-            }
+            SetLightColor(MorseTransmitColor);
+            yield return d == 0 ? new WaitForSeconds(0.25f) : new WaitForSeconds(0.75f);
+            SetLightColor(OffColor);
+            yield return new WaitForSeconds(0.25f);
         }
+        //_transmitting = false;
     }
+}
 
+public enum StatusLightState
+{
+    Off,
+    Green,
+    Red,
+    Random
 }

@@ -30,11 +30,19 @@ public class MorseAMaze : MonoBehaviour
 
     public AudioClip GlassBreak;
 
+    public KMModSettings ModSettings;
+
     private Transform _currentLocation;
     private Transform _destination;
 
     private CoroutineQueue _movements;
     private bool _solved;
+
+    private string _souvenirQuestionStartingLocation;
+    private string _souvenirQuestionEndingLocation;
+    private string _souvenirQuestionWordPlaying;
+
+    private ModSettings _modSettings;
 
     private readonly string[,,] _mazes =
     {
@@ -116,6 +124,8 @@ public class MorseAMaze : MonoBehaviour
     // ReSharper disable once UnusedMember.Local
     private void Start ()
     {
+        _modSettings = new ModSettings(BombModule);
+        _modSettings.ReadSettings();
         _movements = gameObject.AddComponent<CoroutineQueue>();
         BombModule.GenerateLogFriendlyName();
 	    Locations.Shuffle();
@@ -129,8 +139,19 @@ public class MorseAMaze : MonoBehaviour
         BombModule.OnActivate += Activate;
 	    FakeStatusLight = Instantiate(FakeStatusLight);
 
-	    StartCoroutine(GetStatusLight());
-	}
+        if (BombModule != null)
+            FakeStatusLight.Module = BombModule;
+
+        FakeStatusLight.PassColor = _modSettings.Settings.SolvedState;
+        FakeStatusLight.FailColor = _modSettings.Settings.StrikeState;
+        FakeStatusLight.OffColor = _modSettings.Settings.OffState;
+        FakeStatusLight.MorseTransmitColor = _modSettings.Settings.MorseOn;
+        FakeStatusLight.GetStatusLights(StatusLight);
+        FakeStatusLight.SetInActive();
+
+
+
+    }
 
     private Vector3 _originalStatusLightLocation;
     private float _statusLightMoveFrames;
@@ -180,30 +201,24 @@ public class MorseAMaze : MonoBehaviour
                 StatusLight.localPosition.z);
             yield return null;
         }
-        FakeStatusLight.HandlePass();
-    }
-
-
-    private IEnumerator GetStatusLight()
-    {
-        FakeStatusLight.SetInActive();
-        yield return null;
-        yield return null;
-        var off = StatusLight.FindDeepChild("Component_LED_OFF");
-        var pass = StatusLight.FindDeepChild("Component_LED_PASS");
-        var fail = StatusLight.FindDeepChild("Component_LED_STRIKE");
-
-        if (off != null)
-            FakeStatusLight.PassLight = off.gameObject;
-
-        if (pass != null)
-            FakeStatusLight.InactiveLight = pass.gameObject;
-
-        if (fail != null)
-            FakeStatusLight.StrikeLight = fail.gameObject;
-
-        if (BombModule != null)
-            FakeStatusLight.Module = BombModule;
+        
+        switch (FakeStatusLight.SetLightColor(FakeStatusLight.PassColor))
+        {
+            case StatusLightState.Red:
+                BombModule.LogFormat("Setting the status light to Red. Did you want that with a side of strikes? Keepo");
+                FakeStatusLight.HandlePass(StatusLightState.Red);
+                break;
+            case StatusLightState.Green:
+                BombModule.LogFormat("Setting the status light to its normal Green color for solved.");
+                FakeStatusLight.HandlePass(StatusLightState.Green);
+                break;
+            case StatusLightState.Off:
+            default:
+                BombModule.LogFormat("Turning off the Status light. Kappa");
+                FakeStatusLight.HandlePass();
+                break;
+        }
+        BombModule.Log("Module Solved");
     }
 
     private void SetWall(int x, int y, bool right, bool active)
@@ -264,10 +279,27 @@ public class MorseAMaze : MonoBehaviour
         return location.parent.name + location.name;
     }
 
+    private string GetDirection(Transform from, Transform to)
+    {
+        var fromCoordinates = GetCoordinates(from);
+        var toCoordinates = GetCoordinates(to);
+        var fromX = "ABCDEF".IndexOf(fromCoordinates.Substring(0, 1), StringComparison.Ordinal);
+        var toX = "ABCDEF".IndexOf(toCoordinates.Substring(0, 1), StringComparison.Ordinal);
+        var fromY = int.Parse(fromCoordinates.Substring(1));
+        var toY = int.Parse(toCoordinates.Substring(1));
+
+        if (fromX == toX && fromY == toY) return "";
+
+        if (fromX == toX)
+            return (fromY < toY) ? "Down" : "Up";
+
+        return (fromX > toX) ? "Left" : "Right";
+    }
+
     private IEnumerator GiveStrike(Transform wall, Transform from, Transform to)
     {
-        BombModule.LogFormat("Tried to move from {0} to {1}, but there was a wall in the way. Strike", GetCoordinates(from),
-            GetCoordinates(to));
+        BombModule.LogFormat("Tried to move from {0} to {1} - {2}, but there was a wall in the way. Strike", GetCoordinates(from),
+            GetCoordinates(to),GetDirection(from,to));
         
 
         var hitWall = 8;
@@ -294,7 +326,7 @@ public class MorseAMaze : MonoBehaviour
     private IEnumerator MoveToLocation(Transform location, Transform from)
     {
         //yield return null;
-        BombModule.LogFormat("Moving from {0} to {1}", GetCoordinates(from), GetCoordinates(location));
+        BombModule.LogFormat("Moving from {0} to {1} - {2}", GetCoordinates(from), GetCoordinates(location), GetDirection(from, location));
         var lx = location.parent.localPosition.x;
         var ly = location.localPosition.z;
         var sx = StatusLight.localPosition.x;
@@ -339,7 +371,6 @@ public class MorseAMaze : MonoBehaviour
 
         if (location == _destination)
         {
-            BombModule.LogFormat("Solved - Turning off the Status light Kappa");
             StartCoroutine(MoveStatusLightToCorner());
         }
         yield return null;
@@ -494,7 +525,9 @@ public class MorseAMaze : MonoBehaviour
  
         _rule = Random.Range(0, _morseCodeWords.Length);
         _unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2 && BombInfo.GetBatteryHolderCount() == 3;
-        StartCoroutine(!_unicorn ? PlayWordLocation(_morseCodeWords[_rule]) : PlayWordLocation("Thank you BOB"));
+        _souvenirQuestionWordPlaying = !_unicorn ? _morseCodeWords[_rule] : "Thank you BOB";
+
+        StartCoroutine(PlayWordLocation(_souvenirQuestionWordPlaying));
 
 
         switch (_edgeworkRules[_rule])
@@ -654,8 +687,11 @@ public class MorseAMaze : MonoBehaviour
 
         if (_firstGeneration)
         {
-            BombModule.LogFormat("Starting Location: {0}{1} - Destination Location: {2}{3}", _currentLocation.parent.name,
-                _currentLocation.name, _destination.parent.name, _destination.name);
+            _souvenirQuestionStartingLocation = GetCoordinates(_currentLocation);
+            _souvenirQuestionEndingLocation = GetCoordinates(_destination);
+
+            BombModule.LogFormat("Starting Location: {0} - Destination Location: {1}",
+                _souvenirQuestionStartingLocation, _souvenirQuestionEndingLocation);
             BombModule.LogFormat("Rule used to Look up the Maze = {0}", _edgeworkRules[_rule]);
 
             if (_unicorn)
@@ -777,7 +813,7 @@ public class MorseAMaze : MonoBehaviour
     private void Update ()
     {
         if (_movements.Processing) return;
-        
+        if (_solved) return;
         
 	    // ReSharper disable once SwitchStatementMissingSomeCases
 	    switch (_edgeworkRules[_rule])
