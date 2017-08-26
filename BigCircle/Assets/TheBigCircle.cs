@@ -61,7 +61,7 @@ public class TheBigCircle : MonoBehaviour
         BombModule.OnActivate += delegate { _activated = true; StartCoroutine(SpinCircle()); StartCoroutine(UpdateSolution());};
     }
 
-    private const float ListResetTime = 0.1f;
+    private const float ListResetTime = 0.25f;
     private float _lastSelected;
     private float _lastAdded;
     private readonly List<WedgeColors> _selectedColors = new List<WedgeColors>();
@@ -122,90 +122,74 @@ public class TheBigCircle : MonoBehaviour
             return _baseOffset;
 
         var total = 0;
-        foreach (var indicator in BombInfo.GetOnIndicators())
+
+
+
+        var customIndicatorRule = new List<string>();
+        var litIndicators = BombInfo.GetOnIndicators().ToList();
+        var indicators = BombInfo.GetIndicators().ToList();
+        indicators.Sort();
+        int score;
+
+
+        foreach (var indicator in indicators)
         {
+            var lit = litIndicators.Contains(indicator);
+            if (lit)
+            {
+                litIndicators.Remove(indicator);
+            }
             switch (indicator)
             {
                 case "IND":
+                    score = 0;
                     break;
                 case "BOB":
                 case "CAR":
                 case "CLR":
-                    BombModule.Log("Lit BOB, CAR, CLR - Adding 1");
-                    total += 1;
+                    score = lit ? 1 : -1;
                     break;
                 case "FRK":
                 case "FRQ":
                 case "MSA":
                 case "NSA":
-                    BombModule.Log("Lit FRK, FRQ, MSA, NSA - Adding 2");
-                    total += 2;
+                    score = lit ? 2 : -2;
                     break;
                 case "SIG":
                 case "SND":
                 case "TRN":
-                    BombModule.Log("Lit SIG, SND, TRN - Adding 3");
-                    total += 3;
+                    score = lit ? 3 : -3;
                     break;
                 default:
-                    BombModule.Log("Custom Indicator - Adding 6");
-                    total += 6;
+                    score = 6;
                     break;
             }
+            if(score < 6)
+                BombModule.LogFormat("{0} {1}: {2:+#;-#}", lit ? "Lit" : "Unlit", indicator, score);
+            else
+                customIndicatorRule.Add(string.Format("Custom indicator: {0} {1}: +6", lit ? "Lit":"Unlit",indicator));
+            total += score;
         }
-        BombModule.LogFormat("Total after Adding Lit Indicators: {0}", total);
+        score = BombInfo.GetBatteryCount() % 2 == 0 ? -4 : 4;
+        BombModule.LogFormat("{0} Batteries ({1}): {2}", BombInfo.GetBatteryCount(),score < 0 ? "Even" : "Odd",  score);
+        total += score;
 
-        foreach (var indicator in BombInfo.GetOffIndicators())
-        {
-            switch (indicator)
-            {
-                case "IND":
-                    break;
-                case "BOB":
-                case "CAR":
-                case "CLR":
-                    BombModule.Log("Unlit BOB, CAR, CLR - Subtracting 1");
-                    total -= 1;
-                    break;
-                case "FRK":
-                case "FRQ":
-                case "MSA":
-                case "NSA":
-                    BombModule.Log("Unlit FRK, FRQ, MSA, NSA - Subtracting 2");
-                    total -= 2;
-                    break;
-                case "SIG":
-                case "SND":
-                case "TRN":
-                    BombModule.Log("Unlit SIG, SND, TRN - Subtracting 3");
-                    total -= 3;
-                    break;
-                default:
-                    BombModule.Log("Custom Indicator - Adding 6");
-                    total += 6;
-                    break;
-            }
-        }
-        BombModule.LogFormat("Total after Adding Unlit Indicators: {0}", total);
-
-        total += BombInfo.GetBatteryCount() % 2 == 0 ? -4 : 4;
-        BombModule.LogFormat("Total after Batteries: {0}", total);
-
+        var dviRule = new List<string>();
+        var customPorts = new List<string>();
         foreach (var plate in BombInfo.GetPortPlates())
         {
             foreach (var port in plate)
             {
                 if (port == KMBombInfoExtensions.KnownPortType.Parallel.ToString())
                 {
-                    BombModule.Log("Port Plate with Parallel port found");
                     if (plate.Contains(KMBombInfoExtensions.KnownPortType.Serial.ToString()))
                     {
-                        BombModule.Log("Paired with a Serial port - Subtracting 5");
+                        BombModule.Log("Port plate with both parallel and serial: -5");
                         total -= 5;
                     }
                     else
                     {
-                        BombModule.LogFormat("Not paired with a Serial port - Adding 5");
+                        BombModule.LogFormat("Port plate with only parallel: +5");
                         total += 5;
                     }
                     continue;
@@ -213,15 +197,14 @@ public class TheBigCircle : MonoBehaviour
                 if (port == KMBombInfoExtensions.KnownPortType.Serial.ToString()) continue;
                 if (port == KMBombInfoExtensions.KnownPortType.DVI.ToString())
                 {
-                    BombModule.Log("Port plate with DVI-D port found");
                     if (plate.Contains(KMBombInfoExtensions.KnownPortType.StereoRCA.ToString()))
                     {
-                        BombModule.Log("Paired with Stereo-RCA - Adding 5");
+                        dviRule.Add("Port plate with both DVI-D and Stereo RCA: +5");
                         total += 5;
                     }
                     else
                     {
-                        BombModule.LogFormat("Not paired with Stereo-RCA - Subtracting 5");
+                        dviRule.Add("Port plate with DVI-D: -5");
                         total -= 5;
                     }
                     continue;
@@ -229,11 +212,16 @@ public class TheBigCircle : MonoBehaviour
                 if (port == KMBombInfoExtensions.KnownPortType.RJ45.ToString()) continue;
                 if (port == KMBombInfoExtensions.KnownPortType.StereoRCA.ToString()) continue;
                 if (port == KMBombInfoExtensions.KnownPortType.PS2.ToString()) continue;
-                BombModule.LogFormat("Special Port {0} found - Subtracting 6", port);
+                customPorts.Add(string.Format("Special port {0}: -6",port));
                 total = total - 6;
             }
         }
-        BombModule.LogFormat("Total after Adding Ports: {0}", total);
+        foreach (var s in dviRule)
+            BombModule.Log(s);
+        foreach (var s in customIndicatorRule)
+            BombModule.Log(s);
+        foreach (var s in customPorts)
+            BombModule.Log(s);
 
         _baseOffset = total;
 
@@ -265,26 +253,31 @@ public class TheBigCircle : MonoBehaviour
         if (IsBobPresent())
             return null;
 
-        BombModule.LogFormat("Base Total for current solution: {0}", total);
+        BombModule.LogFormat("Base total: {0}", total);
 
 
         total += solved * 4;
-        BombModule.LogFormat("Total after Adding Solved Modules: {0}", total);
+        if(solved > 0)
+            BombModule.LogFormat("{0} solved modules: +{1}", solved, solved*4);
 
         total += twofactor;
-        BombModule.LogFormat("Total after Adding TwoFactors: {0}", total);
+        foreach (var twoFA in BombInfo.GetTwoFactorCodes())
+            BombModule.LogFormat("Two Factor {0}: +{1}", twoFA, twoFA % 10);
+
+        BombModule.LogFormat("Total: {0}", total);
 
         if (total < 0)
         {
-            BombModule.Log("Total is Negative. Multiplying by -1");
             total *= -1;
+            BombModule.LogFormat("Total is Negative.  Multiplying by -1.  New number is {0}.", total);
         }
 
         var serial = BombInfo.GetSerialNumber().ToUpperInvariant();
         serial += serial.Substring(4, 1) + serial.Substring(3, 1) + serial.Substring(2, 1) + serial.Substring(1, 1);
 
         var index = serial.Substring(total % 10, 1);
-        BombModule.LogFormat("Extended Serial# = {0}. Using Character {1}, which is {2}", serial, total % 10, index);
+        BombModule.LogFormat("Extended serial number is {0}.", serial);
+        BombModule.LogFormat("Using Character {0}, which is {1}.", total % 10, index);
 
         var colorIndex = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".IndexOf(index, StringComparison.Ordinal);
 
@@ -296,14 +289,17 @@ public class TheBigCircle : MonoBehaviour
         }
 
         var lookup = new List<WedgeColors>(colorLookup[colorIndex / 3]);
-        BombModule.LogFormat("Current Solution: {0}, {1}, {2}", lookup[0], lookup[1], lookup[2]);
-
 
         if (_rotateCounterClockwise)
         {
-            BombModule.LogFormat("Circle is rotating counter-Clockwise. Reversing solution to {0} {1} {2}", lookup[2], lookup[1], lookup[0]);
             lookup.Reverse();
+            BombModule.Log("Circle is spinning counter-clockwise.");
         }
+        else
+        {
+            BombModule.Log("Circle is spinning clockwise.");
+        }
+        BombModule.LogFormat("Solution: {0}, {1}, {2}", lookup[0], lookup[1], lookup[2]);
 
         return lookup.ToArray();
     }
