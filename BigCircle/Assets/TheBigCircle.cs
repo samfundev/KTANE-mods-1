@@ -485,6 +485,7 @@ public class TheBigCircle : MonoBehaviour
 
 
     public string TwitchHelpMessage = "Submit the correct response with !{0} press blue black red.  (Valid colors are Red, Orange, Yellow, Green, Blue, Magenta, White, blacK)";
+    public string[] TwitchValidCommands ={"press(?> (?>red|orange|yellow|green|blue|magenta|purple|white|black|[roygbmwkp])){1,3}"};
     public IEnumerator ProcessTwitchCommand(string command)
     {
         if (!command.StartsWith("press ", StringComparison.InvariantCultureIgnoreCase))

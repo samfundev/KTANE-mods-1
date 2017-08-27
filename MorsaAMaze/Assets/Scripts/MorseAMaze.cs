@@ -759,6 +759,7 @@ public class MorseAMaze : MonoBehaviour
     #region TwitchPlays
     public string TwitchManualCode = "Morse-A-Maze";
     public string TwitchHelpMessage = "!{0} move up down left right, !{0} move udlr [make a series of status light moves]";
+    public string[] TwitchValidCommands = {"move .*"};
     public IEnumerator ProcessTwitchCommand(string command)
     {
         if (!command.StartsWith("move ", StringComparison.InvariantCultureIgnoreCase))
