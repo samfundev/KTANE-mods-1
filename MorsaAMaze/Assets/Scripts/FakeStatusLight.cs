@@ -16,6 +16,9 @@ public class FakeStatusLight : MonoBehaviour
 
     public KMBombModule Module;
 
+    public bool IsFakeStatusLightReady { get; private set; }
+    public bool HasFakeStatusLightFailed { get; private set; }
+
     private bool _green;
     private bool _off;
     private bool _red;
@@ -78,10 +81,13 @@ public class FakeStatusLight : MonoBehaviour
                 yield return null;
                 continue;
             }
+            IsFakeStatusLightReady = true;
             OffLight = off.gameObject;
             GreenLight = pass.gameObject;
             RedLight = fail.gameObject;
+            yield break;
         }
+        HasFakeStatusLightFailed = true;
     }
 
     public void HandleStrike()

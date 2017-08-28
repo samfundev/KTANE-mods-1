@@ -130,11 +130,6 @@ public class MorseAMaze : MonoBehaviour
         BombModule.GenerateLogFriendlyName();
 	    Locations.Shuffle();
         SetMaze(0); //Hide the walls now.
-	    
-        _currentLocation = Locations[0];
-	    _destination = Locations[1];
-        StartCoroutine(MoveStatusLightToStart());
-
 
         BombModule.OnActivate += Activate;
 	    FakeStatusLight = Instantiate(FakeStatusLight);
@@ -145,63 +140,111 @@ public class MorseAMaze : MonoBehaviour
         FakeStatusLight.PassColor = _modSettings.Settings.SolvedState;
         FakeStatusLight.FailColor = _modSettings.Settings.StrikeState;
         FakeStatusLight.OffColor = _modSettings.Settings.OffState;
-        FakeStatusLight.MorseTransmitColor = _modSettings.Settings.MorseOn;
+        FakeStatusLight.MorseTransmitColor = _modSettings.Settings.MorseXmitState;
+
+
         FakeStatusLight.GetStatusLights(StatusLight);
         FakeStatusLight.SetInActive();
 
-
-
+        _currentLocation = Locations[0];
+        _destination = Locations[1];
+        StartCoroutine(MoveStatusLightToStart());
     }
 
     private Vector3 _originalStatusLightLocation;
     private float _statusLightMoveFrames;
+    private const float MoveTime = 0.75f;
     private IEnumerator MoveStatusLightToStart()
     {
-        yield return null; yield return null; yield return null;
+        while (!FakeStatusLight.IsFakeStatusLightReady)
+        {
+            yield return null;
+            if (!FakeStatusLight.HasFakeStatusLightFailed) continue;
+
+            _souvenirQuestionEndingLocation = null;
+            _souvenirQuestionStartingLocation = null;
+            _souvenirQuestionWordPlaying = null;
+            _solved = true;
+            foreach (var location in Locations)
+                location.gameObject.SetActive(false);
+            BombModule.HandlePass();
+            BombModule.LogFormat("Status light not able to be manipulated. Passing the module so that this bomb can be solved.");
+            yield return new WaitForSecondsRealtime(2);
+            _unicorn = true;
+            for (var x = 0; x < 6; x++)
+            {
+                for (var y = 0; y < 6; y++)
+                {
+                    SetWall(x, y, false, true);
+                    SetWall(x, y, true, true);
+                }
+            }
+
+            yield return new WaitForSecondsRealtime(8);
+            StopAllCoroutines();
+        }
 
         _originalStatusLightLocation = StatusLight.localPosition;
-        _statusLightMoveFrames = 1f / Time.deltaTime;
-        var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
-        for (var i = 0; i < (_statusLightMoveFrames*2); i++)
+
+        var targetMove = _originalStatusLightLocation.y * -1;
+        while (StatusLight.localPosition.y > targetMove)
         {
+            _statusLightMoveFrames = MoveTime / Time.deltaTime;
+            var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
             StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y - move,
                 StatusLight.localPosition.z);
             yield return null;
         }
 
-        StatusLight.localPosition = new Vector3(_currentLocation.parent.localPosition.x, StatusLight.localPosition.y,
+        StatusLight.localPosition = new Vector3(_currentLocation.parent.localPosition.x, targetMove,
             _currentLocation.localPosition.z);
         yield return null;
+        targetMove *= -1;
 
-        for (var i = 0; i < (_statusLightMoveFrames * 2); i++)
+        while (StatusLight.localPosition.y < targetMove)
         {
+            _statusLightMoveFrames = MoveTime / Time.deltaTime;
+            var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
             StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y + move,
                 StatusLight.localPosition.z);
             yield return null;
         }
+
+        StatusLight.localPosition = new Vector3(_currentLocation.parent.localPosition.x, targetMove,
+            _currentLocation.localPosition.z);
+        yield return null;
     }
 
     private IEnumerator MoveStatusLightToCorner()
     {
-        var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
-        for (var i = 0; i < (_statusLightMoveFrames * 2); i++)
+        var targetMove = _originalStatusLightLocation.y * -1;
+        while (StatusLight.localPosition.y > targetMove)
         {
+            _statusLightMoveFrames = MoveTime / Time.deltaTime;
+            var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
             StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y - move,
                 StatusLight.localPosition.z);
             yield return null;
         }
 
-        StatusLight.localPosition = new Vector3(StatusLightCorner.localPosition.x, StatusLight.localPosition.y,
+        StatusLight.localPosition = new Vector3(StatusLightCorner.localPosition.x, targetMove,
             StatusLightCorner.localPosition.z);
         yield return null;
+        targetMove *= -1;
 
-        for (var i = 0; i < (_statusLightMoveFrames * 2); i++)
+        while (StatusLight.localPosition.y < targetMove)
         {
+            _statusLightMoveFrames = MoveTime / Time.deltaTime;
+            var move = _originalStatusLightLocation.y / _statusLightMoveFrames;
             StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y + move,
                 StatusLight.localPosition.z);
             yield return null;
         }
-        
+
+        StatusLight.localPosition = new Vector3(StatusLightCorner.localPosition.x, targetMove,
+            StatusLightCorner.localPosition.z);
+        yield return null;
+
         switch (FakeStatusLight.SetLightColor(FakeStatusLight.PassColor))
         {
             case StatusLightState.Red:
@@ -524,6 +567,9 @@ public class MorseAMaze : MonoBehaviour
         Right.OnInteract += delegate { MoveRight(); return false; };
  
         _rule = Random.Range(0, _morseCodeWords.Length);
+        //if (BombModule.GetIDNumber() == 1)
+        //    _rule = _edgeworkRules.ToList().IndexOf(EdgeworkRules.Strikes);
+
         _unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2 && BombInfo.GetBatteryHolderCount() == 3;
         _souvenirQuestionWordPlaying = !_unicorn ? _morseCodeWords[_rule] : "Thank you BOB";
 
@@ -644,46 +690,86 @@ public class MorseAMaze : MonoBehaviour
 
 
     private bool _firstGeneration = true;
+
+    private bool IsLocationAlwaysThreeMovesTwoDirections()
+    {
+        var fromCoordinates = GetCoordinates(_currentLocation);
+        var toCoordinates = GetCoordinates(_destination);
+        var fromX = "ABCDEF".IndexOf(fromCoordinates.Substring(0, 1), StringComparison.Ordinal) + 1;
+        var toX = "ABCDEF".IndexOf(toCoordinates.Substring(0, 1), StringComparison.Ordinal) + 1;
+        var fromY = int.Parse(fromCoordinates.Substring(1));
+        var toY = int.Parse(toCoordinates.Substring(1));
+        if (fromX == toX)
+            return false;
+        if (fromY == toY)
+            return false;
+        return (Mathf.Abs(fromX - toX) + Mathf.Abs(fromY - toY)) >= 3;
+    }
+
     private void GetMazeSolution(int maze)
     {
         maze %= 18;
         SetMaze(maze);
-        
+
 
         var directions = new List<string>();
-        StringBuilder sb;
-        int moveLength;
-        var locationNumber = 1;
-        bool success;
-        do
+        StringBuilder sb = new StringBuilder();
+        int moveLength = 0;
+        bool success = false;
+
+        //} while (_firstGeneration && (moveLength < 3 || directions.Count < 2) && (locationNumber < Locations.Length));
+
+
+        var allMazes = _edgeworkRules[_rule] == EdgeworkRules.TwoFactor
+                       || _edgeworkRules[_rule] == EdgeworkRules.SolveCount
+                       || _edgeworkRules[_rule] == EdgeworkRules.Strikes;
+        allMazes &= _firstGeneration;
+
+
+        for (var i = 1; i < (_firstGeneration ? Locations.Length : 2); i++)
         {
-            directions.Clear();
-            sb = new StringBuilder();
             if (_firstGeneration)
             {
-                _destination = Locations[locationNumber++];
+                _destination = Locations[i];
             }
-            success = GenerateMazeSolution(maze, 77);
-            moveLength = _mazeStack.Count;
-            if (!success)
+            for (var j = maze; j < (allMazes ? maze + 18 + 1 : maze + 1); j++)
             {
-                BombModule.LogFormat("Failed to Generate the maze solution for going from {0} to {1} in maze {2}",
-                    GetCoordinates(_currentLocation), GetCoordinates(_destination), maze + 1);
-                continue;
-            }
+                directions.Clear();
+                sb = new StringBuilder();
 
-            var move = _mazeStack.Pop();
-            directions.Add(move);
-            sb.Append(move);
-            while (_mazeStack.Count > 0)
-            {
-                move = _mazeStack.Pop();
-                if (!directions.Contains(move))
-                    directions.Add(move);
-                sb.Append(", " + move);
+                success = GenerateMazeSolution(j % 18, 77);
+                moveLength = _mazeStack.Count;
+                if (!success)
+                {
+                    BombModule.LogFormat(
+                        "Failed to Generate the maze solution for going from {0} to {1} in maze {2}",
+                        GetCoordinates(_currentLocation), GetCoordinates(_destination), maze + 1);
+                    continue;
+                }
+
+                var move = _mazeStack.Pop();
+                directions.Add(move);
+                sb.Append(move);
+                while (_mazeStack.Count > 0)
+                {
+                    move = _mazeStack.Pop();
+                    if (!directions.Contains(move))
+                        directions.Add(move);
+                    sb.Append(", " + move);
+                }
+                if (IsLocationAlwaysThreeMovesTwoDirections() && j == maze) break;  //Always at least 3 moves and at least 2 Directions away in ALL mazes.
+                if (moveLength < 3 || directions.Count < 2) break;  //No point in checking the rest of the mazes if the rules are not met.
+                //The first maze will be run twice if ALL 18 mazes pass the rules.
             }
-        } while (_firstGeneration && (moveLength < 3 || directions.Count < 2) && (locationNumber < Locations.Length));
-        if (!success) return;
+            if (IsLocationAlwaysThreeMovesTwoDirections()) break;   //And no need to check any more locations if this condition is met.
+            if (moveLength >= 3 && directions.Count >= 2) break; //Likewise if this condition was met in ALL 18 mazes, being on same line or less than 3 manhatten distance away.
+        }
+        if (!success)
+        {
+            BombModule.Log("Failed to generate a maze solution. Passing the module now.");
+            StartCoroutine(MoveStatusLightToCorner());
+            return;
+        }
 
         if (_firstGeneration)
         {
@@ -692,7 +778,7 @@ public class MorseAMaze : MonoBehaviour
 
             BombModule.LogFormat("Starting Location: {0} - Destination Location: {1}",
                 _souvenirQuestionStartingLocation, _souvenirQuestionEndingLocation);
-            BombModule.LogFormat("Rule used to Look up the Maze = {0}", _edgeworkRules[_rule]);
+            BombModule.LogFormat("Rule used to Look up the Maze = {0}", GetRuleName());
 
             if (_unicorn)
             {
@@ -708,10 +794,20 @@ public class MorseAMaze : MonoBehaviour
         }
         else
         {
-            BombModule.LogFormat("Updating the maze for rule {0}",_edgeworkRules[_rule]);
+            BombModule.LogFormat("Updating the maze for rule {0}", _edgeworkRules[_rule]);
         }
-        BombModule.LogFormat("Maze Solution from {0} to {1} in maze \"{2} - {3}\" is: {4}", GetCoordinates(_currentLocation),
+        BombModule.LogFormat("Maze Solution from {0} to {1} in maze \"{2} - {3}\" is: {4}",
+            GetCoordinates(_currentLocation),
             GetCoordinates(_destination), maze, _morseCodeWords[maze], sb);
+    }
+
+    private string GetRuleName()
+    {
+        if (_edgeworkRules[_rule] == EdgeworkRules.TwoFactor)
+        {
+            return BombInfo.IsTwoFactorPresent() ? "TwoFactor" : "UnsolvedModules";
+        }
+        return _edgeworkRules[_rule].ToString();
     }
     #endregion
 

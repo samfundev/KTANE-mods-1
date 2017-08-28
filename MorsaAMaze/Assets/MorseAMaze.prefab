@@ -10448,6 +10448,8 @@ MonoBehaviour:
   TwitchManualCode: Morse-A-Maze
   TwitchHelpMessage: '!{0} move up down left right, !{0} move udlr [make a series
     of status light moves]'
+  TwitchValidCommands:
+  - move .*
 --- !u!114 &114000011353193498
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -11291,7 +11293,7 @@ MonoBehaviour:
   m_Script: {fileID: -289456416, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Settings: '{   "SettingsVersion": 1,   "HowToUse0": "Don''t Touch this value. It
+  Settings: '{   "SettingsVersion": 2,   "HowToUse0": "Don''t Touch this value. It
     is used by the mod internally to determine if there are new settings to be saved.",    "ResetToDefault":
     false,   "HowToReset": "Changing this setting to true will reset ALL your setting
     back to default.",    "SolvedState": 0,   "StrikeState": 0,   "OffState": 1,   "MorseXmitState":

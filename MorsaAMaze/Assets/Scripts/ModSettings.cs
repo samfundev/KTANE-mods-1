@@ -18,7 +18,7 @@ public class ModuleSettings
     public StatusLightState SolvedState = StatusLightState.Off;
     public StatusLightState StrikeState = StatusLightState.Off;
     public StatusLightState OffState = StatusLightState.Green;
-    public StatusLightState MorseOn = StatusLightState.Red;
+    public StatusLightState MorseXmitState = StatusLightState.Red;
 
     public string HowToUse1 = "Sets the color of the various States. 0 = Off, 1 = Green, 2 = Red, 3 = Random";
     public string HowToUse2 = "The Default settings are: Solved = 0, Strike = 0, Off = 1, MorseOff = 1, MorseOn = 2";
@@ -27,7 +27,7 @@ public class ModuleSettings
 
 public class ModSettings
 {
-    public readonly int ModSettingsVersion = 1;
+    public readonly int ModSettingsVersion = 2;
     public ModuleSettings Settings = new ModuleSettings();
 
     public string ModuleName { get; private set; }
