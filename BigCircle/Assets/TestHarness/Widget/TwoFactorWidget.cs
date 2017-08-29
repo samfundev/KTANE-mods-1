@@ -13,14 +13,14 @@ public class TwoFactorWidget : Widget
 
     void Start()
     {
+        OnQueryRequest += GetResult;
+        OnWidgetActivate += Activate;
         if (ExpiryTime == 0)
             Init();
     }
 
     public void Init(int ExpiryTime = 60)
     {
-        OnQueryRequest += GetResult;
-        OnWidgetActivate += Activate;
         if (ExpiryTime < 30)
             ExpiryTime = 30;
         if (ExpiryTime > 120)

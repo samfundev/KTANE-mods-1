@@ -184,8 +184,8 @@ public class TheBigCircle : MonoBehaviour
                 {
                     if (plate.Contains(KMBombInfoExtensions.KnownPortType.Serial.ToString()))
                     {
-                        BombModule.Log("Port plate with both parallel and serial: -5");
-                        total -= 5;
+                        BombModule.Log("Port plate with both parallel and serial: -4");
+                        total -= 4;
                     }
                     else
                     {
@@ -199,8 +199,8 @@ public class TheBigCircle : MonoBehaviour
                 {
                     if (plate.Contains(KMBombInfoExtensions.KnownPortType.StereoRCA.ToString()))
                     {
-                        dviRule.Add("Port plate with both DVI-D and Stereo RCA: +5");
-                        total += 5;
+                        dviRule.Add("Port plate with both DVI-D and Stereo RCA: +4");
+                        total += 4;
                     }
                     else
                     {
@@ -256,9 +256,10 @@ public class TheBigCircle : MonoBehaviour
         BombModule.LogFormat("Base total: {0}", total);
 
 
-        total += solved * 4;
-        if(solved > 0)
-            BombModule.LogFormat("{0} solved modules: +{1}", solved, solved*4);
+        const int solvedMultiplier = 3;
+        total += solved * solvedMultiplier;
+        if (solved > 0)
+            BombModule.LogFormat("{0} solved modules: +{1}", solved, solved * solvedMultiplier);
 
         total += twofactor;
         foreach (var twoFA in BombInfo.GetTwoFactorCodes())
