@@ -54,26 +54,9 @@ public class TheBigCircle : MonoBehaviour
 	        WedgeRenderers[i].material.color = _wedgeColors[(int) _colors[i]];
 	        var j = _colors[i];
 	        Wedges[i].OnInteract += delegate { HandleWedge(j); return false; };
-
-	        Wedges[i].OnSelect += delegate { Select(j); };
 	    }
         BombModule.LogFormat("Colors in Clockwise order: {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", _colors[0], _colors[1], _colors[2], _colors[3], _colors[4], _colors[5], _colors[6], _colors[7]);
         BombModule.OnActivate += delegate { _activated = true; StartCoroutine(SpinCircle()); StartCoroutine(UpdateSolution());};
-    }
-
-    private const float ListResetTime = 0.25f;
-    private float _lastSelected;
-    private float _lastAdded;
-    private readonly List<WedgeColors> _selectedColors = new List<WedgeColors>();
-    private void Select(WedgeColors color)
-    {
-        _lastSelected = Time.time;
-        if (_selectedColors.Contains(color)) return;
-        if ((Time.time - _lastAdded) > ListResetTime || _selectedColors.Count >= 2)
-            _selectedColors.Clear();
-
-        _lastAdded = Time.time;
-        _selectedColors.Add(color);
     }
 
 
@@ -339,21 +322,6 @@ public class TheBigCircle : MonoBehaviour
                 }
                 else
                 {
-                    foreach (var bc in enumerable)
-                    {
-                        var bobcolor = bc;
-                        if (bobcolor == KMBombInfoExtensions.KnownIndicatorColors.Purple.ToString())
-                            bobcolor = KMBombInfoExtensions.KnownIndicatorColors.Magenta.ToString();
-
-                        foreach(var sc in _selectedColors)
-                            if (sc.ToString() == bobcolor)
-                            {
-                                BombModule.LogFormat("Bob has determenind that you meant to press {0} while the selection was going crazy. Module passed", bobcolor);
-                                StartCoroutine(FadeCircle(_wedgeColors[(int) sc]));
-                                return;
-                            }
-                    }
-
                     BombModule.LogFormat("Strike");
                     BombModule.HandleStrike();
                 }
@@ -365,13 +333,8 @@ public class TheBigCircle : MonoBehaviour
 
 
             BombModule.LogFormat("Stage {0}: Pressed {1}. I Expected {2}", _currentState + 1, color, _currentSolution[_currentState]);
-            if (color == _currentSolution[_currentState] || _selectedColors.Contains(_currentSolution[_currentState]))
+            if (color == _currentSolution[_currentState])
             {
-                if (color != _currentSolution[_currentState])
-                {
-                    BombModule.LogFormat("Stage {0}: Tried to Press {1} while selection was going crazy.", _currentState + 1, _currentSolution[_currentState]);
-                    _selectedColors.Clear(); //If selection is still going crazy, the list will repopulate.
-                }
                 BombModule.LogFormat("Stage {0} Correct.", _currentState + 1);
                 _currentState++;
                 if (_currentState != _currentSolution.Length) return;
@@ -468,9 +431,6 @@ public class TheBigCircle : MonoBehaviour
     {
         do
         {
-            if ((Time.time - _lastSelected) > ListResetTime)
-                _selectedColors.Clear();
-
             var framerate = 1f / Time.deltaTime;
             var rotation = 6f / framerate; //6 degrees per second.
             if (_rotateCounterClockwise)
