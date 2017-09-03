@@ -613,6 +613,11 @@ public class AssetBundler
                     materialInfo.ShaderNames = new List<string>();
                     foreach(Material material in renderer.sharedMaterials)
                     {
+                        if (material == null)
+                        {
+                            Debug.LogWarning(string.Format("Failed to load a shader present in {0}", renderer.gameObject.name));
+                            continue;
+                        }
                         materialInfo.ShaderNames.Add(material.shader.name);
 
                         if(material.shader.name == "Standard")
