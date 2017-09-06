@@ -1,0 +1,10 @@
+{
+  "SettingsVersion": 2,
+  "HowToUse0": "Don't Touch this value. It is used by the mod internally to determine if there are new settings to be saved.",
+
+  "ResetToDefault": false,
+  "HowToReset": "Changing this setting to true will reset ALL your setting back to default.",
+
+  "AlarmClockBuzzerTime": 60.0,
+  "HowToUse1": "Sets the number of seconds the Alarm clock will buzz for."
+}
