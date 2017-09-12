@@ -26,7 +26,7 @@ GameObject:
   - 114: {fileID: 114000013322751724}
   - 114: {fileID: 114000012518995834}
   m_Layer: 0
-  m_Name: FreePlayHelper
+  m_Name: AlarmClockExtender
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
