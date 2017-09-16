@@ -63,7 +63,7 @@ public class MultipleWidgets : MonoBehaviour
     #endregion
 
     #region private variables
-    private readonly int _currentSettingsVersion = 3;
+    private readonly int _currentSettingsVersion = 4;
     private class ModSettings
     {
         public int SettingsVersion = 0;
@@ -90,7 +90,7 @@ public class MultipleWidgets : MonoBehaviour
         public bool EnableTwoFactor = true;
         public int TwoFactorDuration = 60;
         public string HowToUse7 = "If Enabled, Two factor has a possibilty to spawn.";
-        public string HowToUse7_2 ="TwoFactorDuration is a number between 30 and 120 seconds (half a minute to two minutes)";
+        public string HowToUse7_2 ="TwoFactorDuration is a number between 30 and 999 seconds (30 seconds to 16 minutes 39 seconds.)";
 
         public bool DebugModeForceAllPortsInCurrentSet = false;
         public string HowToUse5_1 = "This forces the port plates to have every type possible in the given set.";
@@ -694,8 +694,8 @@ public class MultipleWidgets : MonoBehaviour
         if (_modSettings.TwoFactorDuration < 30)
             _modSettings.TwoFactorDuration = 30;
 
-        if (_modSettings.TwoFactorDuration > 120)
-            _modSettings.TwoFactorDuration = 120;
+        if (_modSettings.TwoFactorDuration > 999)
+            _modSettings.TwoFactorDuration = 999;
 
         GenerateKey();
         TwoFactor.SetActive(true);

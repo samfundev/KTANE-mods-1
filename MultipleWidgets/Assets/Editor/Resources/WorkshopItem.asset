@@ -44,7 +44,7 @@ MonoBehaviour:
     (Enabled by default)
 
     [*] TwoFactorDuration - Controls how long in seconds it takes for the next Two
-    Factor code to be generated. Minimum 30 seconds, Maximum 120 seconds. (Default
+    Factor code to be generated. Minimum 30 seconds, Maximum 999 seconds. (Default
     value of 60)
 
     [/list]
@@ -53,8 +53,12 @@ MonoBehaviour:
     Credits to TrainZack for the Encrypted Indicators code which is used here.
 
 
+    [url=https://ktane.timwi.de/HTML/Multiple%20Widgets.html]HTML Manual[/url]
+
     [url=https://drive.google.com/file/d/0BzdipTil_z3ANUFxOXJOc0lzRjA/view?usp=sharing]PDF
-    Manual[/url]'
+    Manual[/url]
+
+'
   PreviewImage: {fileID: 2800000, guid: 9d068ae4feb1cdc4894d8ad919c18a12, type: 3}
   Tags:
   - Widget
