@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -160,29 +161,11 @@ public class MorseAMaze : MonoBehaviour
         {
             yield return null;
             if (!FakeStatusLight.HasFakeStatusLightFailed) continue;
-
-            _souvenirQuestionEndingLocation = null;
-            _souvenirQuestionStartingLocation = null;
-            _souvenirQuestionWordPlaying = null;
-            _solved = true;
-            foreach (var location in Locations)
-                location.gameObject.SetActive(false);
-            BombModule.HandlePass();
-            BombModule.LogFormat("Status light not able to be manipulated. Passing the module so that this bomb can be solved.");
-            yield return new WaitForSecondsRealtime(2);
-            _unicorn = true;
-            for (var x = 0; x < 6; x++)
-            {
-                for (var y = 0; y < 6; y++)
-                {
-                    SetWall(x, y, false, true);
-                    SetWall(x, y, true, true);
-                }
-            }
-
-            yield return new WaitForSecondsRealtime(8);
-            StopAllCoroutines();
+            StatusLightCorner.localPosition = new Vector3(-StatusLightCorner.localPosition.x, StatusLightCorner.localPosition.y, StatusLightCorner.localPosition.z);
+            StartCoroutine(InstantlySolveModule("Status light not able to be manipulated."));
+            yield break;
         }
+        StatusLightCorner.localPosition = new Vector3(-StatusLightCorner.localPosition.x, StatusLightCorner.localPosition.y, StatusLightCorner.localPosition.z);
 
         _originalStatusLightLocation = StatusLight.localPosition;
 
@@ -245,6 +228,14 @@ public class MorseAMaze : MonoBehaviour
             StatusLightCorner.localPosition.z);
         yield return null;
 
+        HandleModulePass();
+    }
+
+    private bool _alreadyHandledPass;
+    private void HandleModulePass()
+    {
+        if (_alreadyHandledPass) return;
+        _alreadyHandledPass = true;
         switch (FakeStatusLight.SetLightColor(FakeStatusLight.PassColor))
         {
             case StatusLightState.Red:
@@ -366,8 +357,51 @@ public class MorseAMaze : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
     }
 
+    private IEnumerator InstantlySolveModule(string reason, params object[] args)
+    {
+        BombModule.LogFormat("Instantly solving the module because the following error happened:");
+        BombModule.LogFormat(reason, args);
+        _movements.CancelFutureSubcoroutines();
+        _movements.StopQueue();
+
+        //Kill the Souvenir questions because of crash. This will make Souvenir ignore this Morse-A-Maze instance.
+        _souvenirQuestionEndingLocation = null;
+        _souvenirQuestionStartingLocation = null;
+        _souvenirQuestionWordPlaying = null;
+
+        _solved = true;
+        if (!FakeStatusLight.HasFakeStatusLightFailed)
+        {
+            StartCoroutine(MoveStatusLightToCorner());
+            FakeStatusLight.PassColor = StatusLightState.Green;
+            HandleModulePass();
+        }
+        else
+        {
+            BombModule.HandlePass();
+        }
+
+        foreach (var location in Locations)
+            location.gameObject.SetActive(false);
+
+        yield return new WaitForSecondsRealtime(2);
+        _unicorn = true;
+        for (var x = 0; x < 6; x++)
+        {
+            for (var y = 0; y < 6; y++)
+            {
+                SetWall(x, y, false, true);
+                SetWall(x, y, true, true);
+            }
+        }
+        yield return new WaitForSecondsRealtime(8);
+        StopAllCoroutines();
+    }
+
     private IEnumerator MoveToLocation(Transform location, Transform from)
     {
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         //yield return null;
         BombModule.LogFormat("Moving from {0} to {1} - {2}", GetCoordinates(from), GetCoordinates(location), GetDirection(from, location));
         var lx = location.parent.localPosition.x;
@@ -394,6 +428,11 @@ public class MorseAMaze : MonoBehaviour
                 yield return null;
                 fps = (1 / Time.deltaTime) * (eta / 36f);
                 movex = x / fps;
+
+                if (sw.ElapsedMilliseconds <= 5000) continue;
+                sw.Stop();
+                StartCoroutine(InstantlySolveModule("The Status Light Left the maze while moving from {0} to {1} - {2}", GetCoordinates(from), GetCoordinates(location), GetDirection(from, location)));
+                yield break;
             } while (Mathf.Abs(sx - lx) > Mathf.Abs(movex));
             sx = lx;
         }
@@ -407,6 +446,11 @@ public class MorseAMaze : MonoBehaviour
                 yield return null;
                 fps = (1 / Time.deltaTime) * (eta / 36f);
                 movey = y / fps;
+
+                if (sw.ElapsedMilliseconds <= 5000) continue;
+                sw.Stop();
+                StartCoroutine(InstantlySolveModule("The Status Light Left the maze while moving from {0} to {1} - {2}", GetCoordinates(from), GetCoordinates(location), GetDirection(from, location)));
+                yield break;
             } while (Mathf.Abs(sy - ly) > Mathf.Abs(movey));
             sy = ly;
         }
@@ -417,6 +461,7 @@ public class MorseAMaze : MonoBehaviour
             StartCoroutine(MoveStatusLightToCorner());
         }
         yield return null;
+        sw.Stop();
     }
 
     private List<MeshRenderer> _showingWalls = new List<MeshRenderer>();
@@ -766,8 +811,7 @@ public class MorseAMaze : MonoBehaviour
         }
         if (!success)
         {
-            BombModule.Log("Failed to generate a maze solution. Passing the module now.");
-            StartCoroutine(MoveStatusLightToCorner());
+            StartCoroutine(InstantlySolveModule("Failed to generate a maze solution."));
             return;
         }
 
@@ -858,8 +902,63 @@ public class MorseAMaze : MonoBehaviour
     public string[] TwitchValidCommands = {"move .*"};
     public IEnumerator ProcessTwitchCommand(string command)
     {
+        if (command.Contains("UseDefaultColors"))
+        {
+            command = command.Replace("UseDefaultColors", "").Trim();
+            FakeStatusLight.PassColor = StatusLightState.Off;
+            FakeStatusLight.MorseTransmitColor = StatusLightState.Red;
+            FakeStatusLight.OffColor = StatusLightState.Green;
+            FakeStatusLight.FailColor = StatusLightState.Off;
+            yield return null;
+        }
+        else if (command.Contains("UseEasyColors"))
+        {
+            command = command.Replace("UseEasyColors", "").Trim();
+            FakeStatusLight.PassColor = StatusLightState.Green;
+            FakeStatusLight.MorseTransmitColor = StatusLightState.Green;
+            FakeStatusLight.OffColor = StatusLightState.Off;
+            FakeStatusLight.FailColor = StatusLightState.Red;
+            yield return null;
+        }
+        else if (command.Contains("UseCruelColors"))
+        {
+            command = command.Replace("UseCruelColors", "").Trim();
+            FakeStatusLight.PassColor = StatusLightState.Random;
+            FakeStatusLight.FailColor = StatusLightState.Random;
+            FakeStatusLight.OffColor = StatusLightState.Random;
+            FakeStatusLight.MorseTransmitColor = StatusLightState.Random;
+            yield return null;
+        }
+
+        if (command.Contains("UseRedOnSolve"))
+        {
+            command = command.Replace("UseRedOnSolve", "").Trim();
+            FakeStatusLight.PassColor = StatusLightState.Red;
+            yield return null;
+        }
+        else if (command.Contains("UseGreenOnSolve"))
+        {
+            command = command.Replace("UseGreenOnSolve", "").Trim();
+            FakeStatusLight.PassColor = StatusLightState.Red;
+            yield return null;
+        }
+        else if (command.Contains("UseOffOnSolve"))
+        {
+            command = command.Replace("UseOffOnSolve", "").Trim();
+            FakeStatusLight.PassColor = StatusLightState.Red;
+            yield return null;
+        }
+        
+
         if (!command.StartsWith("move ", StringComparison.InvariantCultureIgnoreCase))
             yield break;
+
+        if (_solved)
+        {
+            yield return "solve";
+            yield break;
+        }
+
 
         yield return null;
         command = command.Substring(5);
@@ -870,9 +969,12 @@ public class MorseAMaze : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
+        var moved = false;
         foreach (Match move in Regex.Matches(command, @"[udlr]", RegexOptions.IgnoreCase))
         {
+            moved = true;
             bool safe;
+            
             switch (move.Value.ToLowerInvariant())
             {
                 case "u":
@@ -903,6 +1005,7 @@ public class MorseAMaze : MonoBehaviour
             yield return "trycancel";
             yield return new WaitForSeconds(0.1f);
         }
+        if(moved) yield return "solve";
     }
     #endregion
 
