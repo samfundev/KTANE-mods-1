@@ -11,10 +11,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cf2299c8864afe4ab42466f546ae20d, type: 3}
   m_Name: WorkshopItem
   m_EditorClassIdentifier: 
-  WorkshopPublishedFileID: 0
+  WorkshopPublishedFileID: 1139014410
   Title: Bomb Defusing 101
   Description: "You thought this was going to be an easy bomb? Really?\n\nIt is recommended
-    that you grab the Camera Zoom add-on as well.\n\r\nSource code at "
+    that you grab the Camera Zoom add-on as well.\n\r\nSource code at https://github.com/CaitSith2/KTANE-mods/tree/master/Bomb%20Cases/9x7%20Bomb%20Case"
   PreviewImage: {fileID: 2800000, guid: 8c976e9744de4724cb68a52fa8af35af, type: 3}
   Tags:
   - Bomb Casing
