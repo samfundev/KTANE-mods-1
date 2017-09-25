@@ -161,12 +161,9 @@ public class MorseAMaze : MonoBehaviour
         {
             yield return null;
             if (!FakeStatusLight.HasFakeStatusLightFailed) continue;
-            StatusLightCorner.localPosition = new Vector3(-StatusLightCorner.localPosition.x, StatusLightCorner.localPosition.y, StatusLightCorner.localPosition.z);
             StartCoroutine(InstantlySolveModule("Status light not able to be manipulated."));
             yield break;
         }
-        StatusLightCorner.localPosition = new Vector3(-StatusLightCorner.localPosition.x, StatusLightCorner.localPosition.y, StatusLightCorner.localPosition.z);
-
         _originalStatusLightLocation = StatusLight.localPosition;
 
         var targetMove = _originalStatusLightLocation.y * -1;
@@ -897,11 +894,15 @@ public class MorseAMaze : MonoBehaviour
     }
 
     #region TwitchPlays
-    public string TwitchManualCode = "Morse-A-Maze";
-    public string TwitchHelpMessage = "!{0} move up down left right, !{0} move udlr [make a series of status light moves]";
-    public string[] TwitchValidCommands = {"move .*"};
-    public IEnumerator ProcessTwitchCommand(string command)
+    private static bool TwitchPlaysDetected = false;
+    private string TwitchManualCode = "Morse-A-Maze";
+    private string TwitchHelpMessage = "!{0} move up down left right, !{0} move udlr [make a series of status light moves]";
+    private string[] TwitchValidCommands = {"((UseDefaultColors|UseEasyColors|UseCruelColors|UseRedOnSolve|UseGreenOnSolve|UseOffOnSolve|UseRandomOnSolve)? ?)*(move .*)?"};
+    private IEnumerator ProcessTwitchCommand(string command)
     {
+        TwitchPlaysDetected = true;
+        var originalCommand = command;
+        var commandUsed = false;
         if (command.Contains("UseDefaultColors"))
         {
             command = command.Replace("UseDefaultColors", "").Trim();
@@ -909,7 +910,8 @@ public class MorseAMaze : MonoBehaviour
             FakeStatusLight.MorseTransmitColor = StatusLightState.Red;
             FakeStatusLight.OffColor = StatusLightState.Green;
             FakeStatusLight.FailColor = StatusLightState.Off;
-            yield return null;
+            yield return new WaitForSeconds(0.1f);
+            commandUsed = true;
         }
         else if (command.Contains("UseEasyColors"))
         {
@@ -918,7 +920,8 @@ public class MorseAMaze : MonoBehaviour
             FakeStatusLight.MorseTransmitColor = StatusLightState.Green;
             FakeStatusLight.OffColor = StatusLightState.Off;
             FakeStatusLight.FailColor = StatusLightState.Red;
-            yield return null;
+            yield return new WaitForSeconds(0.1f);
+            commandUsed = true;
         }
         else if (command.Contains("UseCruelColors"))
         {
@@ -927,31 +930,48 @@ public class MorseAMaze : MonoBehaviour
             FakeStatusLight.FailColor = StatusLightState.Random;
             FakeStatusLight.OffColor = StatusLightState.Random;
             FakeStatusLight.MorseTransmitColor = StatusLightState.Random;
-            yield return null;
+            yield return new WaitForSeconds(0.1f);
+            commandUsed = true;
         }
 
         if (command.Contains("UseRedOnSolve"))
         {
             command = command.Replace("UseRedOnSolve", "").Trim();
             FakeStatusLight.PassColor = StatusLightState.Red;
-            yield return null;
+            yield return new WaitForSeconds(0.1f);
+            commandUsed = true;
         }
         else if (command.Contains("UseGreenOnSolve"))
         {
             command = command.Replace("UseGreenOnSolve", "").Trim();
-            FakeStatusLight.PassColor = StatusLightState.Red;
-            yield return null;
+            FakeStatusLight.PassColor = StatusLightState.Green;
+            yield return new WaitForSeconds(0.1f);
+            commandUsed = true;
         }
         else if (command.Contains("UseOffOnSolve"))
         {
             command = command.Replace("UseOffOnSolve", "").Trim();
-            FakeStatusLight.PassColor = StatusLightState.Red;
-            yield return null;
+            FakeStatusLight.PassColor = StatusLightState.Off;
+            yield return new WaitForSeconds(0.1f);
+            commandUsed = true;
         }
-        
+        else if (command.Contains("UseRandomOnSolve"))
+        {
+            command = command.Replace("UseOffOnSolve", "").Trim();
+            FakeStatusLight.PassColor = StatusLightState.Random;
+            yield return new WaitForSeconds(0.1f);
+            commandUsed = true;
+        }
+
 
         if (!command.StartsWith("move ", StringComparison.InvariantCultureIgnoreCase))
+        {
+            if (commandUsed)
+            {
+                yield return "sendtochat " + originalCommand + " processed successfully";
+            }
             yield break;
+        }
 
         if (_solved)
         {
@@ -963,14 +983,23 @@ public class MorseAMaze : MonoBehaviour
         yield return null;
         command = command.Substring(5);
 
+        if (_movements.Processing)
+            yield return "elevator music";
+
         while (_movements.Processing)
         {
             yield return "trycancel";
             yield return new WaitForSeconds(0.1f);
         }
 
+        MatchCollection matches = Regex.Matches(command, @"[udlr]", RegexOptions.IgnoreCase);
+        if (matches.Count > 35)
+        {
+            yield return "elevator music";
+        }
+
         var moved = false;
-        foreach (Match move in Regex.Matches(command, @"[udlr]", RegexOptions.IgnoreCase))
+        foreach (Match move in matches)
         {
             moved = true;
             bool safe;
