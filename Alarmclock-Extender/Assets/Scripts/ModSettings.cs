@@ -19,15 +19,77 @@ public class ModuleSettings
     public float AlarmClockBuzzerTime = 60f;
 
     public string HowToUse1 = "Sets the number of seconds the Alarm clock will buzz for.";
+
+    public string SoundFileDirectory = null;
+    public string HowToUse2 = "Set this directory to where you will put all your music tracks used for the Alarm clock.";
+
+    public bool RescanDirectory = true;
+    public string HowToUse3 = "When Enabled, the directory where the tracks are contained will be rescanned each bomb.";
+
+    public int ChanceOfNormalBeep = 5;
+    public string HowToUse4_1 = "Set this between 0 and 100. This determines how likely you will get the annoying beep instead of music.";
+    public string HowToUse4_2 = "Note: If there are no tracks loaded, you will ALWAYS get the beep instead.";
+
+
 }
 
 public class ModSettings
 {
-    public readonly int ModSettingsVersion = 2;
+    public readonly int ModSettingsVersion = 4;
     public ModuleSettings Settings = new ModuleSettings();
 
     public string ModuleName { get; private set; }
     //Update this line each time you make changes to the Settings version.
+
+    public bool InitializeSettings()
+    {
+        bool RewriteFile = false;
+
+        if (Settings.ResetToDefault)
+        {
+            DebugLog("Factory Reset requested.");
+            Settings = new ModuleSettings();
+            RewriteFile = true;
+        }
+
+        if (Settings.SettingsVersion != ModSettingsVersion)
+        {
+            DebugLog("New settings added since previous version.  Previous = {0}, Current = {1}", Settings.SettingsVersion, ModSettingsVersion);
+            Settings.SettingsVersion = ModSettingsVersion;
+            RewriteFile = true;
+        }
+
+        //Set up things that are not allowed to be done in the constructor here, such as Application.persistantDataPath related items.
+        //Although the code would run and work correctly if done in the constructor, the Unity editor will complain with an "error".
+        if (string.IsNullOrEmpty(Settings.SoundFileDirectory))
+        {
+            Settings.SoundFileDirectory = Path.Combine(Application.persistentDataPath, "AlarmClockExtender");
+            DebugLog("SoundFileDiretory is Null or Empty. Resetting to {0}", Settings.SoundFileDirectory);
+            RewriteFile = true;
+        }
+
+        //This is also a good place to enforce limits
+        if (Settings.ChanceOfNormalBeep < 0)
+        {
+            DebugLog("ChanceOfNormalBeep < 0%.");
+            Settings.ChanceOfNormalBeep = 0;
+            RewriteFile = true;
+        }
+        if (Settings.ChanceOfNormalBeep > 100)
+        {
+            DebugLog("ChanceOfNormalBeep > 100%.");
+            Settings.ChanceOfNormalBeep = 100;
+            RewriteFile = true;
+        }
+
+        return RewriteFile;
+    }
+
+    public void DebugLog(string message, params object[] args)
+    {
+        var debugstring = string.Format("[{0}] {1}", ModuleName,  message);
+        Debug.LogFormat(debugstring, args);
+    }
 
 
     public ModSettings(KMBombModule module)
@@ -53,7 +115,8 @@ public class ModSettings
 
     public bool WriteSettings()
     {
-        Debug.LogFormat("Writing Settings File: {0}", GetModSettingsPath(false));
+        InitializeSettings();
+        DebugLog("Writing Settings File: {0}", GetModSettingsPath(false));
         try
         {
             if (!Directory.Exists(GetModSettingsPath(true)))
@@ -61,15 +124,14 @@ public class ModSettings
                 Directory.CreateDirectory(GetModSettingsPath(true));
             }
 
-            Settings.SettingsVersion = ModSettingsVersion;
             string settings = JsonConvert.SerializeObject(Settings, Formatting.Indented, new StringEnumConverter());
             File.WriteAllText(GetModSettingsPath(false), settings);
-            Debug.LogFormat("New settings = {0}", settings);
+            DebugLog("New settings = {0}", settings);
             return true;
         }
         catch (Exception ex)
         {
-            Debug.LogFormat("Failed to Create settings file due to Exception:\n{0}\nStack Trace:\n{1}", ex.Message,
+            DebugLog("Failed to Create settings file due to Exception:\n{0}\nStack Trace:\n{1}", ex.Message,
                 ex.StackTrace);
             return false;
         }
@@ -77,6 +139,7 @@ public class ModSettings
 
     public bool ReadSettings()
     {
+        DebugLog("Attempting to read Settings file");
         string ModSettings = GetModSettingsPath(false);
         try
         {
@@ -84,19 +147,16 @@ public class ModSettings
             {
                 string settings = File.ReadAllText(ModSettings);
                 Settings = JsonConvert.DeserializeObject<ModuleSettings>(settings, new StringEnumConverter());
+                DebugLog("Settings loaded. Settings = {0}", settings);
 
-                if (Settings.SettingsVersion != ModSettingsVersion)
-                    return WriteSettings();
-                if (!Settings.ResetToDefault) return true;
-                Settings = new ModuleSettings();
-                return WriteSettings();
+                return !InitializeSettings() || WriteSettings();
             }
             Settings = new ModuleSettings();
             return WriteSettings();
         }
         catch (Exception ex)
         {
-            Debug.LogFormat(
+            DebugLog(
                 "Settings not loaded due to Exception:\n{0}\nStack Trace:\n{1}\nLoading default settings instead.",
                 ex.Message, ex.StackTrace);
             Settings = new ModuleSettings();
