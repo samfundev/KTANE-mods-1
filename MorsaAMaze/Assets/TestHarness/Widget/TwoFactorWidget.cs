@@ -23,8 +23,8 @@ public class TwoFactorWidget : Widget
         OnWidgetActivate += Activate;
         if (ExpiryTime < 30)
             ExpiryTime = 30;
-        if (ExpiryTime > 120)
-            ExpiryTime = 120;
+        if (ExpiryTime > 999)
+            ExpiryTime = 999;
 
         _id = _increment;
         _increment++;
