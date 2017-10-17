@@ -11533,7 +11533,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShaderNames:
-  - Standard
+  - KT/Mobile/Diffuse
 --- !u!114 &114000013102020276
 MonoBehaviour:
   m_ObjectHideFlags: 1
