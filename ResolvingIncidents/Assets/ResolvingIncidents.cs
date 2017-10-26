@@ -12,7 +12,34 @@ public class Character
     public bool Heroine;
     public int DistanceBonus;
     public int RangeBonus;
-    public Incidents ForbiddenIncident = Incidents.None;
+    public Incidents ForbiddenIncident;
+
+    public Character(string name, int distance, int range, bool heroine = false)
+    {
+        Name = name;
+        DistanceBonus = distance;
+        RangeBonus = range;
+        ForbiddenIncident = Incidents.None;
+        Heroine = heroine;
+    }
+
+    public Character(string name, int distance, int range, Incidents forbidden)
+    {
+        Name = name;
+        DistanceBonus = distance;
+        RangeBonus = range;
+        ForbiddenIncident = forbidden;
+        Heroine = false;
+    }
+
+    public Character(string name, int distance, int range, bool heroine, Incidents forbidden)
+    {
+        Name = name;
+        Heroine = heroine;
+        DistanceBonus = distance;
+        RangeBonus = range;
+        ForbiddenIncident = forbidden;
+    }
 }
 
 [Serializable]
@@ -21,115 +48,238 @@ public class Inventory
     public string Item;
     public int Distance;
     public int Range;
+
+    public Inventory(string name, int distance, int range)
+    {
+        Item = name;
+        Distance = distance;
+        Range = range;
+    }
+}
+
+[Serializable]
+public class Boss
+{
+    public string Name;
+    public int BaseDistance;
+    public int BaseRange;
+    public int BonusDistance = 0;
+    public int BonusRange = 0;
+    public int EdgeworkBonusDistance = 0;
+    public int EdgeworkBonusRange = 0;
+    public int WidgetBonusDistance = 0;
+    public int WidgetBonusRange = 0;
+
+    public Boss(){}
+
+    public Boss(string name, int baseDistance, int baseRange, int bonusDistance, int bonusRange, int widgetDistance, int widgetRange)
+    {
+        Name = name;
+        BaseDistance = baseDistance;
+        BaseRange = baseRange;
+        BonusDistance = bonusDistance;
+        BonusRange = bonusRange;
+        WidgetBonusDistance = widgetDistance;
+        WidgetBonusRange = widgetRange;
+    }
+}
+
+[Serializable]
+public class IncidentSet
+{
+    public string Name;
+    public Boss Boss1;
+    public Boss Boss2;
+    public string BonusReason = "";
+    public string EdgeworkBonusReason = "";
+    public string WidgetBonusReason = "number of widgets on the bomb";
+
+    public IncidentSet()
+    {
+        Name = "Error";
+    }
+
+    public IncidentSet(string name, Boss boss1, string bonusReason)
+    {
+        Name = name;
+        Boss1 = boss1;
+        BonusReason = bonusReason;
+    }
+
+    public IncidentSet(string name, Boss boss1, Boss boss2, string bonusReason)
+    {
+        Name = name;
+        Boss1 = boss1;
+        Boss2 = boss2;
+        BonusReason = bonusReason;
+    }
 }
 
 
 public class ResolvingIncidents : MonoBehaviour
 {
-
     #region Public Variables
+    public bool DEBUG = true;
+
     public GameObject OnLED;
     public GameObject OffLED;
     public KMSelectable InventoryLeft;
     public KMSelectable InventoryRight;
     public KMSelectable WinButton;
     public KMSelectable LoseButton;
-    public KMSelectable DrawButton;
 
     public TextMesh CharacterText;
     public TextMesh IncidentText;
     public TextMesh InventoryText;
+    public TextMesh StageNumberText;
 
     public KMBombModule BombModule;
     public KMAudio Audio;
     public KMBombInfo BombInfo;
+
     #endregion
 
     #region Prviate Variables
     private bool _solved = false;
     private bool _activated = false;
+    private bool _spinning = false;
 
     private const int WINSTOSOLVE = 1;
-    private const int LOSSESTOSOLVE = 2;
+    private const int LOSSESTOSOLVE = 4;
     private int _wins = 0;
     private int _losses = 0;
 
     private IncidentResult _correctIncidentResultEvenStrike;
     private IncidentResult _correctIncidentResultOddStrike;
-    
 
-    
+
+
 
     private const int MAXINVENTORYITEMS = 5;
+    private List<Inventory> _inventoryItems;
+    private List<Character> _characters;
+    private List<IncidentSet> _incidedentSets;
+
     private List<Inventory> _inventory;
     private int _currentInventoryItem;
-    private List<Character> _characters;
     private Incidents _incident;
-    
-
     private Character _character;
+    private int _characterBaseDistance;
+    private int _characterBaseRange;
     private CharacterSeasons _season;
     private bool _spellBonus;
+
+    private int _twofactorsum;
+
 
 
 
     private Color[] _colorValues = Ext.NewArray(
-            "3030F3",       //Winter
-            "00FF21",       //Spring
-            "C9CC21",       //Summer
-            "CC0000"        //Fall
+            "3030F3", //Winter
+            "00FF21", //Spring
+            "C9CC21", //Summer
+            "CC0000" //Fall
         )
         .Select(c => new Color(Convert.ToInt32(c.Substring(0, 2), 16) / 255f, Convert.ToInt32(c.Substring(2, 2), 16) / 255f, Convert.ToInt32(c.Substring(4, 2), 16) / 255f))
         .ToArray();
 
 
     private CharacterSeasons[] _seasons = (CharacterSeasons[]) Enum.GetValues(typeof(CharacterSeasons));
-    private Incidents[] _incidents = (Incidents[])(Enum.GetValues(typeof(Incidents)));
+    private Incidents[] _incidents = (Incidents[]) (Enum.GetValues(typeof(Incidents)));
 
 
 
     #endregion
 
     // Use this for initialization
-    void Start ()
+    void Start()
     {
         BombModule.GenerateLogFriendlyName();
         BombModule.OnActivate += OnActivate;
-        
-        _incident = _incidents[Rnd.Range(1, _incidents.Length)];
+
+        _incident = !DEBUG 
+            ? _incidents[Rnd.Range(1, _incidents.Length)] 
+            : _incidents[((BombModule.GetIDNumber() - 1) % (_incidents.Length - 1)) + 1];
 
         _characters = new List<Character>
         {
-            new Character {Name = "Crow Tengu",         DistanceBonus = 3, RangeBonus = 2, Heroine = true },
-            new Character {Name = "Elegant Maid",       DistanceBonus = 3, RangeBonus = 3, Heroine = true },
-            new Character {Name = "Gatekeeper",         DistanceBonus = 2, RangeBonus = 1, Heroine = false },
-            new Character {Name = "Great Librarian",    DistanceBonus = 2, RangeBonus = 3, Heroine = false },
-            new Character {Name = "Great Magician",     DistanceBonus = 4, RangeBonus = 5, Heroine = false },
+            //             Name                  Di  Ra  Heroine   Forbidden Incident
+            new Character ("Crow Tengu",         3,  2,   true                                       ),
+            new Character ("Elegant Maid",       3,  3,   true                                       ),
+            new Character ("Gatekeeper",         2,  1                                               ),
+            new Character ("Great Librarian",    2,  3                                               ),
+            new Character ("Great Magician",     5,  5                                               ),
+            //             Name                  Di  Ra  Heroine   Forbidden Incident
+            new Character ("Green Shaman",       2,  3,   true,    Incidents.EndlessParty            ),
+            new Character ("Heavenly Swordgirl", 4,  5,            Incidents.CosmicWeather           ),
+            new Character ("Ice Fairy",          1,  2,   true,    Incidents.FairyWars               ),
+            new Character ("Kappa",              1,  2                                               ),
+            new Character ("Legendary Student",  4,  4,            Incidents.OccultInvasion          ),
+            //             Name                  Di  Ra  Heroine   Forbidden Incident
+            new Character ("Lunar Doctor",       1,  3,            Incidents.OverdrivenNight         ),
+            new Character ("Moon Rabbit",        2,  2,   true                                       ),
+            new Character ("Ordinary Magician",  2,  4,   true                                       ),
+            new Character ("Phoenix",            4,  3                                               ),
+            new Character ("Puppeteer",          3,  1                                               ),
+            //             Name                  Di  Ra  Heroine   Forbidden Incident
+            new Character ("Red Shaman",         3,  5,   true,    Incidents.EndlessParty            ),
+            new Character ("Satori",             1,  2                                               ),
+            new Character ("Scarlet Devil",      2,  1,            Incidents.ScarletMist             ),
+            new Character ("Scarlet Sister",     3,  1,            Incidents.ScarletMist             ),
+            new Character ("Unidentified Girl",  5,  4,            Incidents.UndefinedFantasticObject),
+        };
 
-            new Character {Name = "Green Shaman",       DistanceBonus = 2, RangeBonus = 3, Heroine = true, ForbiddenIncident = Incidents.EndlessParty },
-            new Character {Name = "Heavenly Swordgirl", DistanceBonus = 5, RangeBonus = 5, Heroine = false, ForbiddenIncident = Incidents.CosmicWeather },
-            new Character {Name = "Ice Fairy",          DistanceBonus = 1, RangeBonus = 2, Heroine = true, ForbiddenIncident = Incidents.FairyWars },
-            new Character {Name = "Kappa",              DistanceBonus = 1, RangeBonus = 2, Heroine = false },
-            new Character {Name = "Legendary Student",  DistanceBonus = 4, RangeBonus = 4, Heroine = false, ForbiddenIncident = Incidents.OccultInvasion },
+        _incidedentSets = new List<IncidentSet>
+        {
+            new IncidentSet(),
+            //                Incident Name                (Boss #1   Boss Name             BASE     Bonus    Widget)      (Boss #2  Boss name           Base     Bonus    Widget)  Bonus Reason              //
+            //                                                                             Di  Ra    Di  Ra   Di  Ra                                    Di  Ra    Di  Ra   Di  Ra)
+            new IncidentSet ("Cosmic Weather",             new Boss ("Heavenly Swordgirl", 12, 14,   1,  1,   3,  3  ),                                                             "season"                  ),
+            new IncidentSet ("Endless Party",              new Boss ("Green Shaman",       6,  14,   0,  0,   2,  1  ),   new Boss ("Red Shaman",       7,  13,   0,  0,   0,  1 ), ""                        ),
+            new IncidentSet ("Fairy Wars",                 new Boss ("Ice Fairy",          7,  8,    1,  1,   1,  1  ),   new Boss ("Sunflower Fairy",  8,  9,    1,  2,   1,  1 ), "season"                  ),
+            new IncidentSet ("Lily Black and White",       new Boss ("Lily Black",         13, 12,   1,  1,   2,  1  ),   new Boss ("Lily White",       12, 13,   2,  0,   1,  2 ), "season"                  ),
+            new IncidentSet ("Lunar War",                  new Boss ("Lunar King",         11, 12,   1,  1,   3,  2  ),   new Boss ("Lunar Queen",      12, 11,   1,  1,   2,  3 ), "serial number digit sum" ),
 
-            new Character {Name = "Lunar Doctor",       DistanceBonus = 1, RangeBonus = 3, Heroine = false, ForbiddenIncident = Incidents.OverdrivenNight },
-            new Character {Name = "Moon Rabbit",        DistanceBonus = 2, RangeBonus = 2, Heroine = true },
-            new Character {Name = "Ordinary Magician",  DistanceBonus = 2, RangeBonus = 4, Heroine = true },
-            new Character {Name = "Phoenix",            DistanceBonus = 4, RangeBonus = 3, Heroine = false },
-            new Character {Name = "Puppeteer",          DistanceBonus = 3, RangeBonus = 1, Heroine = false },
+            //                Incident Name                (Boss #1   Boss Name             BASE     Bonus    Widget)      (Boss #2  Boss name           Base     Bonus    Widget)  Bonus Reason              //
+            //                                                                             Di  Ra    Di  Ra   Di  Ra                                    Di  Ra    Di  Ra   Di  Ra)
+            new IncidentSet ("Occult Invasion",            new Boss ("Legendary Student",  11, 12,   1,  2,   3,  3  ),                                                             "season"                  ),
+            new IncidentSet ("Overdriven Night",           new Boss ("Lunar Doctor",       14, 12,   0,  0,   2,  3  ),   new Boss ("Moon Rabbit",      12, 13,   0,  0,   2,  3 ), ""                        ),
+            new IncidentSet ("Undefined Fantastic Object", new Boss ("Undefined Girl",     12, 12,   0,  0,   3,  4  ),   new Boss ("Fantastic Girl",   14, 13,   0,  0,   1,  2 ), ""                        ),
+            new IncidentSet ("Scarlet Mist",               new Boss ("Scarlet Devil",      14, 13,   0,  0,   3,  3  ),   new Boss ("Scarlet Sister",   12, 14,   0,  0,   3,  3 ), ""                        ),
+            new IncidentSet ("Worldly Desires",            new Boss ("Wise Hermit",        12, 15,   0,  0,   3,  1  ),   new Boss ("Wicked Hermit",    13, 16,   0,  0,   4,  2 ), ""                        )
+        };
 
-            new Character {Name = "Red Shaman",         DistanceBonus = 3, RangeBonus = 5, Heroine = true, ForbiddenIncident = Incidents.EndlessParty },
-            new Character {Name = "Satori",             DistanceBonus = 1, RangeBonus = 2, Heroine = false },
-            new Character {Name = "Scarlet Devil",      DistanceBonus = 2, RangeBonus = 1, Heroine = false, ForbiddenIncident = Incidents.ScarletMist },
-            new Character {Name = "Scarlet Sister",     DistanceBonus = 3, RangeBonus = 1, Heroine = false, ForbiddenIncident = Incidents.ScarletMist },
-            new Character {Name = "Unidentified Girl",  DistanceBonus = 5, RangeBonus = 4, Heroine = false, ForbiddenIncident = Incidents.UndefinedFantasticObject },
+        _inventoryItems = new List<Inventory>
+        {   //              Name              Di  Ra
+            new Inventory ("Flower",         -2,  2  ),
+            new Inventory ("Glove",           2,  2  ),
+            new Inventory ("Gohei",           4,  5  ),
+            new Inventory ("Grimoire",       -2,  4  ),
+            new Inventory ("Hisou Sword",     2,  3  ),
+            //              Name              Di  Ra
+            new Inventory ("Ice",             3,  3  ),
+            new Inventory ("Jeweled Pagoda",  5,  6  ),
+            new Inventory ("Keystone",        5,  5  ),
+            new Inventory ("Lunar Cape",      4,  4  ),
+            new Inventory ("Mini-Hakkero",   -2,  8  ),
+            //              Name              Di  Ra
+            new Inventory ("Miracle Mallet",  3,  4  ),
+            new Inventory ("Nimble Cloth",    8,  1  ),
+            new Inventory ("Rock",            1,  3  ),
+            new Inventory ("Occult Orb",      4,  7  ),
+            new Inventory ("Seal",            6,  5  ),
+            //              Name              Di  Ra
+            new Inventory ("Soul Torch",      3,  1  ),
+            new Inventory ("Sunflower",       1,  2  ),
+            new Inventory ("Trident",         2,  3  ),
+            new Inventory ("UFO",             5,  5  ),
+            new Inventory ("Yin-Yang Orb",    3,  6  ),
         };
 
         InventoryLeft.OnInteract += () => HandleInventory(true);
         InventoryRight.OnInteract += () => HandleInventory(false);
         WinButton.OnInteract += () => ResolveIncident(IncidentResult.Win);
         LoseButton.OnInteract += () => ResolveIncident(IncidentResult.Loss);
-        DrawButton.OnInteract += () => ResolveIncident(IncidentResult.Draw);
         OffLED.SetActive(true);
         OnLED.SetActive(false);
         IncidentText.text = "";
@@ -137,293 +287,155 @@ public class ResolvingIncidents : MonoBehaviour
         CharacterText.text = "";
     }
 
-    private void Initialize()
+    void OnActivate()
     {
-        int strikeCount = 0;
-        if (_solved)
+        BombModule.LogFormat("Bomb Serial Number = {0}", BombInfo.GetSerialNumber());
+        int totalwidgets = BombInfo.GetBatteryHolderCount();
+        totalwidgets += BombInfo.GetIndicators().Count();
+        totalwidgets += BombInfo.GetPortPlateCount();
+        totalwidgets += BombInfo.GetTwoFactorCounts();
+        _widgetbonus = totalwidgets >= WIDGETSFORBONUS;
+
+        if (DEBUG)
+        {
+            StartCoroutine(SimulatateBattles(0, 0));
+        }
+        else
+        {
+            SetEdgeworkBonus();
+            StartCoroutine(SetNextCharacter(false));
+        }
+        _activated = true;
+    }
+
+    void Update()
+    {
+        if (_incident != Incidents.ScarletMist || !_activated || !_NO_SIMULATION_RUNNING)
             return;
-        if (_incident == Incidents.WorldlyDesires)
+        if (BombInfo.IsTwoFactorPresent() && BombInfo.GetTwoFactorCodes().Sum(twofactor => twofactor % 10) != _twofactorsum)
         {
-            BombModule.LogFormat("Calculating the results for Even number of Strikes");
+            SetEdgeworkBonus();
+            if (!_spinning)
+            {
+                Initialize(true);
+            }
+        }
+    }
+
+    private bool _widgetbonus = false;
+    private bool _edgeworkDefinedBoss = false;
+    private const int WIDGETSFORBONUS = 8;
+    private void SetEdgeworkBonus()
+    {
+        _characterBaseDistance = BombInfo.GetBatteryCount() == 0 ? 3 : BombInfo.GetBatteryCount();
+        _characterBaseRange = BombInfo.GetBatteryHolderCount() == 0 ? 3 : BombInfo.GetBatteryHolderCount();
+
+        if (!_widgetbonus)
+        {
+            while (_characterBaseDistance > 5)
+                _characterBaseDistance -= 5;
+            while (_characterBaseRange > 5)
+                _characterBaseRange -= 5;
+        }
+        else
+        {
+            while (_characterBaseDistance < 5)
+                _characterBaseDistance += 5;
+            while (_characterBaseRange < 5)
+                _characterBaseRange += 5;
+            while (_characterBaseDistance > 10)
+                _characterBaseDistance -= 5;
+            while (_characterBaseRange > 10)
+                _characterBaseRange -= 5;
         }
 
-        _inventory = new List<Inventory>()
-        {
-            new Inventory {Item = "Flower", Distance = -2, Range = 2},
-            new Inventory {Item = "Glove", Distance = 2, Range = 2},
-            new Inventory {Item = "Gohei", Distance = 4, Range = 5},
-            new Inventory {Item = "Grimoire", Distance = -2, Range = 4},
-            new Inventory {Item = "Hisou Sword", Distance = 2, Range = 3},
-            new Inventory {Item = "Ice", Distance = 3, Range = 3},
-            new Inventory {Item = "Jeweled Pagoda", Distance = 5, Range = 6},
-            new Inventory {Item = "Keystone", Distance = 5, Range = 5},
-            new Inventory {Item = "Lunar Cape", Distance = 4, Range = 4},
-            new Inventory {Item = "Mini-Hakkero", Distance = -2, Range = 8},
-            new Inventory {Item = "Miracle Mallet", Distance = 3, Range = 4},
-            new Inventory {Item = "Nimble Cloth", Distance = 8, Range = 1},
-            new Inventory {Item = "Rock", Distance = 1, Range = 3},
-            new Inventory {Item = "Occult Orb", Distance = 4, Range = 7},
-            new Inventory {Item = "Seal", Distance = 6, Range = 5},
-            new Inventory {Item = "Soul Torch", Distance = 3, Range = 1},
-            new Inventory {Item = "Sunflower", Distance = 1, Range = 2},
-            new Inventory {Item = "Trident", Distance = 2, Range = 3},
-            new Inventory {Item = "UFO", Distance = 5, Range = 5},
-            new Inventory {Item = "Yin-Yang Orb", Distance = 3, Range = 6},
-        }.OrderBy(x => Rnd.value).Take(MAXINVENTORYITEMS).ToList();
-
-        _spellBonus = Rnd.value > 0.5f;
-        _character = _characters.OrderBy(x => Rnd.value).First(y => y.ForbiddenIncident != _incident);
-        _season = _seasons[Rnd.Range(0, _seasons.Length)];
-
-        OffLED.SetActive(!_spellBonus);
-        OnLED.SetActive(_spellBonus);
-
-        CharacterText.text = _character.Name;
-        CharacterText.color = _colorValues[(int) _season];
-        InventoryText.text = _inventory[_currentInventoryItem].Item;
-
-        
-
-        OddStrikes:
-        if (strikeCount == 1)
-        {
-            BombModule.LogFormat("Calculating the results for Odd number of Strikes");
-        }
-
-        int CharacterDistance = BombInfo.GetBatteryCount() == 0 ? 3 : (BombInfo.GetBatteryCount() % 5);
-        int CharacterRange = BombInfo.GetBatteryHolderCount() == 0 ? 3 : (BombInfo.GetBatteryHolderCount() % 5);
-
-        BombModule.LogFormat("Chararcter: {0} - Distance = {1}, Range = {2}, Season = {3}", _character.Name, CharacterDistance, CharacterRange, _season);
-
-        if (_character.Heroine)
-        {
-            CharacterDistance++;
-            CharacterRange++;
-            BombModule.LogFormat("Character is a Heroine, Gets a bonus of 1/1 to Distance/Range");
-        }
-
-        if (_spellBonus)
-        {
-            CharacterDistance += _character.DistanceBonus;
-            CharacterRange += _character.RangeBonus;
-            BombModule.LogFormat("Spell Bonus is Active. Character gets a bonus of {0} to Distance and {1} to Range", _character.DistanceBonus, _character.RangeBonus);
-        }
-
-        int BossDistance;
-        int BossRange;
- 
+        IncidentSet incident = new IncidentSet { Name = "Error" };
+        if ((int)_incident < _incidedentSets.Count && (int)_incident >= 0)
+            incident = _incidedentSets[(int)_incident];
         switch (_incident)
         {
             case Incidents.CosmicWeather:
-                IncidentText.text = "Cosmic Weather";
-                BossDistance = (_season == CharacterSeasons.Spring || _season == CharacterSeasons.Summer) ? 9 : 7;
-                BossDistance += BombInfo.GetPortPlateCount();
-                BossRange = (_season == CharacterSeasons.Spring || _season == CharacterSeasons.Summer) ? 10 : 9;
-                BombModule.LogFormat("Fighting Heavenly Swordgirl - Distance = 7, Range = 9");
-                if (_season == CharacterSeasons.Spring || _season == CharacterSeasons.Summer)
-                {
-                    BombModule.LogFormat("Boss has a Distance/Range advantage of 2/1 based on season");
-                }
-                if (BombInfo.GetPortPlateCount() > 0)
-                    BombModule.LogFormat("Boss has a Distance advantage of {0} based on port plate count", BombInfo.GetPortPlateCount());
+                bool heavenlyNoEmptyPlatesBonus = BombInfo.GetPortPlates().All(x => x.Length != 0) && (BombInfo.GetPortCount() % 2) == 1;
+                int heavenlyBonus = (BombInfo.GetPortCount() / 2);
+                if (heavenlyNoEmptyPlatesBonus)
+                    heavenlyBonus++;
+                incident.Boss1.EdgeworkBonusDistance = heavenlyBonus;
+                incident.EdgeworkBonusReason = string.Format("port counts divided by two{0}", heavenlyNoEmptyPlatesBonus ? " rounded up" : " rounded down");
                 break;
             case Incidents.EndlessParty:
-                IncidentText.text = "Endless Party";
-                int SakeCount = BombInfo.GetSerialNumberLetters().Count(c => "SAKE".Contains(c.ToString().ToUpperInvariant()));
-                if (BombInfo.CountUniquePorts() >= 3)
-                {
-                    BombModule.LogFormat("Fighting Red Shaman - Distance = 8, Range = 7");
-                    BossDistance = 8;
-                    BossRange = 7 + SakeCount;
-                    if (SakeCount > 0)
-                        BombModule.LogFormat("Boss has a Range advantage of {0} based on serial number contain the letters of S, A, K, or E", SakeCount);
-                }
-                else
-                {
-                    BombModule.LogFormat("Fighting Red Shaman - Distance = 7, Range = 8");
-                    BossDistance = 7 + SakeCount;
-                    BossRange = 8;
-                    if (SakeCount > 0)
-                        BombModule.LogFormat("Boss has a Distance advantage of {0} based on serial number contain the letters of S, A, K, or E", SakeCount);
-                }
+                _edgeworkDefinedBoss = BombInfo.CountUniquePorts() < 3;
+                int shamanBonus = BombInfo.GetSerialNumberNumbers().Min();
+                if (shamanBonus == 0)
+                    shamanBonus = 10;
+                incident.EdgeworkBonusReason = "the last serial number digit";
+                incident.Boss1.EdgeworkBonusDistance = shamanBonus;
+                incident.Boss2.EdgeworkBonusRange = shamanBonus;
                 break;
             case Incidents.FairyWars:
-                IncidentText.text = "Fairy Wars";
-                int FairyBonus = BombInfo.CountUniquePorts() / 2;
-                if (_season == CharacterSeasons.Fall || _season == CharacterSeasons.Winter)
-                {
-                    BombModule.LogFormat("Fighting Ice Fairy - Distance = 7, Range = 8");
-                    BossDistance = 7;
-                    BossRange = 8 + FairyBonus;
-                    if (_season == CharacterSeasons.Winter)
-                    {
-                        BombModule.LogFormat("Boss has a Distance/Range advantage of 1/1 based on season");
-                        BossDistance++;
-                        BossRange++;
-                    }
-                }
-                else
-                {
-                    BombModule.LogFormat("Fighting Sunflower Fairy - Distance = 8, Range = 9");
-                    BossDistance = 8;
-                    BossRange = 9 + FairyBonus;
-                    if (_season == CharacterSeasons.Summer)
-                    {
-                        BombModule.LogFormat("Boss has a Distance advantage of 1 based on season");
-                        BossDistance++;
-                    }
-                }
-                if (FairyBonus > 0)
-                    BombModule.LogFormat("Boss has a Range advantage of {0} based on unique ports divided by two", FairyBonus);
+                int FairyBonus = BombInfo.CountUniquePorts();
+                incident.Boss1.EdgeworkBonusDistance = FairyBonus;
+                incident.Boss1.EdgeworkBonusRange = FairyBonus;
+                incident.Boss2.EdgeworkBonusDistance = FairyBonus;
+                incident.Boss2.EdgeworkBonusRange = FairyBonus;
+                incident.EdgeworkBonusReason = "unique ports divided by two";
                 break;
             case Incidents.LilyBlackandWhite:
-                IncidentText.text = "Lily Black and White";
-                if (_season == CharacterSeasons.Winter || _season == CharacterSeasons.Spring)
-                {
-                    BombModule.LogFormat("Fighting Lily White - Distance = 10, Range = 11");
-                    BossDistance = 10;
-                    BossRange = 11;
-                }
-                else
-                {
-                    BombModule.LogFormat("Fighting Lily Black - Distance = 10, Range = 9");
-                    BossDistance = 10;
-                    BossRange = 9;
-                }
-                if (_season == CharacterSeasons.Spring || _season == CharacterSeasons.Summer)
-                {
-                    BombModule.LogFormat("Boss has a Distance/Range advantage of 1/1 based on season");
-                    BossDistance++;
-                    BossRange++;
-                }
                 break;
             case Incidents.LunarWar:
-                IncidentText.text = "Lunar War";
-                if (BombInfo.CountDuplicatePorts() == 1)
+                _edgeworkDefinedBoss = BombInfo.CountDuplicatePorts() != 1;
+                if (BombInfo.GetSerialNumberNumbers().Sum() <= 11)
                 {
-                    BombModule.LogFormat("Fighting Lunar Queen - Distance = 10, Range = 9");
-                    BossDistance = 10;
-                    BossRange = 9;
-                }
-                else
-                {
-                    BombModule.LogFormat("Fighting Lunar King - Distance = 9, Range = 10");
-                    BossDistance = 9;
-                    BossRange = 10;
-                }
-                if (BombInfo.GetSerialNumberNumbers().Sum() >= 9)
-                {
-                    BombModule.LogFormat("Boss has a Distance/Range advantage of 1/1 based on serial number digit sum");
-                    BossDistance++;
-                    BossRange++;
+                    incident.Boss1.EdgeworkBonusDistance = incident.Boss1.BonusDistance;
+                    incident.Boss1.EdgeworkBonusRange = incident.Boss1.BonusRange;
+                    incident.Boss2.EdgeworkBonusDistance = incident.Boss2.BonusDistance;
+                    incident.Boss2.EdgeworkBonusRange = incident.Boss2.BonusRange;
+                    incident.EdgeworkBonusReason = incident.BonusReason;
                 }
                 break;
             case Incidents.OccultInvasion:
-                IncidentText.text = "Occult Invasion";
-                int LegendaryBonus = BombInfo.GetIndicators().Count(x => x.ToCharArray().Any(y => "URBAN LEGEND".Contains(y.ToString().ToUpperInvariant()))) / 2;
-                BombModule.LogFormat("Fighting Legendary Student - Distance = 9, Range = 10");
-                BossDistance = 9 + LegendaryBonus;
-                BossRange = 10;
-                if (_season == CharacterSeasons.Spring || _season == CharacterSeasons.Summer)
-                {
-                    BombModule.LogFormat("Boss has a Distance/Range advantage of 1/1 based on season");
-                    BossDistance++;
-                    BossRange++;
-                }
-                if (LegendaryBonus > 0)
-                {
-                    BombModule.LogFormat("Boss has a Distance advantage of 1 based on every two indicators containing letters of \"URBAN LEGEND\"");
-                }
+                int LegendaryBonus = BombInfo.GetModuleNames().Count % 5;
+                bool LegendaryIndicator = BombInfo.GetOnIndicators().Count(x => "LEGEND".Contains(x.ToUpperInvariant().ToCharArray().Last())) == 2;
+                if (LegendaryBonus == 0 && LegendaryIndicator)
+                    LegendaryBonus = 5;
+                incident.Boss1.EdgeworkBonusDistance = LegendaryBonus;
+                incident.EdgeworkBonusReason = LegendaryBonus == 5 ? "Two indicators ending in a letter contained in \"LEGEND\"" : "Module count modulo 5";
                 break;
             case Incidents.OverdrivenNight:
-                IncidentText.text = "Overdriven Night";
-                if (_season == CharacterSeasons.Fall || _season == CharacterSeasons.Winter)
-                {
-                    BombModule.LogFormat("Fighting Lunar Doctor - Distance = 11, Range = 8");
-                    BossDistance = 11;
-                    BossRange = 8;
-                }
-                else
-                {
-                    BombModule.LogFormat("Fighting Moon Rabbit - Distance = 8, Range = 9");
-                    BossDistance = 8;
-                    BossRange = 9;
-                }
-                if (BombInfo.GetOffIndicators().Any())
-                {
-                    BombModule.LogFormat("Boss has a Distance advantage of {0} based on the number of unlit Indicators", BombInfo.GetOffIndicators().Count());
-                    BossRange += BombInfo.GetOffIndicators().Count();
-                }
+                incident.Boss1.EdgeworkBonusRange = BombInfo.GetOffIndicators().Count();
+                incident.Boss2.EdgeworkBonusRange = BombInfo.GetOffIndicators().Count();
+                incident.EdgeworkBonusReason = "the number of unlit Indicators";
                 break;
             case Incidents.UndefinedFantasticObject:
-                IncidentText.text = "Undefined Fastastic Object";
+                _edgeworkDefinedBoss = BombInfo.GetOffIndicators().Count() > BombInfo.GetOnIndicators().Count();
                 int undefineduniqueports = BombInfo.CountUniquePorts();
-                if (BombInfo.GetOffIndicators().Count() > BombInfo.GetOnIndicators().Count())
-                {
-                    BombModule.LogFormat("Fighting Undefined Girl - Distance = 7, Range = 7");
-                    BossDistance = 7;
-                    BossRange = 7;
-                    if (undefineduniqueports > 0)
-                    {
-                        BombModule.LogFormat("Boss has a Distance/Range advantage of {0}/{0} based on the number of unique port types", undefineduniqueports);
-                        BossDistance += undefineduniqueports;
-                        BossRange += undefineduniqueports;
-                    }
-                }
-                else
-                {
-                    BombModule.LogFormat("Fighting Fantastic Girl - Distance = 9, Range = 8");
-                    BossDistance = 9;
-                    BossRange = 8;
-                    if (undefineduniqueports > 0)
-                    {
-                        BombModule.LogFormat("Boss has a Range advantage of {0} based on the number of unique port types", undefineduniqueports);
-                        BossDistance += undefineduniqueports;
-                        BossRange += undefineduniqueports;
-                    }
-                }
+                incident.Boss1.EdgeworkBonusDistance = undefineduniqueports;
+                incident.Boss1.EdgeworkBonusRange = undefineduniqueports;
+                incident.Boss2.EdgeworkBonusRange = undefineduniqueports;
+                incident.EdgeworkBonusReason = "the number of unique port types";
                 break;
             case Incidents.ScarletMist:
-                IncidentText.text = "Scarlet Mist";
+                _edgeworkDefinedBoss = BombInfo.GetSerialNumberLetters().Count() > BombInfo.GetSerialNumberNumbers().Count();
                 int scarletdisadvantage = BombInfo.GetOnIndicators().Count();
-                if (BombInfo.GetSerialNumberLetters().Count() > BombInfo.GetSerialNumberNumbers().Count())
-                {
-                    BombModule.LogFormat("Fighting Scarlet Devil - Distance = 12, Range = 11");
-                    BossDistance = 12;
-                    BossRange = 11;
-                }
+                if (_NO_SIMULATION_RUNNING)
+                    _twofactorsum = BombInfo.IsTwoFactorPresent()
+                        ? BombInfo.GetTwoFactorCodes().Sum(twofactor => twofactor % 10)
+                        : BombInfo.GetSerialNumberNumbers().Last();
                 else
-                {
-                    BombModule.LogFormat("Fighting Scarlet Sister - Distance = 13, Range = 12");
-                    BossDistance = 13;
-                    BossRange = 12;
-                }
-                if (scarletdisadvantage > 0)
-                {
-                    BombModule.LogFormat("Boss has a Distance/Range disadvantage of {0}/{0} based on the number of lit indicators", scarletdisadvantage);
-                    BossDistance -= scarletdisadvantage;
-                    BossRange -= scarletdisadvantage;
-                }
+                    _twofactorsum = BombInfo.IsTwoFactorPresent()
+                        ? 0
+                        : BombInfo.GetSerialNumberNumbers().Last();
+                scarletdisadvantage += _twofactorsum;
+                incident.Boss1.EdgeworkBonusDistance = -scarletdisadvantage;
+                incident.Boss1.EdgeworkBonusRange = -scarletdisadvantage;
+                incident.Boss2.EdgeworkBonusDistance = -scarletdisadvantage;
+                incident.Boss2.EdgeworkBonusRange = -scarletdisadvantage;
+                incident.EdgeworkBonusReason = string.Format("based on the number of lit indicators and {0}", BombInfo.IsTwoFactorPresent() ? "two factor least significant digit sum" : "last serial number digit");
                 break;
             case Incidents.WorldlyDesires:
-                IncidentText.text = "Worldly Desires";
-                if (strikeCount == 1)
-                {
-                    BombModule.LogFormat("Fighting Wise Hermit - Distance = 10, Range = 11");
-                    BossDistance = 10;
-                    BossRange = 11;
-                }
-                else
-                {
-                    BombModule.LogFormat("Fighting Wicked Hermit - Distance = 11, Range = 12");
-                    BossDistance = 11;
-                    BossRange = 12;
-                }
-                if (BombInfo.GetPortPlateCount() > 0)
-                {
-                    BombModule.LogFormat("Boss has a Range disadvantage of {0} based on the number of port plates", BombInfo.GetPortPlateCount());
-                    BossRange -= BombInfo.GetPortPlateCount();
-                }
+                int hermitpenalty = -BombInfo.GetPortCount();
+                incident.Boss1.EdgeworkBonusRange = hermitpenalty;
+                incident.Boss2.EdgeworkBonusRange = hermitpenalty;
+                incident.EdgeworkBonusReason = "the number of ports";
                 break;
             case Incidents.None:
                 ForcePass("No idea why Incident.None was picked. That should not have happened.");
@@ -432,50 +444,358 @@ public class ResolvingIncidents : MonoBehaviour
                 ForcePass("Unknown Incident: {0}", _incident);
                 return;
         }
+    }
 
-        BombModule.LogFormat("Item with Best Distance advantage and worst Range disadvantage is {0}, Distance = {1}, Range = {2}", FindBestDistanceAdvantage.Item, FindBestDistanceAdvantage.Distance, FindBestDistanceAdvantage.Range);
-        CharacterDistance += FindBestDistanceAdvantage.Distance;
-        CharacterRange += FindBestDistanceAdvantage.Range;
 
-        BombModule.LogFormat("Item with Best Range advantage and worst Distance disadvantage is {0}, Distance = {1}, Range = {2}", FindBestRangeAdvantage.Item, FindBestRangeAdvantage.Distance, FindBestRangeAdvantage.Range);
-        CharacterDistance += FindBestRangeAdvantage.Distance;
-        CharacterRange += FindBestRangeAdvantage.Range;
 
-        BombModule.LogFormat("Final character results - Distance = {0}, Range = {1}", CharacterDistance, CharacterRange);
-        BombModule.LogFormat("Final Boss results - Distance = {0}, Range = {1}", BossDistance, BossRange);
+    private void PrintBonus(int Distance, int Range, string Reason)
+    {
 
-        if (CharacterDistance > BossRange && CharacterRange > BossDistance)
+        if (Distance > 0 && Range > 0)
         {
-            BombModule.LogFormat("The Boss is Defeated");
-            if (strikeCount == 0)
-                _correctIncidentResultEvenStrike = IncidentResult.Win;
-            else
-                _correctIncidentResultOddStrike = IncidentResult.Win;
+            BombModule.LogFormat("Boss has a Distance/Range advantage of {0}/{1} based on {2}", Distance, Range, Reason);
         }
-        else if (BossDistance > CharacterRange && BossRange > CharacterDistance)
+        else if (Distance < 0 && Range < 0)
         {
-            BombModule.LogFormat("The Character dies");
-            if (strikeCount == 0)
-                _correctIncidentResultEvenStrike = IncidentResult.Loss;
-            else
-                _correctIncidentResultOddStrike = IncidentResult.Loss;
+            BombModule.LogFormat("Boss has a Distance/Range penalty of {0}/{1} based on {2}", Distance, Range, Reason);
         }
         else
         {
-            BombModule.LogFormat("The Battle ends in a Draw");
-            if (strikeCount == 0)
-                _correctIncidentResultEvenStrike = IncidentResult.Draw;
-            else
-                _correctIncidentResultOddStrike = IncidentResult.Draw;
+
+            if (Distance > 0)
+            {
+                BombModule.LogFormat("Boss has a Distance advantage of {0} based on {1}", Distance, Reason);
+            }
+            else if (Distance < 0)
+            {
+                BombModule.LogFormat("Boss has a Distance penalty of {0} based on {1}", Mathf.Abs(Distance), Reason);
+            }
+
+            if (Range > 0)
+            {
+                BombModule.LogFormat("Boss has a Range advantage of {0} based on {1}", Range, Reason);
+            }
+            else if (Range < 0)
+            {
+                BombModule.LogFormat("Boss has a Range penalty of {0} based on {1}", Mathf.Abs(Range), Reason);
+            }
+        }
+    }
+
+    private void PrintIncident(IncidentSet incident, bool boss1, bool bossbonus, out int distance, out int range)
+    {
+        if (incident == null)
+        {
+            distance = 0;
+            range = 0;
+            return;
+        }
+        Boss boss = boss1 ? incident.Boss1 : incident.Boss2;
+        if (boss == null)
+        {
+            distance = 0;
+            range = 0;
+            return;
+        }
+        distance = boss.BaseDistance + boss.EdgeworkBonusDistance;
+        range = boss.BaseRange + boss.EdgeworkBonusRange;
+        if (bossbonus)
+        {
+            distance += boss.BonusDistance;
+            range += boss.BonusRange;
         }
 
+        if (_widgetbonus)
+        {
+            distance += boss.WidgetBonusDistance;
+            range += boss.WidgetBonusRange;
+        }
+
+        if (!_NO_SIMULATION_RUNNING) return;
+
+        BombModule.LogFormat("Fighting {0} - Distance = {1}, Range = {2}", boss.Name, boss.BaseDistance, boss.BaseRange);
+        if (bossbonus) PrintBonus(boss.BonusDistance, boss.BonusRange, incident.BonusReason);
+        PrintBonus(boss.EdgeworkBonusDistance, boss.EdgeworkBonusRange, incident.EdgeworkBonusReason);
+        if(_widgetbonus) PrintBonus(boss.WidgetBonusDistance, boss.WidgetBonusRange, incident.WidgetBonusReason);
+    }
+
+    private static int _sets = 0;
+    private static Dictionary<int, Inventory[]> _itemSets = new Dictionary<int, Inventory[]>();
+
+    private void InitializeItemSets()
+    {
+        for (int i = 0; i < (_inventoryItems.Count - 4); i++)
+        {
+            for (int j = (i + 1); j < (_inventoryItems.Count - 3); j++)
+            {
+                for (int k = (j + 1); k < (_inventoryItems.Count - 2); k++)
+                {
+                    for (int l = (k + 1); l < (_inventoryItems.Count - 1); l++)
+                    {
+                        for (int m = (l + 1); m < _inventoryItems.Count; m++)
+                        {
+                            //_inventory.OrderByDescending(x => x.Distance).ThenBy(y => y.Range).ToList()[0];
+                            //_inventory.OrderByDescending(x => x.Range).ThenBy(y => y.Distance).Where(z => z != FindBestDistanceAdvantage).ToList()[0];
+                            var inventory = new [] { _inventoryItems[i], _inventoryItems[j], _inventoryItems[k], _inventoryItems[l], _inventoryItems[m]};
+                            var bestdist = inventory.OrderByDescending(x => x.Distance).ThenBy(y => y.Range).ToList()[0];
+                            var bestrange = inventory.OrderByDescending(x => x.Range).ThenBy(y => y.Distance).Where(z => z != bestdist).ToList()[0];
+                            if ((from w in _itemSets.Values let wdist = w.OrderByDescending(x => x.Distance).ThenBy(y => y.Range).ToList()[0] let wrange = w.OrderByDescending(x => x.Range).ThenBy(y => y.Distance).Where(z => z != wdist).ToList()[0] where bestdist == wdist && bestrange == wrange select wdist).Any())
+                                continue;
+                            _itemSets[_sets++] = inventory;
+                        }
+                    }
+                }
+            }
+        }
+        BombModule.LogFormat("Found {0} Unique Items sets", _sets);
+    }
+
+    private void RandomizeCharacter()
+    {
+        _spellBonus = Rnd.value > 0.5f;
+        _character = _characters.OrderBy(x => Rnd.value).First(y => y.ForbiddenIncident != _incident);
+        _season = _seasons[Rnd.Range(0, _seasons.Length)];
+    }
+
+    private void RandomizeInventory()
+    {
+        _inventory = new List<Inventory>(_inventoryItems).OrderBy(x => Rnd.value).Take(MAXINVENTORYITEMS).ToList();
+    }
+
+    private void UpdateDisplay(bool updateLED=true, bool UpdateCharacter=true, bool UpdateInventory=true)
+    {
+        if (!_NO_SIMULATION_RUNNING)
+            return;
+        if (UpdateCharacter)
+        {
+            CharacterText.text = _character.Name;
+            CharacterText.color = _colorValues[(int) _season];
+            if (updateLED)
+            {
+                OffLED.SetActive(!_spellBonus);
+                OnLED.SetActive(_spellBonus);
+            }
+        }
+        if (UpdateInventory)
+        {
+            InventoryText.text = _inventory[_currentInventoryItem].Item;
+        }
+        StageNumberText.text = string.Format("{0}", _losses + 1);
+
+        IncidentSet incident = new IncidentSet();
+        if ((int)_incident < _incidedentSets.Count && (int)_incident >= 0)
+            incident = _incidedentSets[(int)_incident];
+        IncidentText.text = incident.Name;
         
+        
+    }
+
+    private void Initialize(bool TwoFactorUpdate = false)
+    {
+        Initialize(0, TwoFactorUpdate);
+    }
+
+    private void Initialize(int BossBuff, bool TwoFactorUpdate)
+    {
+        if (_solved)
+            return;
+
+        int BossDistance;
+        int BossRange;
+        IncidentSet incident = new IncidentSet { Name = "Error" };
+        if ((int)_incident < _incidedentSets.Count && (int)_incident >= 0)
+            incident = _incidedentSets[(int)_incident];
+        bool boss1 = true;
+        bool bossbonus = false;
+
+        if (!TwoFactorUpdate)
+        {
+            RandomizeCharacter();
+            RandomizeInventory();
+            if (_NO_SIMULATION_RUNNING)
+            {
+                UpdateDisplay();
+                BombModule.LogFormat("Resolving Incident: {0}", incident.Name);
+            }
+        }
+        else
+        {
+            if (_NO_SIMULATION_RUNNING)
+            {
+                UpdateDisplay();
+                BombModule.LogFormat("Updating Incident {0} results based on a change in the Two Factor sum", incident.Name);
+            }
+        }
+
+        bool Strikes = false;
+        OddStrikes:
         if (_incident == Incidents.WorldlyDesires)
         {
-            strikeCount++;
-            BombModule.LogFormat(strikeCount == 1 ? "Done calculating for Even strikes" : "Done calculating for Odd strikes");
-            if (strikeCount == 1)
+            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat(!Strikes ? "Calculating the results for Even number of Strikes" : "Calculating the results for Odd number of Strikes");
+        }
+
+        int CharacterDistance = _characterBaseDistance;
+        int CharacterRange = _characterBaseRange;
+
+        if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Chararcter: {0} - Distance = {1}, Range = {2}, Season = {3}", _character.Name, CharacterDistance, CharacterRange, _season);
+
+        if (_character.Heroine)
+        {
+            CharacterDistance++;
+            CharacterRange++;
+            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Character is a Heroine, Gets a bonus of 1/1 to Distance/Range");
+        }
+
+        if (_spellBonus)
+        {
+            CharacterDistance += _character.DistanceBonus;
+            CharacterRange += _character.RangeBonus;
+            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Spell Bonus is Active. Character gets a bonus of {0} to Distance and {1} to Range", _character.DistanceBonus, _character.RangeBonus);
+        }
+
+        switch (_incident)
+        {
+            case Incidents.CosmicWeather:
+                bossbonus = _season == CharacterSeasons.Summer;
+                break;
+            case Incidents.EndlessParty:
+                boss1 = _edgeworkDefinedBoss;
+                break;
+            case Incidents.FairyWars:
+                boss1 = _season == CharacterSeasons.Fall || _season == CharacterSeasons.Winter;
+                bossbonus = _season == CharacterSeasons.Winter || _season == CharacterSeasons.Summer;
+                break;
+            case Incidents.LilyBlackandWhite:
+                boss1 = _season == CharacterSeasons.Summer || _season == CharacterSeasons.Fall;
+                bossbonus = _season == CharacterSeasons.Spring || _season == CharacterSeasons.Summer;
+                break;
+            case Incidents.LunarWar:
+                boss1 = _edgeworkDefinedBoss;
+                break;
+            case Incidents.OccultInvasion:
+                bossbonus = _season == CharacterSeasons.Spring || _season == CharacterSeasons.Summer;
+                break;
+            case Incidents.OverdrivenNight:
+                boss1 = _season == CharacterSeasons.Fall || _season == CharacterSeasons.Winter;
+                break;
+            case Incidents.UndefinedFantasticObject:
+                boss1 = _edgeworkDefinedBoss;
+                break;
+            case Incidents.ScarletMist:
+                boss1 = _edgeworkDefinedBoss;
+                break;
+            case Incidents.WorldlyDesires:
+                boss1 = Strikes;
+                break;
+            case Incidents.None:
+                ForcePass("No idea why Incident.None was picked. That should not have happened.");
+                return;
+            default:
+                ForcePass("Unknown Incident: {0}", _incident);
+                return;
+        }
+        PrintIncident(incident, boss1, bossbonus, out BossDistance, out BossRange);
+
+        foreach (Inventory item in _inventory.OrderBy(x => x.Item))
+        {
+            string footer = "";
+            if (item == FindBestDistanceAdvantage)
+            {
+                int i = item.Distance;
+                footer = " <--- Best Distance advantage";
+                if (_inventory.Count(x => x.Distance == i) > 1)
+                    footer += " and worst Range disadvantage";
+            }
+            else if (item == FindBestRangeAdvantage)
+            {
+                int i = item.Range;
+                footer = " <--- Best Range advantage";
+                if (_inventory.Count(x => x.Range == i) > 1)
+                    footer += " and worst Distance disadvantage";
+            }
+            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Item: {0}, Distance: {1}, Range: {2}{3}", item.Item, item.Distance, item.Range, footer);
+        }
+        CharacterDistance += FindBestDistanceAdvantage.Distance;
+        CharacterRange += FindBestDistanceAdvantage.Range;
+
+        CharacterDistance += FindBestRangeAdvantage.Distance;
+        CharacterRange += FindBestRangeAdvantage.Range;
+
+        if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Final character results - Distance = {0}, Range = {1}", CharacterDistance, CharacterRange);
+        if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Final Boss results - Distance = {0}, Range = {1}", BossDistance, BossRange);
+
+        BossRange += BossBuff;
+        BossDistance += BossBuff;
+
+        bool BossWins = BossRange >= CharacterDistance;
+        bool CharacterWins = CharacterRange >= BossDistance;
+        if (_NO_SIMULATION_RUNNING)
+        {
+            if (CharacterWins) BombModule.LogFormat(BossWins ? "Although the Boss was defeated, the character died in the process." : "The Boss was defeated and the character returned victorious");
+            else BombModule.LogFormat(BossWins ? "The character was killed by the boss" : "The Battle ended in a stale-mate");
+
+        }
+        IncidentResult correctResult;
+        if (CharacterWins && BossWins)
+        {
+            correctResult = _losses < 2 ? IncidentResult.Loss : IncidentResult.Win;
+        }
+        else
+        {
+            correctResult = CharacterWins ? IncidentResult.Win : IncidentResult.Loss;
+        }
+        if (_NO_SIMULATION_RUNNING)
+            BombModule.LogFormat("Expecting {0} to be pressed.", correctResult);
+
+        if (!Strikes)
+            _correctIncidentResultEvenStrike = correctResult;
+        else
+            _correctIncidentResultOddStrike = correctResult;
+
+        if (boss1)
+        {
+            if (CharacterWins && BossWins)
+            {
+                _BOTHDEFEATEDLOSS = !_BOTHDEFEATEDLOSS;
+                if(_BOTHDEFEATEDLOSS)
+                    _WINSBOSS1++;
+                else
+                    _LOSSESBOSS1++;
+            }
+            else if (CharacterWins)
+                _WINSBOSS1++;
+            else
+                _LOSSESBOSS1++;
+        }
+        else
+        {
+            if (CharacterWins && BossWins)
+            {
+                _BOTHDEFEATEDLOSS = !_BOTHDEFEATEDLOSS;
+                if (_BOTHDEFEATEDLOSS)
+                    _WINSBOSS2++;
+                else
+                    _LOSSESBOSS2++;
+            }
+            else if(CharacterWins)
+                _WINSBOSS2++;
+            else
+                _LOSSESBOSS2++;
+        }
+
+
+        if (_incident == Incidents.WorldlyDesires)
+        {
+            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat(!Strikes ? "Done calculating for Even strikes" : "Done calculating for Odd strikes");
+            if (!Strikes)
+            {
+                Strikes = true;
                 goto OddStrikes;
+            }
+        }
+        else
+        {
+            _correctIncidentResultOddStrike = _correctIncidentResultEvenStrike;
         }
     }
 
@@ -489,29 +809,43 @@ public class ResolvingIncidents : MonoBehaviour
         get { return _inventory.OrderByDescending(x => x.Range).ThenBy(y => y.Distance).Where(z => z != FindBestDistanceAdvantage).ToList()[0]; }
     }
 
-    void OnActivate()
-    {
-        Initialize();
-        _activated = true;
-    }
-
     public void ForcePass(string reason, params object[] args)
     {
-        BombModule.LogFormat("Forcing a pass because of reason: {0}", string.Format(reason,args));
+        BombModule.LogFormat("Forcing a pass because of reason: {0}", string.Format(reason, args));
 
         //Clear the things that souvenir may eventually read, to tell souvenir to abort readout of this module instance.
         StopAllCoroutines();
         _incident = Incidents.None;
         _character = null;
         _solved = true;
+        IncidentText.text = "Error";
+        InventoryText.text = "";
+        CharacterText.text = "";
+        OnLED.SetActive(false);
+        OffLED.SetActive(true);
 
         BombModule.HandlePass();
     }
 
+    void PlayRandomSound()
+    {
+        List<KMSoundOverride.SoundEffect> effects = ((KMSoundOverride.SoundEffect[])Enum.GetValues(typeof(KMSoundOverride.SoundEffect))).ToList();
+        effects.Remove(KMSoundOverride.SoundEffect.AlarmClockBeep);
+        effects.Remove(KMSoundOverride.SoundEffect.BombExplode);
+        effects.Remove(KMSoundOverride.SoundEffect.GameOverFanfare);
+        effects.Remove(KMSoundOverride.SoundEffect.NeedyWarning);
+        Audio.PlayGameSoundAtTransform(effects.OrderBy(x => Rnd.value).First(), transform);
+    }
+
     bool HandleInventory(bool left)
     {
+        if (DEBUG)
+        {
+            PlayRandomSound();
+            return false;
+        }
         Audio.HandlePlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        if (_solved)
+        if (_solved || _spinning)
             return false;
         if (!_activated)
         {
@@ -527,8 +861,13 @@ public class ResolvingIncidents : MonoBehaviour
 
     bool ResolveIncident(IncidentResult result)
     {
+        if (DEBUG)
+        {
+            PlayRandomSound();
+            return false;
+        }
         Audio.HandlePlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        if (_solved)
+        if (_solved || _spinning)
             return false;
         if (!_activated)
         {
@@ -536,9 +875,10 @@ public class ResolvingIncidents : MonoBehaviour
             BombModule.LogFormat("Pressed {0} button before module was ready.", result);
             return false;
         }
-        IncidentResult strikeResult = _incident == Incidents.WorldlyDesires 
-            ? ((BombInfo.GetStrikes() % 2) == 0 ? _correctIncidentResultEvenStrike : _correctIncidentResultOddStrike )
-            : _correctIncidentResultEvenStrike;
+        bool EvenStrikes = (BombInfo.GetStrikes() % 2) == 0;
+        IncidentResult strikeResult = EvenStrikes ? _correctIncidentResultEvenStrike : _correctIncidentResultOddStrike;
+        if (_incident == Incidents.WorldlyDesires)
+            BombModule.LogFormat(EvenStrikes ? "Even number of strikes present - Fighting Wicked Hermit" : "Odd number of Strikes present - Fighting Wise Hermit");
 
         if (result == strikeResult)
         {
@@ -549,37 +889,97 @@ public class ResolvingIncidents : MonoBehaviour
                     _wins++;
                     break;
                 case IncidentResult.Loss:
-                case IncidentResult.Draw:
                     _losses++;
                     break;
                 default:
                     ForcePass("Unknown Incident result was pressed.");
                     return false;
             }
-            if (_wins >= WINSTOSOLVE || _losses >= LOSSESTOSOLVE)
-            {
-                BombModule.Log("Passed");
-                BombModule.HandlePass();
-                CharacterText.text = "";
-                InventoryText.text = "";
-                IncidentText.text = "Incident Resolved";
-                _solved = true;
-                return false;
-            }
+            StartCoroutine(SetNextCharacter(false));
         }
         else
         {
             BombModule.LogFormat("Pressed {0}, Expected {1} - Incorrect", result, _correctIncidentResultEvenStrike);
-            BombModule.HandleStrike();
+            _losses++;
+            StartCoroutine(SetNextCharacter(true));
         }
-        Initialize();
         return false;
     }
 
-    private string TwitchHelpMessage = "Cycle the inventory with !{0} cycle. Resolve the Incident with !{0} win, !{0} loss, or !{0} draw.";
+    private bool _twitchPlayStrike;
+    IEnumerator SetNextCharacter(bool giveStrike)
+    {
+        _spinning = true;
+        _twitchPlayStrike = giveStrike;
+        if (_wins >= WINSTOSOLVE || _losses >= LOSSESTOSOLVE)
+        {
+            _solved = true;
+        }
+
+        for (int i = 0; i < 60; i++)
+        {
+            RandomizeCharacter();
+            RandomizeInventory();
+            UpdateDisplay();
+            StageNumberText.text = string.Format("{0}", (_losses + 1 + i) % 10);
+            yield return null;
+        }
+        if (_solved) CharacterText.text = "";
+        OnLED.SetActive(giveStrike);
+        OffLED.SetActive(!giveStrike);
+
+        for (int i = 0; i < 60; i++)
+        {
+            RandomizeInventory();
+            UpdateDisplay(false, !_solved);
+            StageNumberText.text = string.Format("{0}", (_losses + 1 + i) % 10);
+            yield return null;
+        }
+        if (_solved)
+        {
+            InventoryText.text = "";
+            OnLED.SetActive(false);
+            OffLED.SetActive(true);
+        }
+        else
+        {
+            UpdateDisplay();
+        }
+        
+
+        for (int i = 0; i < 60; i++)
+        {
+            StageNumberText.text = string.Format("{0}", (_losses + 1 + i) % 10);
+            yield return null;
+        }
+
+        if (giveStrike)
+            BombModule.HandleStrike();
+
+        if (_solved)
+        {
+            IncidentText.text = "Incident Resolved";
+            StageNumberText.text = "!";
+            OnLED.SetActive(false);
+            OffLED.SetActive(true);
+            BombModule.Log("Passed");
+            BombModule.HandlePass();
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, transform);
+        }
+        else
+        {
+            Initialize(true);
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.TitleMenuPressed, transform);
+        }
+        _spinning = false;
+    }
+
+    private string TwitchHelpMessage = "Cycle the inventory with !{0} cycle. Resolve the Incident with !{0} win, or !{0} loss";
+
     IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.ToLowerInvariant();
+        _twitchPlayStrike = false;
         if (command == "cycle")
         {
             yield return null;
@@ -601,68 +1001,181 @@ public class ResolvingIncidents : MonoBehaviour
             LoseButton.OnInteract();
             yield return new WaitForSeconds(0.1f);
         }
-        else if (command == "draw")
+        if (_twitchPlayStrike)
         {
-            yield return null;
-            DrawButton.OnInteract();
-            yield return new WaitForSeconds(0.1f);
+            yield return "strike";
         }
-
-        else if (command == "bruteforce win")
+        if (_solved)
         {
-            yield return null;
             yield return "solve";
-            yield return "multiple strikes";
-            int strikes = 0;
-            while (!_solved)
-            {
-                yield return new WaitForSeconds(0.1f);
-                ResolveIncident(IncidentResult.Win);
-                if (!_solved)
-                    strikes++;
-            }
-            yield return "award strikes " + strikes;
-
-            yield return null;
-        }
-        else if (command == "bruteforce draw")
-        {
-            yield return null;
-            yield return "solve";
-            yield return "multiple strikes";
-            int strikes = 0;
-            while (!_solved)
-            {
-                yield return new WaitForSeconds(0.1f);
-                ResolveIncident(IncidentResult.Draw);
-                if (!_solved)
-                    strikes++;
-            }
-            yield return "award strikes " + strikes;
-
-            yield return null;
-        }
-        else if (command == "bruteforce loss")
-        {
-            yield return null;
-            yield return "solve";
-            yield return "multiple strikes";
-            int strikes = 0;
-            while (!_solved)
-            {
-                yield return new WaitForSeconds(0.1f);
-                ResolveIncident(IncidentResult.Loss);
-                if (!_solved)
-                    strikes++;
-            }
-            yield return "award strikes " + strikes;
-
-            yield return null;
         }
     }
-   
+
+    private static Dictionary<Incidents, int[]> IncidentResults = new Dictionary<Incidents, int[]>
+    {
+        {Incidents.None, new int[6]},
+        {Incidents.CosmicWeather, new int[6]},
+        {Incidents.EndlessParty, new int[6]},
+        {Incidents.FairyWars, new int[6]},
+        {Incidents.LilyBlackandWhite, new int[6]},
+        {Incidents.LunarWar, new int[6]},
+        {Incidents.OccultInvasion, new int[6]},
+        {Incidents.OverdrivenNight, new int[6]},
+        {Incidents.UndefinedFantasticObject, new int[6]},
+        {Incidents.ScarletMist, new int[6]},
+        {Incidents.WorldlyDesires, new int[6]}
+    };
+
+    void ReportWinResults(int BossBuff, bool printBuffInfo)
+    {
+        if (_WINSBOSS1 > 0 || _LOSSESBOSS1 > 0)
+        {
+            IncidentResults[_incident][0]++;
+            IncidentResults[_incident][1] += _WINSBOSS1;
+            IncidentResults[_incident][2] += _LOSSESBOSS1;
+        }
+        if (_WINSBOSS2 > 0 || _LOSSESBOSS2 > 0)
+        {
+            IncidentResults[_incident][3]++;
+            IncidentResults[_incident][4] += _WINSBOSS2;
+            IncidentResults[_incident][5] += _LOSSESBOSS2;
+        }
+
+        IncidentSet incident = _incidedentSets[(int) _incident];
+        if(printBuffInfo)
+            BombModule.LogFormat("results with {0}/{0} Dist/Range {1}:", BossBuff, (BossBuff < 0 ? "penalty" : (BossBuff > 0 ? "bonus" : "bonus/penalty")));
+        if (_WINSBOSS1 > 0 || _LOSSESBOSS1 > 0)
+            BombModule.LogFormat("Boss #1 ({0}): W/L: {1}/{2}", incident.Boss1.Name, _WINSBOSS1, _LOSSESBOSS1);
+
+        if (_WINSBOSS2 > 0 || _LOSSESBOSS2 > 0)
+            BombModule.LogFormat("Boss #2 ({0}): W/L: {1}/{2}", incident.Boss2.Name, _WINSBOSS2, _LOSSESBOSS2);
+
+
+
+        _WINSBOSS1 = 0;
+        _LOSSESBOSS1 = 0;
+        _WINSBOSS2 = 0;
+        _LOSSESBOSS2 = 0;
+    }
+
+    private static int IsItMyTurnYet = 1;
+    private static string BombSerialNumber = "";
+    private static bool IsSimulationRunning = false;
+    IEnumerator SimulatateBattles(int debuff, int buff)
+    {
+        if (IsSimulationRunning)
+        {
+            IsItMyTurnYet = BombModule.GetIDNumber();
+            IsSimulationRunning = false;
+        }
+        yield return null;
+        yield return null;
+
+        _NO_SIMULATION_RUNNING = false;
+        BombModule.LogFormat("DEBUGGING MODE ENABLED");
+        while (IsItMyTurnYet < BombModule.GetIDNumber())
+            yield return null;
+        IsSimulationRunning = true;
+
+        if (_sets == 0)
+            InitializeItemSets();
+
+        if (!BombSerialNumber.Equals(BombInfo.GetSerialNumber()))
+        {
+            BombSerialNumber = BombInfo.GetSerialNumber();
+            BombModule.LogFormat("------------------");
+            BombModule.LogFormat("Simulation Results");
+            BombModule.LogFormat("------------------");
+            BombModule.LogFormat("");
+            foreach (Incidents incident in _incidents.Skip(1))
+            {
+                _incident = incident;
+                int battles = _sets * 4 * 2 * _characters.Count(x => x.ForbiddenIncident != _incident);
+                SetEdgeworkBonus();
+
+                IncidentSet incidentSet = _incidedentSets[(int) _incident];
+                BombModule.LogFormat("Simulating Incident: {0}", incidentSet.Name);
+                IncidentText.text = _incident.ToString();
+                InventoryText.characterSize = 1;
+                for (int j = debuff; j <= buff; j++)
+                {
+                    int i = 0;
+                    foreach (Character c in _characters.Where(x => x.ForbiddenIncident != incident))
+                    {
+                        _character = c;
+                        foreach (CharacterSeasons s in _seasons)
+                        {
+                            _season = s;
+                            foreach (Inventory[] items in _itemSets.Values)
+                            {
+                                _inventory = items.ToList();
+                                _spellBonus = false;
+                                Initialize(j, true);
+                                _spellBonus = true;
+                                Initialize(j, true);
+                                i += 2;
+                                if ((i % 50) == 0)
+                                {
+                                    UpdateDisplay(true, true, false);
+                                    InventoryText.text = string.Format("{0}/{1}\n{2}: {3}/{4}", i + 1, battles, j < 0 ? "penalty" : "bonus", j, buff);
+                                    yield return null;
+                                }
+                            }
+                        }
+                    }
+                    ReportWinResults(j, debuff != buff);
+                }
+            }
+            BombModule.LogFormat("");
+            BombModule.LogFormat("---------------");
+            BombModule.LogFormat("Average Results");
+            BombModule.LogFormat("---------------");
+            BombModule.LogFormat("");
+            foreach (Incidents incident in _incidents.Skip(1))
+            {
+                IncidentSet incidentSet = _incidedentSets[(int)incident];
+                BombModule.LogFormat("Incident {0}:", incidentSet.Name);
+                if (IncidentResults[incident][0] > 0)
+                    BombModule.LogFormat("Boss #1 ({0}): W/L: {1:0.##}/{2:0.##} ({3} Bombs)", incidentSet.Boss1.Name, (float)IncidentResults[incident][1] / IncidentResults[incident][0], (float)IncidentResults[incident][2] / IncidentResults[incident][0], IncidentResults[incident][0]);
+
+                if (IncidentResults[incident][3] > 0)
+                    BombModule.LogFormat("Boss #2 ({0}): W/L: {1:0.##}/{2:0.##} ({3} Bombs)", incidentSet.Boss2.Name, (float)IncidentResults[incident][4] / IncidentResults[incident][3], (float)IncidentResults[incident][5] / IncidentResults[incident][3], IncidentResults[incident][3]);
+            }
+            BombModule.LogFormat("");
+        }
+        BombModule.LogFormat("--------------");
+        BombModule.LogFormat("Battle Results");
+        BombModule.LogFormat("--------------");
+        BombModule.LogFormat("");
+        _NO_SIMULATION_RUNNING = true;
+        foreach (Incidents incident in _incidents.Skip(1))
+        {
+            BombModule.LogFormat("--------------");
+            _incident = incident;
+            Initialize();
+            BombModule.LogFormat("--------------");
+
+        }
+
+
+        IsItMyTurnYet++;
+        IsSimulationRunning = false;
+        BombModule.HandlePass();
+        if (IsItMyTurnYet <= KMBombModuleExtensions.HighestConsecutiveID)
+            yield break;
+        yield return new WaitForSeconds(1);
+        BombModule.HandleStrike();
+    }
+
+    private bool _NO_SIMULATION_RUNNING = true;
+    private bool _BOTHDEFEATEDLOSS = false;
+    private int _WINSBOSS1 = 0;
+    private int _LOSSESBOSS1 = 0;
+    private int _WINSBOSS2 = 0;
+    private int _LOSSESBOSS2 = 0;
 
 }
+
 
 public enum Incidents
 {
@@ -690,6 +1203,5 @@ public enum CharacterSeasons
 public enum IncidentResult
 {
     Win,
-    Draw,
     Loss
 }
