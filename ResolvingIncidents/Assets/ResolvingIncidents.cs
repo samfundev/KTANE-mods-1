@@ -188,6 +188,21 @@ public class ResolvingIncidents : MonoBehaviour
     private Incidents[] _incidents = (Incidents[]) (Enum.GetValues(typeof(Incidents)));
 
 
+    private string[,] IdleScreens = new string[,]
+    {
+        {"","","" },
+    };
+
+    private string[,] RareIdleScreens = new string[,]
+    {
+        {"Oh No.","Toshi!","Where Are You??" },
+        {"Resolving Incidents","By","Toshi and CaitSith" }
+    };
+
+    private string[,] SolvedScreens = new string[,]
+    {
+        {"","","" },
+    };
 
     #endregion
 
@@ -217,7 +232,7 @@ public class ResolvingIncidents : MonoBehaviour
             new Character ("Legendary Student",  4,  4,            Incidents.OccultInvasion          ),
             //             Name                  Di  Ra  Heroine   Forbidden Incident
             new Character ("Lunar Doctor",       1,  3,            Incidents.OverdrivenNight         ),
-            new Character ("Moon Rabbit",        2,  2,   true                                       ),
+            new Character ("Moon Rabbit",        2,  2,   true,    Incidents.OverdrivenNight         ),
             new Character ("Ordinary Magician",  2,  4,   true                                       ),
             new Character ("Phoenix",            4,  3                                               ),
             new Character ("Puppeteer",          3,  1                                               ),
