@@ -5,116 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Rnd = UnityEngine.Random;
 
-[Serializable]
-public class Character
-{
-    public string Name;
-    public bool Heroine;
-    public int DistanceBonus;
-    public int RangeBonus;
-    public Incidents ForbiddenIncident;
-
-    public Character(string name, int distance, int range, bool heroine = false)
-    {
-        Name = name;
-        DistanceBonus = distance;
-        RangeBonus = range;
-        ForbiddenIncident = Incidents.None;
-        Heroine = heroine;
-    }
-
-    public Character(string name, int distance, int range, Incidents forbidden)
-    {
-        Name = name;
-        DistanceBonus = distance;
-        RangeBonus = range;
-        ForbiddenIncident = forbidden;
-        Heroine = false;
-    }
-
-    public Character(string name, int distance, int range, bool heroine, Incidents forbidden)
-    {
-        Name = name;
-        Heroine = heroine;
-        DistanceBonus = distance;
-        RangeBonus = range;
-        ForbiddenIncident = forbidden;
-    }
-}
-
-[Serializable]
-public class Inventory
-{
-    public string Item;
-    public int Distance;
-    public int Range;
-
-    public Inventory(string name, int distance, int range)
-    {
-        Item = name;
-        Distance = distance;
-        Range = range;
-    }
-}
-
-[Serializable]
-public class Boss
-{
-    public string Name;
-    public int BaseDistance;
-    public int BaseRange;
-    public int BonusDistance = 0;
-    public int BonusRange = 0;
-    public int EdgeworkBonusDistance = 0;
-    public int EdgeworkBonusRange = 0;
-    public int WidgetBonusDistance = 0;
-    public int WidgetBonusRange = 0;
-
-    public Boss(){}
-
-    public Boss(string name, int baseDistance, int baseRange, int bonusDistance, int bonusRange, int widgetDistance, int widgetRange)
-    {
-        Name = name;
-        BaseDistance = baseDistance;
-        BaseRange = baseRange;
-        BonusDistance = bonusDistance;
-        BonusRange = bonusRange;
-        WidgetBonusDistance = widgetDistance;
-        WidgetBonusRange = widgetRange;
-    }
-}
-
-[Serializable]
-public class IncidentSet
-{
-    public string Name;
-    public Boss Boss1;
-    public Boss Boss2;
-    public string BonusReason = "";
-    public string EdgeworkBonusReason = "";
-    public string WidgetBonusReason = "number of widgets on the bomb";
-
-    public IncidentSet()
-    {
-        Name = "Error";
-    }
-
-    public IncidentSet(string name, Boss boss1, string bonusReason)
-    {
-        Name = name;
-        Boss1 = boss1;
-        BonusReason = bonusReason;
-    }
-
-    public IncidentSet(string name, Boss boss1, Boss boss2, string bonusReason)
-    {
-        Name = name;
-        Boss1 = boss1;
-        Boss2 = boss2;
-        BonusReason = bonusReason;
-    }
-}
-
 
 public class ResolvingIncidents : MonoBehaviour
 {
@@ -145,7 +35,7 @@ public class ResolvingIncidents : MonoBehaviour
     private bool _spinning = false;
 
     private const int WINSTOSOLVE = 1;
-    private const int LOSSESTOSOLVE = 4;
+    private const int LOSSESTOSOLVE = 3;
     private int _wins = 0;
     private int _losses = 0;
 
@@ -188,21 +78,8 @@ public class ResolvingIncidents : MonoBehaviour
     private Incidents[] _incidents = (Incidents[]) (Enum.GetValues(typeof(Incidents)));
 
 
-    private string[,] IdleScreens = new string[,]
-    {
-        {"","","" },
-    };
-
-    private string[,] RareIdleScreens = new string[,]
-    {
-        {"Oh No.","Toshi!","Where Are You??" },
-        {"Resolving Incidents","By","Toshi and CaitSith" }
-    };
-
-    private string[,] SolvedScreens = new string[,]
-    {
-        {"","","" },
-    };
+    private List<DisplayScreens> IdleScreens;
+    private List<DisplayScreens> SolvedScreens;
 
     #endregion
 
@@ -291,15 +168,46 @@ public class ResolvingIncidents : MonoBehaviour
             new Inventory ("Yin-Yang Orb",    3,  6  ),
         };
 
+        IdleScreens = new List<DisplayScreens>
+        {
+            new DisplayScreens("It is Time","To Resolve","Some Incidents!"),
+            new DisplayScreens("That Character","Did Not Spill","A Drop Of Sake!"),
+            new DisplayScreens("Did You","hear An Incident","occurred Nearby?"),
+            new DisplayScreens("Have you","ever wonder what a","youkai is like?"),
+            new DisplayScreens("Sorry, Characters.","It is that", "time again..."),
+            new DisplayScreens("Extra! Extra!","Nothing Really Happened!","Still an Extra!"),
+            new DisplayScreens("Three Characters?","This must be","an incident!"),
+            new DisplayScreens("This Must Be","Some Kind","Of Incident"),
+            new DisplayScreens("This Must Be","The Youkai's","Doing Again."),
+            new DisplayScreens("That's Sweet!","I only get","Weekends Off, Though..."),
+            new DisplayScreens("I'll Tell You","My Weakness...","It's Nothing."),
+            new DisplayScreens("Your surrounding","are full of","unnatural naturalness."),
+            new DisplayScreens("Oh No.","Toshi!","Where Are You??",0,10),
+            new DisplayScreens("Resolving Incidents","By Toshi","and CaitSith2",0,5),
+            new DisplayScreens("Thank You","For Resolving Incidents","With Us!",0,1)
+        };
+
+        SolvedScreens = new List<DisplayScreens>
+        {
+            new DisplayScreens("Well Done!","You Are Victorious","Heroine!"),
+            new DisplayScreens("Congratulations!","The Incident Is Now","Resolved!"),
+            new DisplayScreens("Congratulations!","You Have Well Played","This Round!"),
+            new DisplayScreens("20,000,000 points!","Spell Card Bonus Get!","20,000,000 points"),
+            new DisplayScreens("Extra! Extra!","The Heroine Defeats","The Incidents's Boss"),
+            new DisplayScreens("Extra! Extra!","The Heroine Resolves","The Incident!"),
+            new DisplayScreens("Extra! Extra!","The Boss is Defeated","Incident Resolved!"),
+            new DisplayScreens("!     !     ! ","This  Incident is Resolved","!     !     ! ")
+        };
+
         InventoryLeft.OnInteract += () => HandleInventory(true);
         InventoryRight.OnInteract += () => HandleInventory(false);
         WinButton.OnInteract += () => ResolveIncident(IncidentResult.Win);
         LoseButton.OnInteract += () => ResolveIncident(IncidentResult.Loss);
         OffLED.SetActive(true);
         OnLED.SetActive(false);
-        IncidentText.text = "";
-        InventoryText.text = "";
-        CharacterText.text = "";
+
+        int screenChance = Rnd.Range(0, 100);
+        IdleScreens.OrderBy(x => Rnd.value).First(y => screenChance >= y.MinChance && screenChance < y.MaxChance).UpdateScreens(ref CharacterText, ref IncidentText, ref InventoryText);
     }
 
     void OnActivate()
@@ -973,7 +881,7 @@ public class ResolvingIncidents : MonoBehaviour
 
         if (_solved)
         {
-            IncidentText.text = "Incident Resolved";
+            SolvedScreens.OrderBy(x => Rnd.value).First().UpdateScreens(ref CharacterText, ref IncidentText, ref InventoryText);
             StageNumberText.text = "!";
             OnLED.SetActive(false);
             OffLED.SetActive(true);

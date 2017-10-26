@@ -1246,7 +1246,7 @@ Transform:
   m_GameObject: {fileID: 1000010918431064}
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0.027, z: -0.005}
-  m_LocalScale: {x: 0.01, y: 0.015, z: 0.0100000035}
+  m_LocalScale: {x: 0.01, y: 0.0225, z: 0.0100000035}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 4000011958679066}
@@ -1259,7 +1259,7 @@ Transform:
   m_GameObject: {fileID: 1000013987517038}
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0.003999993, y: 0.027000012, z: -0.005625002}
-  m_LocalScale: {x: 0.012999999, y: 0.022500044, z: 0.010000019}
+  m_LocalScale: {x: 0.01, y: 0.022500044, z: 0.010000019}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 4000010342623522}
@@ -2333,7 +2333,7 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000013475412622}
-  m_Text: Undefined Fantastic Object
+  m_Text: for Resolving Incidents
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1
@@ -2417,7 +2417,7 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000013987517038}
-  m_Text: Heavenly Swordgirl
+  m_Text: Thank You
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1
@@ -2430,7 +2430,7 @@ TextMesh:
   m_Font: {fileID: 12800000, guid: a139e4a34a0692f428001e3bf36f9a31, type: 3}
   m_Color:
     serializedVersion: 2
-    rgba: 4278229248
+    rgba: 4294967295
 --- !u!102 &102000013793057356
 TextMesh:
   serializedVersion: 3
@@ -2480,9 +2480,9 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000010918431064}
-  m_Text: Jeweled Pagoda
+  m_Text: With Us!
   m_OffsetZ: 0
-  m_CharacterSize: 1.7
+  m_CharacterSize: 1
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
