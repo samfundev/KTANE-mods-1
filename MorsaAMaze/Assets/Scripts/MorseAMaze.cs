@@ -343,7 +343,15 @@ public class MorseAMaze : MonoBehaviour
             yield return null;
         }
         StartCoroutine(ShowWall(wall.gameObject.GetComponent<MeshRenderer>()));
-        FakeStatusLight.HandleStrike();
+        if (!_unicorn)
+        {
+            FakeStatusLight.HandleStrike();
+        }
+        else
+        {
+            FakeStatusLight.FlashStrike();
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
+        }
         Audio.HandlePlaySoundAtTransform(GlassBreak.name, transform);
         for (var i = 0; i < hitWall; i++)
         {
@@ -483,7 +491,7 @@ public class MorseAMaze : MonoBehaviour
                 yield return null;
             }
         }
-        if (_edgeworkRules[_rule] == EdgeworkRules.Strikes && !_unicorn)
+        if (_edgeworkRules[_rule] == EdgeworkRules.Strikes)
         {
             for (var i = color.a; i > 0; i -= 0.01f)
             {
@@ -507,11 +515,11 @@ public class MorseAMaze : MonoBehaviour
         if (wall == null)
             yield break;
 
-        if (_unicorn)
+        /*if (_unicorn)
         {
             StartCoroutine(ShowWall(wall));
             yield break;
-        }
+        }*/
 
         var color = wall.material.color;
         for (var i = color.a; i > 0; i -= 0.01f)
@@ -603,6 +611,7 @@ public class MorseAMaze : MonoBehaviour
     #region Activate()
     private void Activate()
     {
+        BombModule.LogFormat("Bomb Serial Number = {0}", BombInfo.GetSerialNumber());
         Up.OnInteract += delegate { MoveUp(); return false; };
         Down.OnInteract += delegate { MoveDown(); return false; };
         Left.OnInteract += delegate { MoveLeft(); return false; };
@@ -613,7 +622,7 @@ public class MorseAMaze : MonoBehaviour
         //    _rule = _edgeworkRules.ToList().IndexOf(EdgeworkRules.Strikes);
 
         _unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2 && BombInfo.GetBatteryHolderCount() == 3;
-        _souvenirQuestionWordPlaying = !_unicorn ? _morseCodeWords[_rule] : "Thank you BOB";
+        _souvenirQuestionWordPlaying = _morseCodeWords[_rule];
 
         StartCoroutine(PlayWordLocation(_souvenirQuestionWordPlaying));
 
@@ -820,15 +829,12 @@ public class MorseAMaze : MonoBehaviour
             BombModule.LogFormat("Starting Location: {0} - Destination Location: {1}",
                 _souvenirQuestionStartingLocation, _souvenirQuestionEndingLocation);
             BombModule.LogFormat("Rule used to Look up the Maze = {0}", GetRuleName());
+            BombModule.LogFormat("Playing Morse code word: \"{0}\"", _morseCodeWords[_rule]);
+
 
             if (_unicorn)
             {
-                BombModule.LogFormat("Playing Morse code word: \"Thank you BOB\"");
-                BombModule.LogFormat("Bob came and painted all of the walls, making them visible.");
-            }
-            else
-            {
-                BombModule.LogFormat("Playing Morse code word: \"{0}\"", _morseCodeWords[_rule]);
+                BombModule.LogFormat("Bob will actively prevent you from getting any strikes.");
             }
 
             _firstGeneration = false;
@@ -864,6 +870,11 @@ public class MorseAMaze : MonoBehaviour
         }
         else
         {
+            foreach (var twofactor in BombInfo.GetTwoFactorCodes())
+            {
+                BombModule.LogFormat("Two Factor code: ",twofactor);
+            }
+
             var sum = BombInfo.GetTwoFactorCodes().Select(twofactor => twofactor / 10).Select(code => code % 10).Sum();
             GetMazeSolution(sum);
             _lastTwoFactorSum = sum;
