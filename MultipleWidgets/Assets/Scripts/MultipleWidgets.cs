@@ -283,7 +283,7 @@ public class MultipleWidgets : MonoBehaviour
         if (_twofactor)
             TwoFactorActivate();
 
-        var idList = new List<string>();
+        /*var idList = new List<string>();
         foreach (var response in Info.QueryWidgets("MultipleWidgetsIDQuery", null))
         {
             if (string.IsNullOrEmpty(response)) continue;
@@ -323,7 +323,7 @@ public class MultipleWidgets : MonoBehaviour
         foreach (var twofactor in Info.GetTwoFactorCodes())
         {
             DebugLog("Two Factor: {0}", twofactor);
-        }
+        }*/
     }
 
     public string GetQueryResponse(string queryKey, string queryInfo)
@@ -444,15 +444,21 @@ public class MultipleWidgets : MonoBehaviour
         }
 
         setSolution();
+        var color = _modSettings.EnableIndicatorColors ? IndicatorLights[_indicatorLightColor].name : ((!_indicatorLight) ? "unlit" : "lit");
         if (!IndicatorText.text.Equals(_indicatorLabel))
         {
-            DebugLog("Indicator {0} is Encrypted as {1}", _indicatorLabel, IndicatorText.text);
+            //DebugLog("Indicator {0} is Encrypted as {1}", _indicatorLabel, IndicatorText.text);
+            
+            DebugLog("Encrypted Indicator {0} {1} acting as {0} {2}", color, IndicatorText.text, _indicatorLabel);
             IndicatorText.fontSize = 80;
+        }
+        else
+        {
+            DebugLog("Indicator {0} {1}", color, _indicatorLabel);
         }
 
         Debug.LogFormat("[IndicatorWidget] Randomizing Indicator Widget: {0} {1}", (!_indicatorLight) ? "unlit" : "lit", _indicatorLabel);
-        if(_modSettings.EnableIndicatorColors)
-            DebugLog("Indicator Light Color is {0}", IndicatorLights[_indicatorLightColor].name);
+        
         
         IndicatorLights[_indicatorLightColor].SetActive(true);
     }
@@ -552,7 +558,8 @@ public class MultipleWidgets : MonoBehaviour
                 _portList.Add(set.ToString());
             }
 
-            DebugLog("Using ports from the following port set: {0}", _portGroupNames[portset]);
+            //DebugLog("Using ports from the following port set: {0}", _portGroupNames[portset]);
+            DebugLog("Ports ({0}): {1}", _portGroupNames[portset], _presentPorts.ToString());
         }
         else
         {
@@ -567,6 +574,7 @@ public class MultipleWidgets : MonoBehaviour
                     _portFiller[port].SetActive(false);
                 }
             }
+            DebugLog("Ports ({0}): {1}", "Everything", _presentPorts.ToString());
         }
         Debug.LogFormat("[PortWidget] Randomizing Port Widget: {0}", _presentPorts.ToString());
     }
@@ -704,7 +712,7 @@ public class MultipleWidgets : MonoBehaviour
     private void GenerateKey()
     {
         _key = Random.Range(0, 1000000);
-        DebugLog(_key > -1 ? "Next Two-Factor key is {0}" : "First Two-Factor key is {0}", _key);
+        //DebugLog(_key > -1 ? "Next Two-Factor key is {0}" : "First Two-Factor key is {0}", _key);
     }
 
     private void DisplayKey()
