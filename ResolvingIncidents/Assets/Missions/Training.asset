@@ -9,23 +9,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -548183353, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
-  m_Name: 12 Bomb Tester 1
+  m_Name: Training
   m_EditorClassIdentifier: 
-  DisplayName: 12 Bomb Tester
+  DisplayName: Training
   Description: Do not include in release build
   GeneratorSetting:
     TimeLimit: 3600
-    NumStrikes: 1
+    NumStrikes: 3
     TimeBeforeNeedyActivation: 90
     FrontFaceOnly: 1
     ComponentPools:
-    - Count: 11
-      AllowedSources: 2
-      ComponentTypes: 
-      SpecialComponentType: 0
-      ModTypes:
-      - Multiple Bombs
-    - Count: 1
+    - Count: 5
       AllowedSources: 2
       ComponentTypes: 
       SpecialComponentType: 0

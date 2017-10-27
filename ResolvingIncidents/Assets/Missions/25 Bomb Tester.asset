@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: 25 Bomb Tester
   m_EditorClassIdentifier: 
   DisplayName: 25 Bomb Tester
-  Description: 
+  Description: Do not include in release build
   GeneratorSetting:
     TimeLimit: 3600
     NumStrikes: 1

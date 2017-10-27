@@ -18,3 +18,6 @@ MonoBehaviour:
     - 4 Bomb Tester
     - 12 Bomb Tester 1
     - 25 Bomb Tester
+  - Title: Not in Release build
+    MissionIDs:
+    - Training
