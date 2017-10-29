@@ -340,9 +340,15 @@ public class ResolvingIncidents : MonoBehaviour
                 _edgeworkDefinedBoss = BombInfo.GetSerialNumberLetters().Count() > BombInfo.GetSerialNumberNumbers().Count();
                 int scarletdisadvantage = BombInfo.GetOnIndicators().Count();
                 if (_NO_SIMULATION_RUNNING)
+                {
                     _twofactorsum = BombInfo.IsTwoFactorPresent()
                         ? BombInfo.GetTwoFactorCodes().Sum(twofactor => twofactor % 10)
                         : BombInfo.GetSerialNumberNumbers().Last();
+                    foreach (int twofactor in BombInfo.GetTwoFactorCodes())
+                    {
+                        BombModule.LogFormat("Two Factor code changed: {0}", twofactor);
+                    }
+                }
                 else
                     _twofactorsum = BombInfo.IsTwoFactorPresent()
                         ? 0
