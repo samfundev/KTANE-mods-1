@@ -457,7 +457,7 @@ public class MultipleWidgets : MonoBehaviour
             DebugLog("Indicator {0} {1}", color, _indicatorLabel);
         }
 
-        Debug.LogFormat("[IndicatorWidget] Randomizing Indicator Widget: {0} {1}", (!_indicatorLight) ? "unlit" : "lit", _indicatorLabel);
+        //Debug.LogFormat("[IndicatorWidget] Randomizing Indicator Widget: {0} {1}", (!_indicatorLight) ? "unlit" : "lit", _indicatorLabel);
         
         
         IndicatorLights[_indicatorLightColor].SetActive(true);
@@ -576,7 +576,7 @@ public class MultipleWidgets : MonoBehaviour
             }
             DebugLog("Ports ({0}): {1}", "Everything", _presentPorts.ToString());
         }
-        Debug.LogFormat("[PortWidget] Randomizing Port Widget: {0}", _presentPorts.ToString());
+        //Debug.LogFormat("[PortWidget] Randomizing Port Widget: {0}", _presentPorts.ToString());
     }
 
     public bool IsPortPresent(PortType port)
@@ -658,7 +658,7 @@ public class MultipleWidgets : MonoBehaviour
             holder == 0
                 ? "battery"
                 : "batteries");
-        Debug.LogFormat("[BatteryWidget] Randomizing Battery Widget: {0}", GetNumberOfBatteries());
+        //Debug.LogFormat("[BatteryWidget] Randomizing Battery Widget: {0}", GetNumberOfBatteries());
         Batteries[(int) _batteryType].SetActive(true);
         BatteryHolders[holder].SetActive(true);
 
