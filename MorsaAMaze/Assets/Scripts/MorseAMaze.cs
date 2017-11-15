@@ -1034,7 +1034,15 @@ public class MorseAMaze : MonoBehaviour
             }
             if (!safe)
             {
-                yield return "strike";
+                if (!_unicorn)
+                {
+                    yield return "strike";
+                }
+                else
+                {
+                    yield return "multiple strikes";
+                    yield return "award strikes 0";
+                }
                 yield break;
             }
             if (_solved)
