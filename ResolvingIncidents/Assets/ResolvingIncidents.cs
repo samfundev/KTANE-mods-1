@@ -9,8 +9,6 @@ using Rnd = UnityEngine.Random;
 public class ResolvingIncidents : MonoBehaviour
 {
     #region Public Variables
-    public bool DEBUG = true;
-
     public GameObject OnLED;
     public GameObject OffLED;
     public KMSelectable InventoryLeft;
@@ -30,6 +28,8 @@ public class ResolvingIncidents : MonoBehaviour
     #endregion
 
     #region Prviate Variables
+    private ModSettings _modSettings;
+
     private bool _solved = false;
     private bool _activated = false;
     private bool _spinning = false;
@@ -83,13 +83,23 @@ public class ResolvingIncidents : MonoBehaviour
 
     #endregion
 
+    private void NoSimulationLog(string message, params object[] args)
+    {
+        if (_NO_SIMULATION_RUNNING)
+            BombModule.LogFormat(message, args);
+    }
+
+
     // Use this for initialization
     void Start()
     {
+        _modSettings = new ModSettings(BombModule);
+        _modSettings.ReadSettings();
+
         BombModule.GenerateLogFriendlyName();
         BombModule.OnActivate += OnActivate;
 
-        _incident = !DEBUG 
+        _incident = _modSettings.Settings.DebugMode
             ? _incidents[Rnd.Range(1, _incidents.Length)] 
             : _incidents[((BombModule.GetIDNumber() - 1) % (_incidents.Length - 1)) + 1];
 
@@ -219,7 +229,7 @@ public class ResolvingIncidents : MonoBehaviour
         totalwidgets += BombInfo.GetTwoFactorCounts();
         _widgetbonus = totalwidgets >= WIDGETSFORBONUS;
 
-        if (DEBUG)
+        if (_modSettings.Settings.DebugMode)
         {
             StartCoroutine(SimulatateBattles(0, 0));
         }
@@ -491,9 +501,9 @@ public class ResolvingIncidents : MonoBehaviour
         _inventory = new List<Inventory>(_inventoryItems).OrderBy(x => Rnd.value).Take(MAXINVENTORYITEMS).ToList();
     }
 
-    private void UpdateDisplay(bool updateLED=true, bool UpdateCharacter=true, bool UpdateInventory=true)
+    private void UpdateDisplay(bool updateLED=true, bool UpdateCharacter=true, bool UpdateInventory=true, bool forceUpdate=false)
     {
-        if (!_NO_SIMULATION_RUNNING)
+        if (!_NO_SIMULATION_RUNNING && !forceUpdate)
             return;
         if (UpdateCharacter)
         {
@@ -560,26 +570,26 @@ public class ResolvingIncidents : MonoBehaviour
         OddStrikes:
         if (_incident == Incidents.WorldlyDesires)
         {
-            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat(!Strikes ? "Calculating the results for Even number of Strikes" : "Calculating the results for Odd number of Strikes");
+            NoSimulationLog(!Strikes ? "Calculating the results for Even number of Strikes" : "Calculating the results for Odd number of Strikes");
         }
 
         int CharacterDistance = _characterBaseDistance;
         int CharacterRange = _characterBaseRange;
 
-        if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Chararcter: {0} - Distance = {1}, Range = {2}, Season = {3}", _character.Name, CharacterDistance, CharacterRange, _season);
+        NoSimulationLog("Chararcter: {0} - Distance = {1}, Range = {2}, Season = {3}", _character.Name, CharacterDistance, CharacterRange, _season);
 
         if (_character.Heroine)
         {
             CharacterDistance++;
             CharacterRange++;
-            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Character is a Heroine, Gets a bonus of 1/1 to Distance/Range");
+            NoSimulationLog("Character is a Heroine, Gets a bonus of 1/1 to Distance/Range");
         }
 
         if (_spellBonus)
         {
             CharacterDistance += _character.DistanceBonus;
             CharacterRange += _character.RangeBonus;
-            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Spell Bonus is Active. Character gets a bonus of {0} to Distance and {1} to Range", _character.DistanceBonus, _character.RangeBonus);
+            NoSimulationLog("Spell Bonus is Active. Character gets a bonus of {0} to Distance and {1} to Range", _character.DistanceBonus, _character.RangeBonus);
         }
 
         switch (_incident)
@@ -642,7 +652,7 @@ public class ResolvingIncidents : MonoBehaviour
                 if (_inventory.Count(x => x.Range == i) > 1)
                     footer += " and worst Distance disadvantage";
             }
-            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Item: {0}, Distance: {1}, Range: {2}{3}", item.Item, item.Distance, item.Range, footer);
+            NoSimulationLog("Item: {0}, Distance: {1}, Range: {2}{3}", item.Item, item.Distance, item.Range, footer);
         }
         CharacterDistance += FindBestDistanceAdvantage.Distance;
         CharacterRange += FindBestDistanceAdvantage.Range;
@@ -650,20 +660,18 @@ public class ResolvingIncidents : MonoBehaviour
         CharacterDistance += FindBestRangeAdvantage.Distance;
         CharacterRange += FindBestRangeAdvantage.Range;
 
-        if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Final character results - Distance = {0}, Range = {1}", CharacterDistance, CharacterRange);
-        if (_NO_SIMULATION_RUNNING) BombModule.LogFormat("Final Boss results - Distance = {0}, Range = {1}", BossDistance, BossRange);
+        NoSimulationLog("Final character results - Distance = {0}, Range = {1}", CharacterDistance, CharacterRange);
+        NoSimulationLog("Final Boss results - Distance = {0}, Range = {1}", BossDistance, BossRange);
 
         BossRange += BossBuff;
         BossDistance += BossBuff;
 
         bool BossWins = BossRange >= CharacterDistance;
         bool CharacterWins = CharacterRange >= BossDistance;
-        if (_NO_SIMULATION_RUNNING)
-        {
-            if (CharacterWins) BombModule.LogFormat(BossWins ? "Although the Boss was defeated, the character died in the process." : "The Boss was defeated and the character returned victorious");
-            else BombModule.LogFormat(BossWins ? "The character was killed by the boss" : "The Battle ended in a stale-mate");
 
-        }
+        if (CharacterWins) NoSimulationLog(BossWins ? "Although the Boss was defeated, the character died in the process." : "The Boss was defeated and the character returned victorious");
+        else NoSimulationLog(BossWins ? "The character was killed by the boss" : "The Battle ended in a stale-mate");
+
         IncidentResult correctResult;
         if (CharacterWins && BossWins)
         {
@@ -673,8 +681,7 @@ public class ResolvingIncidents : MonoBehaviour
         {
             correctResult = CharacterWins ? IncidentResult.Win : IncidentResult.Loss;
         }
-        if (_NO_SIMULATION_RUNNING)
-            BombModule.LogFormat("Expecting {0} to be pressed.", correctResult);
+        NoSimulationLog("Expecting {0} to be pressed.", correctResult);
 
         if (!Strikes)
             _correctIncidentResultEvenStrike = correctResult;
@@ -715,7 +722,7 @@ public class ResolvingIncidents : MonoBehaviour
 
         if (_incident == Incidents.WorldlyDesires)
         {
-            if (_NO_SIMULATION_RUNNING) BombModule.LogFormat(!Strikes ? "Done calculating for Even strikes" : "Done calculating for Odd strikes");
+            NoSimulationLog(!Strikes ? "Done calculating for Even strikes" : "Done calculating for Odd strikes");
             if (!Strikes)
             {
                 Strikes = true;
@@ -768,7 +775,7 @@ public class ResolvingIncidents : MonoBehaviour
 
     bool HandleInventory(bool left)
     {
-        if (DEBUG)
+        if (_modSettings.Settings.DebugMode)
         {
             PlayRandomSound();
             return false;
@@ -790,7 +797,7 @@ public class ResolvingIncidents : MonoBehaviour
 
     bool ResolveIncident(IncidentResult result)
     {
-        if (DEBUG)
+        if (_modSettings.Settings.DebugMode)
         {
             PlayRandomSound();
             return false;
@@ -1025,7 +1032,7 @@ public class ResolvingIncidents : MonoBehaviour
                 IncidentSet incidentSet = _incidedentSets[(int) _incident];
                 BombModule.LogFormat("Simulating Incident: {0}", incidentSet.Name);
                 IncidentText.text = _incident.ToString();
-                InventoryText.characterSize = 1;
+                InventoryText.characterSize = 0.7f;
                 for (int j = debuff; j <= buff; j++)
                 {
                     int i = 0;
@@ -1045,7 +1052,7 @@ public class ResolvingIncidents : MonoBehaviour
                                 i += 2;
                                 if ((i % 50) == 0)
                                 {
-                                    UpdateDisplay(true, true, false);
+                                    UpdateDisplay(true, true, false, true);
                                     InventoryText.text = string.Format("{0}/{1}\n{2}: {3}/{4}", i + 1, battles, j < 0 ? "penalty" : "bonus", j, buff);
                                     yield return null;
                                 }
@@ -1085,7 +1092,6 @@ public class ResolvingIncidents : MonoBehaviour
             BombModule.LogFormat("--------------");
 
         }
-
 
         IsItMyTurnYet++;
         IsSimulationRunning = false;
