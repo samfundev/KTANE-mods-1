@@ -261,14 +261,14 @@ public class MorseAMaze : MonoBehaviour
 
         if (right)
         {
-            var wall = VerticalWalls.FindChild(number).FindChild(letters);
+            var wall = VerticalWalls.Find(number).Find(letters);
             if (wall == null) return;
             wall.gameObject.SetActive(active);
             StartCoroutine(HideWall(wall.gameObject.GetComponent<MeshRenderer>()));
         }
         else
         {
-            var wall = HorizontalWalls.FindChild(letter).FindChild(numbers);
+            var wall = HorizontalWalls.Find(letter).Find(numbers);
             if (wall == null) return;
             wall.gameObject.SetActive(active);
             StartCoroutine(HideWall(wall.gameObject.GetComponent<MeshRenderer>()));
@@ -291,16 +291,16 @@ public class MorseAMaze : MonoBehaviour
 
     private Transform CheckHorizontalWall(string x, string y)
     {
-        var hwall = HorizontalWalls.FindChild(x);
-        var wall = hwall.FindChild(y);
+        var hwall = HorizontalWalls.Find(x);
+        var wall = hwall.Find(y);
         
         return wall.gameObject.activeSelf ? wall : null;
     }
 
     private Transform CheckVerticalWalls(string x, string y)
     {
-        var hwall = VerticalWalls.FindChild(x);
-        var wall = hwall.FindChild(y);
+        var hwall = VerticalWalls.Find(x);
+        var wall = hwall.Find(y);
 
         return wall.gameObject.activeSelf ? wall : null;
     }
@@ -557,7 +557,7 @@ public class MorseAMaze : MonoBehaviour
             return true;
         var destination = x.Substring(x.IndexOf(location.parent.name, StringComparison.Ordinal) - 1, 1);
         var wall = destination + location.parent.name;
-        var loc = location.parent.parent.FindChild(destination).FindChild(location.name);
+        var loc = location.parent.parent.Find(destination).Find(location.name);
 
         return ProcessMove(CheckVerticalWalls(location.name, wall), loc);
     }
@@ -572,7 +572,7 @@ public class MorseAMaze : MonoBehaviour
             return true;
         var destination = x.Substring(x.IndexOf(location.parent.name, StringComparison.Ordinal) + 1, 1);
         var wall = location.parent.name + destination;
-        var loc = location.parent.parent.FindChild(destination).FindChild(location.name);
+        var loc = location.parent.parent.Find(destination).Find(location.name);
 
         return ProcessMove(CheckVerticalWalls(location.name, wall), loc);
     }
@@ -588,7 +588,7 @@ public class MorseAMaze : MonoBehaviour
             return true;
         var destination = (int.Parse(location.name) - 1).ToString();
         var wall = destination + location.name;
-        var loc = location.parent.FindChild(destination);
+        var loc = location.parent.Find(destination);
 
         return ProcessMove(CheckHorizontalWall(location.parent.name, wall), loc);
     }
@@ -602,7 +602,7 @@ public class MorseAMaze : MonoBehaviour
             return true;
         var destination = (int.Parse(location.name) + 1).ToString();
         var wall = location.name + destination;
-        var loc = location.parent.FindChild(destination);
+        var loc = location.parent.Find(destination);
 
         return ProcessMove(CheckHorizontalWall(location.parent.name, wall), loc);
     }

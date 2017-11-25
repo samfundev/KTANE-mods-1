@@ -13,5 +13,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: MorseAMaze
   title: Morse-A-Maze
+  description: "The status light for whatever reason got a life of its own and decided
+    to go exploring.  It seems to be lost in the maze and needs your help in returning
+    it to the exit so that it can return to the upper right corner of the module.\r\n\r\nModule
+    ID is \"MorseAMaze\"\r\n\r\nTwitch plays is supported.\r\n\nThese configuration
+    options are available\nSolvedState - The state the status light changes to once
+    the module is solved. (default: Off)\r\nStrikeState - The state the status light
+    changes to for one second when a strike is earned. (default: Off)\r\nOffState
+    - The off state of the status light while morse code is being transmitted. (default:
+    Green)\r\nMorseXmitState - The on state of the status light while morse code is
+    being transmitted. (default: Red)\n\nThe Colors are defined as follows: To change
+    the color, change the configuration option to the matching number.\n0 - Off\n1
+    - Green\n2 - Red\n3 - Random\n\nFinally, if you wish to reset everything back
+    to default, you can simply change ResetToDefault from false to true.\n\r\n[url=https://ktane.timwi.de/HTML/Morse-A-Maze.html]HTML
+    Manual[/url]\r\n[url=https://ktane.timwi.de/PDF/Morse-A-Maze.pdf]PDF Manual[/url]"
   version: v1.0.7
   outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: cd4adcd895819624883d026cbad62568, type: 3}
