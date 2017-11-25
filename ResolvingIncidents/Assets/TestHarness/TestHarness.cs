@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Xml.Serialization;
 using Microsoft.Win32;
-using UnityEditor;
+//using UnityEditor;
 using UnityEngine;
 
 public class TestHarness : MonoBehaviour
@@ -349,21 +349,6 @@ public class TestHarness : MonoBehaviour
         }
 
         currentSelectable.ActivateChildSelectableAreas();
-
-
-        //Load all the audio clips in the asset database
-        audioClips = new List<AudioClip>();
-        string[] audioClipAssetGUIDs = AssetDatabase.FindAssets("t:AudioClip");
-
-        foreach (var guid in audioClipAssetGUIDs)
-        {
-            AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(AssetDatabase.GUIDToAssetPath(guid));
-
-            if (clip != null)
-            {
-                audioClips.Add(clip);
-            }
-        }
 
         _alarmAudioSource = gameObject.AddComponent<AudioSource>();
         _alarmAudioSource.transform.position = transform.position;

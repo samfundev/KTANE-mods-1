@@ -13,5 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: ResolvingIncidents
   title: Resolving Incidents
+  description: 
   version: 1.00
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: 1d2c504736503634e9686cae771a1d3a, type: 3}
