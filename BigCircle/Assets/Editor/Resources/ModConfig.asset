@@ -13,5 +13,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: BigCircle
   title: Big Circle
+  description: "The bomb presents a button in the shape of a big circle spinning around.
+    \ Based on the tables below, determine which parts of the circle to press. If
+    you press a wrong part of the circle or press the parts of a circle in the wrong
+    order, a strike will be incurred.\n\nModule idea by Zeke.\n\nTwitch plays is supported.\n\r\nPDF
+    Manaul: https://ktane.timwi.de/PDF/Big%20Circle.pdf\r\nHTML Manual: https://ktane.timwi.de/HTML/Big%20Circle.html"
   version: 1.04
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: 74dc825b0a2318b4490ef45ac04f408a, type: 3}
