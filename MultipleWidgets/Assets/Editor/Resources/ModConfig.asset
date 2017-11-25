@@ -13,5 +13,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: MultipleWidgets
   title: Multiple Widgets
+  description: "Each widget plate will consist of two widgets, selected randomly from
+    Batteries, Indicators, Ports and Two Factor.\r\n\r\nConfiguration options\r\n[list]\r\n[*]
+    EnableExtendedPorts - Enables HDMI, USB, PCMCIA, VGA, Component Video, Composite
+    Video, 120/240V AC. (Enabled by default)\r\n[*] EnableExtendedBatteries - Enables
+    battery holders that Have 0, 3 or 4 battereis. (Enabled by default)\r\n[*] EnableIndicatorColors
+    - Allows Lit indicators to show up as Red, Orange, Yellow, Green, Blue, Purple,
+    Magenta, Gray, White.   If disabled, Lit Indicators will only be White.  (Enabled
+    by default)\r\n[*] EnableEncryptedIndicators - Allows the Indicators to sometimes
+    be encrypted. (Disabled by default)\r\n[*] MaxEncryptedIndicators - Specifies
+    the maximum number of indicators that can be encrypted per bomb. (default value
+    of 2)\r\n[*] EncryptionProbability - Specifies the percent chance of the indicator
+    being encrypted. (Default chance is 50%  (0.50))\r\n[*] EnableTwoFactor - Controls
+    whether Two Factors will spawn on Multiple Widgets. (Enabled by default)\r\n[*]
+    TwoFactorDuration - Controls how long in seconds it takes for the next Two Factor
+    code to be generated. Minimum 30 seconds, Maximum 999 seconds. (Default value
+    of 60)\r\n[/list]\r\n\r\nCredits to TrainZack for the Encrypted Indicators code
+    which is used here.\r\n\r\n[url=https://ktane.timwi.de/HTML/Multiple%20Widgets.html]HTML
+    Manual[/url]\r\n[url=https://ktane.timwi.de/PDF/Multiple%20Widgets.pdf]PDF Manual[/url]\r"
   version: v1.0.2
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: 9d068ae4feb1cdc4894d8ad919c18a12, type: 3}
