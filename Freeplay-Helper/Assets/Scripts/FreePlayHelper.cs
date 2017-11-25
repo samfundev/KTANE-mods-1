@@ -66,7 +66,9 @@ public class FreePlayHelper : MonoBehaviour
             if (freeplayDevices != null && freeplayDevices.Length > 0)
             {
                 DebugLog("Freeplay Device found - Hooking into it.");
-                UnityEngine.Object[] objects = FindObjectsOfType(ReflectionHelper.FindType("MultipleBombsAssembly.MultipleBombs"));
+                var multipleBombsType = ReflectionHelper.FindType("MultipleBombsAssembly.MultipleBombs");
+                
+                UnityEngine.Object[] objects = multipleBombsType != null ? FindObjectsOfType(multipleBombsType) : null;
                 MonoBehaviour multipleBombs = (objects == null || objects.Length == 0) ? null : (MonoBehaviour)objects[0];
                 if(multipleBombs != null)
                     DebugLog("MultipleBombs also found.");
