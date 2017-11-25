@@ -44,6 +44,24 @@ public class AlarmClockExtender : MonoBehaviour
     void Start()
     {
         DebugLog("Starting service");
+        var failure = false;
+        try
+        {
+            if (CommonReflectedTypeInfo.AlarmClockType == null)
+            {
+                failure = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugLog("Failed due to Exception: {0} - Stack Trace: {1}", ex.Message, ex.StackTrace);
+            failure = true;
+        }
+        if (failure)
+        {
+            DebugLog("The reflection component of Alarm Clock Extender failed. Aborting the load");
+            return;
+        }
         _gameInfo = GetComponent<KMGameInfo>();
         _gameInfo.OnStateChange += OnStateChange;
         _modSettings.ReadSettings();
@@ -155,10 +173,9 @@ public class AlarmClockExtender : MonoBehaviour
     private IEnumerator CheckForAlarmClock()
     {
         yield return null;
-        DebugLog("Attempting to Find Alarm Clock");
         _modSettings.ReadSettings();
         MonoBehaviour AlarmClock = null;
-
+        DebugLog("Attempting to Find Alarm Clock");
         while (_gamestate == KMGameInfo.State.Gameplay)
         {
             UnityEngine.Object[] alarmClock = FindObjectsOfType(CommonReflectedTypeInfo.AlarmClockType);
