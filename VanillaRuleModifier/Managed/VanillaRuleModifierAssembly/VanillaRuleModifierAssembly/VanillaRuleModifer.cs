@@ -1,12 +1,14 @@
 ﻿using System;
+using System.CodeDom;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Object = UnityEngine.Object;
 using Assets.Scripts.Rules;
+using Assets.Scripts.Utility;
+using BombGame;
+using VanillaRuleModifierAssembly;
 
 public class ReplaceText
 {
@@ -257,6 +259,8 @@ public class VanillaRuleModifer : MonoBehaviour
 	    //_modSettings.ReadSettings();
 	}
 
+    private RuleManager _ruleManager;
+
     private KMGameInfo.State _currentState = KMGameInfo.State.Unlock;
     void OnStateChange(KMGameInfo.State state)
     {
@@ -289,32 +293,50 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteSimonSaysManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var simonrules = CommonReflectedTypeInfo.SimonRules.Replace("Strikes","").Replace("\n", "").Replace("0", "").Replace("1", "").Replace("2", "").Replace("HASVOWEL", "").Replace("OTHERWISE", "").Replace(":", "").Replace(" ", "").Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries);
-        string[] SimonReplacements = new[]
+        //var simonrules = CommonReflectedTypeInfo.SimonRules.Replace("Strikes","").Replace("\n", "").Replace("0", "").Replace("1", "").Replace("2", "").Replace("HASHASVOWEL", "").Replace("OTHERWISE", "").Replace(":", "").Replace(" ", "").Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries);
+        /*string[] SimonReplacements = new[]
         {
-            "VOWEL0RED","VOWEL0BLUE","VOWEL0GREEN","VOWEL0YELLOW",
-            "VOWEL1RED","VOWEL1BLUE","VOWEL1GREEN","VOWEL1YELLOW",
-            "VOWEL2RED","VOWEL2BLUE","VOWEL2GREEN","VOWEL2YELLOW",
+            "HASVOWEL0RED","HASVOWEL0BLUE","HASVOWEL0GREEN","HASVOWEL0YELLOW",
+            "HASVOWEL1RED","HASVOWEL1BLUE","HASVOWEL1GREEN","HASVOWEL1YELLOW",
+            "HASVOWEL2RED","HASVOWEL2BLUE","HASVOWEL2GREEN","HASVOWEL2YELLOW",
             "OTHERWISE0RED", "OTHERWISE0BLUE", "OTHERWISE0GREEN", "OTHERWISE0YELLOW",
             "OTHERWISE1RED", "OTHERWISE1BLUE", "OTHERWISE1GREEN", "OTHERWISE1YELLOW",
             "OTHERWISE2RED", "OTHERWISE2BLUE", "OTHERWISE2GREEN", "OTHERWISE2YELLOW",
-        };
-        for(int i = 0; i < simonrules.Length; i++)
-            replacements.Add(new ReplaceText() { original = SimonReplacements[i], replacement = simonrules[i]});
+        };*/
+        var rules = _ruleManager.SimonRuleSet.RuleList;
+        foreach (var keyValuePair in rules)
+        {
+            var Colors = new[] {"RED", "BLUE", "GREEN", "YELLOW"};
+            for (var i = 0; i < keyValuePair.Value.Count; i++)
+            {
+                for (var j = 0; j < 4; j++)
+                {
+                    replacements.Add(new ReplaceText() { original = $"{keyValuePair.Key}{i}{Colors[j]}", replacement = keyValuePair.Value[i][j].ToString()});
+                }
+            }
+        }
+
+
+        //for(int i = 0; i < simonrules.Length; i++)
+        //    replacements.Add(new ReplaceText() { original = SimonReplacements[i], replacement = simonrules[i]});
         file.WriteFile(path, replacements);
     }
 
     private void WritePasswordManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var passwordrules = CommonReflectedTypeInfo.PasswordRules.Replace("Possibilities: ", "").Replace(" ", "").Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries);
-        for(int i = 0; i < passwordrules.Length; i++)
-            replacements.Add(new ReplaceText {original = string.Format("PASSWORD{0:00}",i), replacement = passwordrules[i]});
+        var passwordrules = _ruleManager.PasswordRuleSet.possibilities;
+        for(int i = 0; i < passwordrules.Count; i++)
+            replacements.Add(new ReplaceText {original = string.Format("PASSWORD{0:00}", i), replacement = passwordrules[i]});
+
+        //var passwordrules = CommonReflectedTypeInfo.PasswordRules.Replace("Possibilities: ", "").Replace(" ", "").Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries);
+        //for(int i = 0; i < passwordrules.Length; i++)
+        //    replacements.Add(new ReplaceText {original = string.Format("PASSWORD{0:00}",i), replacement = passwordrules[i]});
         file.WriteFile(path, replacements);
     }
 
     private void WriteNeedyKnobManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var knobrules = CommonReflectedTypeInfo.NeedyKnobRules.Replace(Environment.NewLine,"").Replace("Left", "\nLeft").Replace("Right", "\nRight").Replace("Up", "\nUp").Replace("Down", "\nDown").Replace("O"," ").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+        /*var knobrules = CommonReflectedTypeInfo.NeedyKnobRules.Replace(Environment.NewLine,"").Replace("Left", "\nLeft").Replace("Right", "\nRight").Replace("Up", "\nUp").Replace("Down", "\nDown").Replace("O"," ").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
         var replacement = string.Empty;
         foreach (var pos in knobrules)
         {
@@ -336,7 +358,42 @@ public class VanillaRuleModifer : MonoBehaviour
                 }
                 replacement += "                            </table>\n";
             }
+        }*/
+        var replacement = string.Empty;
+        var currentDirection = string.Empty;
+        foreach (var rule in _ruleManager.NeedyKnobRuleSet.Rules)
+        {
+            var direction = rule.Solution.Text;
+            if (currentDirection != direction)
+            {
+                replacement += string.Format("                            <h4>{0}:</h4>\n", direction);
+                currentDirection = direction;
+            }
+            foreach (var query in rule.Queries)
+            {
+                var leds = (bool[]) query.Args[NeedyKnobRuleSet.LED_CONFIG_ARG_KEY];
+                replacement += "                            <table style=\"display: inline-table\">\n";
+                for (int i = 0; i < NeedyKnobRuleSetGenerator.LED_ROWS; i++)
+                {
+                    replacement += "                                <tr>\n";
+                    for (int j = 0; j < NeedyKnobRuleSetGenerator.LED_COLS; j++)
+                    {
+                        if (leds[NeedyKnobRuleSetGenerator.LED_COLS * i + j])
+                        {
+                            replacement += "                                <td>X</td>\n";
+                        }
+                        else
+                        {
+                            replacement += "                                <td> </td>\n";
+                        }
+                    }
+                    replacement += "                                </tr>\n";
+                }
+                replacement += "                            </table>\n";
+            }
         }
+
+
         replacements.Add(new ReplaceText {original = "NEEDYKNOBLIGHTCONFIGURATION", replacement = replacement});
         file.WriteFile(path, replacements);
 
@@ -344,17 +401,19 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteKeypadsManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        string ruleset = CommonReflectedTypeInfo.KeypadRules;
-        if (string.IsNullOrEmpty(ruleset))
-            return;
+        //string ruleset = CommonReflectedTypeInfo.KeypadRules;
+        //if (string.IsNullOrEmpty(ruleset))
+        //    return;
         string table = string.Empty;
 
-        string[] rules = ruleset.Replace(",", "").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+        //string[] rules = ruleset.Replace(",", "").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+        var rules = _ruleManager.KeypadRuleSet.PrecedenceLists;
 
-        for (int i = 0; i < rules[0].Length; i++)
+
+        for (int i = 0; i < rules[0].Count; i++)
         {
             table += "                                <tr>\n";
-            for (int j = 0; j < rules.Length; j++)
+            for (int j = 0; j < rules.Count; j++)
             {
                 table += "                                    <td class=\"keypad-table-column\"><img class=\"keypad-symbol-image\" src=\"";
 
@@ -362,7 +421,7 @@ public class VanillaRuleModifer : MonoBehaviour
                 table += KeypadFiles[index].Name.Replace(Path.DirectorySeparatorChar, '/');
                 table += "\"></img>";
                 table += "                                    </td>\n";
-                if (j == (rules.Length - 1))
+                if (j == (rules.Count - 1))
                     break;
                 table += "                                    <td class=\"keypad-table-spacer\"></td>\n";
             }
@@ -379,8 +438,12 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteWhosOnFirstManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
+
+
         var whosonfirstrules = CommonReflectedTypeInfo.WhosOnFirstRules.Split(new [] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
         var step1 = whosonfirstrules[1].Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+
+        var step1precedentlist = _ruleManager.WhosOnFirstRuleSet.displayWordToButtonIndexMap;
 
         var replace = string.Empty;
         for (var i = 0; i < 5; i++)
@@ -392,8 +455,11 @@ public class VanillaRuleModifer : MonoBehaviour
             }
             for (var j = 0; j < ((i == 4) ? 4 : 6); j++)
             {
-                var word = step1[(i * 6) + j].Split(':')[0];
-                var index = step1[(i * 6) + j].Split(':')[1];
+                //var word = step1[(i * 6) + j].Split(':')[0];
+                //var index = step1[(i * 6) + j].Split(':')[1];
+                var word = WhosOnFirstRuleSet.DisplayWords[i];
+                var index = step1precedentlist[word].ToString();
+
                 replace += "                                    <td>\n";
                 replace += "                                        <table>\n";
                 replace += "                                            <tr>\n";
@@ -426,14 +492,16 @@ public class VanillaRuleModifer : MonoBehaviour
         replacements.Add(new ReplaceText {original = "LOOKATDISPLAYMAP", replacement = replace });
         replace = string.Empty;
 
-        foreach (var map in whosonfirstrules.Skip(3))
+        foreach (var map in _ruleManager.WhosOnFirstRuleSet.precedenceMap)
         {
             replace += "                                <tr>\n";
             replace += "                                    <th>";
-            replace += map.Split(':')[0].Trim();
+            //replace += map.Split(':')[0].Trim();
+            replace += map.Key;
             replace += "</th>\n";
             replace += "                                    <td>";
-            replace += map.Split(':')[1].Trim();
+            //replace += map.Split(':')[1].Trim();
+            replace += string.Join(", ", map.Value.ToArray());
             replace += "</td>";
             replace += "                                </tr>\n";
         }
@@ -444,9 +512,11 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteWireSequenceManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var sequences = CommonReflectedTypeInfo.WireSequenceRules.Replace(Environment.NewLine, "\n").Replace("BLACK Wires: ", "").Replace("BLUE Wires: ", "").Replace("RED Wires: ", "").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
-        var tablenames = new[] {"Black", "Blue", "Red"};
         var wiresequencetable = string.Empty;
+
+        /*var sequences = CommonReflectedTypeInfo.WireSequenceRules.Replace(Environment.NewLine, "\n").Replace("BLACK Wires: ", "").Replace("BLUE Wires: ", "").Replace("RED Wires: ", "").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+        var tablenames = new[] {"Black", "Blue", "Red"};
+        
 
         for (var i = sequences.Length - 1; i >= 0; i--)
         {
@@ -486,34 +556,111 @@ public class VanillaRuleModifer : MonoBehaviour
                 }
             }
             wiresequencetable += "</table>\n";
+        }*/
+
+        var wireLetters = new[] {"A", "B", "C"};
+        for (int i = WireSequenceRuleSetGenerator.NUM_COLOURS - 1; i >= 0 ; i--)
+        {
+            var color = (WireColor) i;
+            wiresequencetable += "                        <table class=\'";
+            wiresequencetable += color.ToString();
+            wiresequencetable += "'>";
+
+            wiresequencetable += "<tr><th colspan=\'2\' class=\'header\'>";
+            wiresequencetable += color.ToString().Capitalize();
+            wiresequencetable += " Wire Occurrences</th></tr>";
+
+            wiresequencetable += "<tr><th class=\'first-col\'>Wire Occurrence</th><th class=\'second-col\'>Cut if connected to:</th></tr>";
+            for (int j = 0; j < WireSequenceRuleSetGenerator.NumWiresPerColour; j++)
+            {
+                wiresequencetable += "<tr><td class=\'first-col\'>";
+                wiresequencetable += Util.OrdinalWord(j + 1);
+                wiresequencetable += "&nbsp;";
+                wiresequencetable += color.ToString();
+                wiresequencetable += " occurrence</td><td class=\'second-col\'>";
+                var list = new List<string>();
+                for (var k = 0; k < WireSequenceRuleSetGenerator.NUM_PER_PAGE; k++)
+                {
+                    if (_ruleManager.WireSequenceRuleSet.ShouldBeSnipped(color, j, k))
+                    {
+                        list.Add(wireLetters[k]);
+                    }
+                }
+                for (var k = 0; k < list.Count; k++)
+                {
+                    wiresequencetable += list[k];
+                    if (k == list.Count - 2)
+                        wiresequencetable += " or ";
+                    else if (k < list.Count - 2 && list.Count > 2)
+                        wiresequencetable += ", ";
+                }
+                wiresequencetable += "</td></tr>";
+            }
         }
+
         replacements.Add(new ReplaceText { original = "WIRESEQUENCETABLES", replacement = wiresequencetable });
         file.WriteFile(path, replacements);
     }
 
     private void WriteMorseCodeManaul(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var worddict = CommonReflectedTypeInfo.MorseCodeRules.Replace(": ", ":").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries).Skip(1);
+        var worddict = _ruleManager.MorseCodeRuleSet.WordDict;
+        var validFreqs = _ruleManager.MorseCodeRuleSet.ValidFrequencies;
+        //var worddict = CommonReflectedTypeInfo.MorseCodeRules.Replace(": ", ":").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries).Skip(1);
         var morsecodetable = string.Empty;
-        foreach (var word in worddict)
+        foreach (var freq in validFreqs)
         {
             morsecodetable += "                        <tr>\n";
             morsecodetable += "                            <td>";
-            morsecodetable += word.Split(':')[0];
+            //morsecodetable += word.Split(':')[0];
+            morsecodetable += worddict[freq];
             morsecodetable += "</td>\n";
-            morsecodetable += "                            <td>";
-            morsecodetable += word.Split(':')[1];
-            morsecodetable += "</td>\n";
+            morsecodetable += "                            <td>3.";
+            //morsecodetable += word.Split(':')[1];
+            morsecodetable += freq.ToString();
+            morsecodetable += " MHz</td>\n";
             morsecodetable += "                        </tr>\n";
         }
         replacements.Add(new ReplaceText {original = "MORSECODELOOKUP", replacement = morsecodetable });
         file.WriteFile(path, replacements);
     }
 
+    private bool IsWireQueryValid(Rule rule)
+    {
+        if (rule.Queries.Count == 1)
+            return true;
+        var query = rule.GetQueryString();
+        var lastwirecolor = QueryableWireProperty.LastWireIsColor.Text;
+        var exactlyonecolor = QueryableWireProperty.IsExactlyOneColorWire.Text;
+        var morethanonecolor = QueryableWireProperty.MoreThanOneColorWire.Text;
+        var nocolor = QueryableWireProperty.IsExactlyZeroColorWire.Text;
+        for (var i = 0; i < 4; i++)
+        {
+            if (query.Contains(exactlyonecolor.Replace("{color}", ((WireColor) i).ToString())) && query.Contains(nocolor.Replace("{color}", ((WireColor) i).ToString())))
+                return false;
+            if (query.Contains(exactlyonecolor.Replace("{color}", ((WireColor) i).ToString())) && query.Contains(morethanonecolor.Replace("{color}", ((WireColor) i).ToString())))
+                return false;
+            if (query.Contains(morethanonecolor.Replace("{color}", ((WireColor) i).ToString())) && query.Contains(nocolor.Replace("{color}", ((WireColor) i).ToString())))
+                return false;
+
+            if (!query.Contains(lastwirecolor.Replace("{color}", ((WireColor) i).ToString()))) continue;
+            if (query.Contains(nocolor.Replace("{color}", ((WireColor) i).ToString()))) return false;
+            for (var j = i + 1; j < 5; j++)
+            {
+                if (query.Contains(lastwirecolor.Replace("{color}", ((WireColor) j).ToString())))
+                    return false;
+            }
+        }
+        return true;
+    }
+
     private void WriteWiresManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var wirerules = CommonReflectedTypeInfo.WireRules.Split(new[] {"\n\n"}, StringSplitOptions.RemoveEmptyEntries);
         var wirecuttinginstructions = string.Empty;
+        var wirerules = _ruleManager.WireRuleSet.RulesDictionary;
+
+        /*
+        var wirerules = CommonReflectedTypeInfo.WireRules.Split(new[] {"\n\n"}, StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var rule in wirerules)
         {
@@ -538,7 +685,42 @@ public class VanillaRuleModifer : MonoBehaviour
                     wirecuttinginstructions += instructions[i];
             }
             wirecuttinginstructions += "</tr>\n";
+        }*/
+
+        foreach (var rules in wirerules)
+        {
+            var rule = new List<Rule>(rules.Value);
+
+            var lastrule = rule.Last();
+            var remainder = rule.Take(rule.Count - 1).ToList();
+
+            for(var i = remainder.Count - 1; i >= 0; i--)
+                if (!IsWireQueryValid(remainder[i]))
+                    remainder.Remove(remainder[i]);
+
+            while (remainder.Last().GetSolutionString().Equals(lastrule.GetSolutionString()))
+                remainder.Remove(remainder.Last());
+
+            rule = remainder;
+            rule.Add(lastrule);
+
+            wirecuttinginstructions += "                        <tr>";
+            wirecuttinginstructions += "<td><strong><em>";
+            wirecuttinginstructions += rules.Key.ToString();
+            wirecuttinginstructions += " wires:</em></strong><br />";
+            if (rule.Count == 1)
+                wirecuttinginstructions += $"{rule[0].GetSolutionString()}.";
+            else
+            {
+                wirecuttinginstructions += $"If {rule[0].GetQueryString()}, {rule[0].GetSolutionString()}.";
+                for (var i = 1; i < rule.Count - 1; i++)
+                {
+                    wirecuttinginstructions += $"<br />Otherwise, If {rule[i].GetQueryString()}, {rule[i].GetSolutionString()}.";
+                }
+                wirecuttinginstructions += $"<br />Otherwise, {rule.Last().GetSolutionString()}.";
+            }
         }
+
 
         replacements.Add(new ReplaceText { original = "WIRECUTTINGINSTRUCTIONS", replacement = wirecuttinginstructions });
         file.WriteFile(path, replacements);
@@ -546,9 +728,10 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteMemoryManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var memoryrules = CommonReflectedTypeInfo.MemoryRules.Split(new[] { "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
         var memoryinstructions = string.Empty;
-
+        /*
+        var memoryrules = CommonReflectedTypeInfo.MemoryRules.Split(new[] { "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
+        
         foreach (var stage in memoryrules)
         {
             var instructions = stage.Split('\n');
@@ -559,6 +742,16 @@ public class VanillaRuleModifer : MonoBehaviour
             {
                 memoryinstructions += instruction;
                 memoryinstructions += "<br />";
+            }
+            memoryinstructions += "</p>\n";
+        }*/
+
+        foreach (var stage in _ruleManager.MemoryRuleSet.RulesDictionary)
+        {
+            memoryinstructions += $"                        <h4>Stage {stage.Key + 1}:</h4><p>";
+            for (var i = 0; i < stage.Value.Count; i++)
+            {
+                memoryinstructions += $"If {stage.Value[i].GetQueryString()}, {stage.Value[i].GetSolutionString()}.<br />";
             }
             memoryinstructions += "</p>\n";
         }
@@ -694,7 +887,7 @@ public class VanillaRuleModifer : MonoBehaviour
             _modSettings.ReadSettings();
             var seed = _modSettings.Settings.RuleSeed;
             DebugLog("Generating Rules based on Seed {0}", seed);
-            CommonReflectedTypeInfo.GenerateRules(seed);
+            _ruleManager = CommonReflectedTypeInfo.GenerateRules(seed);
             WriteManual(seed);
 
             yield return new WaitUntil(() => _currentState == KMGameInfo.State.PostGame || _currentState == KMGameInfo.State.Setup);

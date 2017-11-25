@@ -341,12 +341,12 @@ public static class CommonReflectedTypeInfo
     
     private static List<int> _previousSeeds = new List<int> {1};
 
-    public static void GenerateRules(int seed)
+    public static RuleManager GenerateRules(int seed)
     {
         DebugLog("Generating Rules for seed {0}", seed);
         var ruleManager = (RuleManager)RuleManagerInstanceField.GetValue(null);
         if (ruleManager == null)
-            return;
+            return null;
 
         GenerateRulesMethod.Invoke(ruleManager, new object[] {seed});
         _previousSeeds.Add(seed);
@@ -410,6 +410,7 @@ public static class CommonReflectedTypeInfo
         
 
         DebugLog("Done Generating Rules for seed {0}", seed);
+        return ruleManager;
     }
 
     public static bool IsRulesReady()
