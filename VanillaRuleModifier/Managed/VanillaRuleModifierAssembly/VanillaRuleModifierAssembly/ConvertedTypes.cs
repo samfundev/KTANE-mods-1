@@ -212,7 +212,7 @@ public static class CommonReflectedTypeInfo
 
     private static void GenerateVennWireSVG(string rules)
     {
-        List<string> lineTypes = new List<string>
+        /*List<string> lineTypes = new List<string>
         {
             "15,40,4,10",
             string.Empty,
@@ -227,16 +227,16 @@ public static class CommonReflectedTypeInfo
             "LED is on"
         };
 
-        rules = rules.Replace("[", "").Replace(" ","").Replace("]","").Replace("True","T").Replace("False","F");
+        rules = rules.Replace("[", "").Replace(" ", "").Replace("]", "").Replace("True", "T").Replace("False", "F");
         rules = rules.Replace("Red:", "").Replace("Blue:", "").Replace("Symbol:", "").Replace("LED:", "");
         rules = rules.Replace("DoNotCut", "D").Replace("CutIfTwoOrMoreBatteriesPresent", "B");
         rules = rules.Replace("CutIfParallelPortPresent", "P").Replace("CutIfSerialEven", "S").Replace("Cut", "C");
 
         Dictionary<string, string> RuleLookup = new Dictionary<string, string>();
-        foreach (string rule in rules.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries))
+        foreach (string rule in rules.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries))
         {
 
-            var halves = rule.Split(new[] {":"}, StringSplitOptions.None);
+            var halves = rule.Split(new[] { ":" }, StringSplitOptions.None);
             if (halves.Length != 2) continue;
             RuleLookup.Add(halves[0], halves[1]);
         }
@@ -258,12 +258,12 @@ public static class CommonReflectedTypeInfo
         VennList.Add(RuleLookup["TFTT"]);
         VennList.Add(RuleLookup["TTTT"]);
         VennList.Add(RuleLookup["FFFF"]);
-        SVGGenerator vennSVG = new SVGGenerator(800,650);
-        SVGGenerator legendSVG = new SVGGenerator(275,200);
+        SVGGenerator vennSVG = new SVGGenerator(800, 650);
+        SVGGenerator legendSVG = new SVGGenerator(275, 200);
         vennSVG.Draw4SetVennDiagram(VennList, lineTypes);
         legendSVG.DrawVennDiagramLegend(labels, lineTypes);
         VennDiagram = vennSVG.ToString();
-        VennDiagramLegend = legendSVG.ToString();
+        VennDiagramLegend = legendSVG.ToString();*/
     }
 
     private static void SetFirstVennWireCutInstruction(int seed, VennWireRuleSet vennruleset)

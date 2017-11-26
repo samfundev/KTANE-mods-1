@@ -5,8 +5,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Assets.Scripts.Components.VennWire;
 using Assets.Scripts.Rules;
 using Assets.Scripts.Utility;
+using Assets.Scripts.Manual;
 using BombGame;
 using VanillaRuleModifierAssembly;
 
@@ -272,23 +274,80 @@ public class VanillaRuleModifer : MonoBehaviour
     {
         var vennpath = Path.Combine(path, Path.Combine("img", "Complicated Wires"));
         Directory.CreateDirectory(vennpath);
-        if (string.IsNullOrEmpty(CommonReflectedTypeInfo.VennDiagram) ||
+        /*if (string.IsNullOrEmpty(CommonReflectedTypeInfo.VennDiagram) ||
             string.IsNullOrEmpty(CommonReflectedTypeInfo.VennDiagramLegend))
-            return;
-        File.WriteAllText(Path.Combine(vennpath, "venndiagram.svg"), CommonReflectedTypeInfo.VennDiagram);
-        File.WriteAllText(Path.Combine(vennpath, "legend.svg"), CommonReflectedTypeInfo.VennDiagramLegend);
+            return;*/
+
+        List<string> lineTypes = new List<string>
+        {
+            "15,40,4,10",
+            string.Empty,
+            "3",
+            "8"
+        };
+        List<string> labels = new List<string>
+        {
+            "Wire has red\ncoloring",
+            "Wire has blue\ncoloring",
+            "Has ★ symbol",
+            "LED is on"
+        };
+
+
+
+        /*rules = rules.Replace("[", "").Replace(" ", "").Replace("]", "").Replace("True", "T").Replace("False", "F");
+        rules = rules.Replace("Red:", "").Replace("Blue:", "").Replace("Symbol:", "").Replace("LED:", "");
+        rules = rules.Replace("DoNotCut", "D").Replace("CutIfTwoOrMoreBatteriesPresent", "B");
+        rules = rules.Replace("CutIfParallelPortPresent", "P").Replace("CutIfSerialEven", "S").Replace("Cut", "C");*/
+        var ruleset = _ruleManager.VennWireRuleSet;
+        var CutInstructionList = new List<CutInstruction>();
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, false, false, false)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(false, true, false, false)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(false, false, true, false)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(false, false, false, true)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, false, true, false)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, true, false, false)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(false, true, false, true)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(false, false, true, true)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(false, true, true, false)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, false, false, true)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, true, true, false)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, true, false, true)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(false, true, true, true)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, false, true, true)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, true, true, true)]);
+        CutInstructionList.Add(ruleset.RuleDict[new VennWireState(false, false, false, false)]);
+
+
+        var CutLetters = new[] {"C", "D", "S", "P", "B"};
+        var VennList = CutInstructionList.Select(instruction => CutLetters[(int) instruction]).ToList();
+
+        SVGGenerator vennSVG = new SVGGenerator(800, 650);
+        SVGGenerator legendSVG = new SVGGenerator(275, 200);
+        vennSVG.Draw4SetVennDiagram(VennList, lineTypes);
+        legendSVG.DrawVennDiagramLegend(labels, lineTypes);
+
+        File.WriteAllText(Path.Combine(vennpath, "venndiagram.svg"), vennSVG.ToString());
+        File.WriteAllText(Path.Combine(vennpath, "legend.svg"), legendSVG.ToString());
     }
 
     private void WriteMazesManual(string path)
     {
         var mazepath = Path.Combine(path, Path.Combine("img", "Mazes"));
         Directory.CreateDirectory(mazepath);
+        var mazes = _ruleManager.MazeRuleSet.GetMazes();
+        for (int i = 0; i < mazes.Count; i++)
+        {
+            File.WriteAllText(Path.Combine(mazepath, $"maze{i}.svg"), mazes[i].ToSVG());
+        }
+
+        /*
         if (string.IsNullOrEmpty(CommonReflectedTypeInfo.Mazes[0]))
             return;
         for (int i = 0; i < 9; i++)
         {
             File.WriteAllText(Path.Combine(mazepath, string.Format("maze{0}.svg",i)), CommonReflectedTypeInfo.Mazes[i]);
-        }
+        }*/
     }
 
     private void WriteSimonSaysManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
@@ -762,7 +821,7 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteButtonManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var buttonrules = CommonReflectedTypeInfo.ButtonRules.Split(new[] {"\n\n"}, StringSplitOptions.RemoveEmptyEntries);
+        var buttonrules = _ruleManager.ButtonRuleSet.ToString().Split(new[] {"\n\n"}, StringSplitOptions.RemoveEmptyEntries);
         var initial = string.Empty;
         var onhold = string.Empty;
 

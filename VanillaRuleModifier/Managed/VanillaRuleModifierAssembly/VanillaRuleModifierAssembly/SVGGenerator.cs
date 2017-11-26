@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿/*
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -212,3 +213,4 @@ public sealed class StringWriterWithEncoding : StringWriter
     // Token: 0x04002846 RID: 10310
     private readonly Encoding encoding;
 }
+*/
