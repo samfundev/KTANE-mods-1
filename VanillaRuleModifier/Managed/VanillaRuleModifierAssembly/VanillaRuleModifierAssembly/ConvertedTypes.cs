@@ -11,22 +11,10 @@ public static class CommonReflectedTypeInfo
 {
     static CommonReflectedTypeInfo()
     {
-        RuleManagerType = ReflectionHelper.FindType("Assets.Scripts.Rules.RuleManager");
+        //RuleManagerType = ReflectionHelper.FindType("Assets.Scripts.Rules.RuleManager");
+        RuleManagerType = typeof(RuleManager);
         if (RuleManagerType != null)
         {
-            RuleManagerWireRuleSet = RuleManagerType.GetProperty("WireRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerWhosOnFirstRuleSet = RuleManagerType.GetProperty("WhosOnFirstRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerKeypadRuleSet = RuleManagerType.GetProperty("KeypadRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerMemoryRuleSet = RuleManagerType.GetProperty("MemoryRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerNeedyKnobRuleSet = RuleManagerType.GetProperty("NeedyKnobRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerButtonRuleSet = RuleManagerType.GetProperty("ButtonRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerWireSequenceRuleSet = RuleManagerType.GetProperty("WireSequenceRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerPasswordRuleSet = RuleManagerType.GetProperty("PasswordRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerMorseCodeRuleSet = RuleManagerType.GetProperty("MorseCodeRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerVennWireRuleSet = RuleManagerType.GetProperty("VennWireRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerMazeRuleSet = RuleManagerType.GetProperty("MazeRuleSet", BindingFlags.Public | BindingFlags.Instance);
-            RuleManagerSimonRuleSet = RuleManagerType.GetProperty("SimonRuleSet", BindingFlags.Public | BindingFlags.Instance);
-
             RuleManagerInstanceField = RuleManagerType.GetField("instance", BindingFlags.NonPublic | BindingFlags.Static);
             GenerateRulesMethod = RuleManagerType.GetMethod("Initialize", BindingFlags.Public | BindingFlags.Instance);
         }
@@ -35,32 +23,6 @@ public static class CommonReflectedTypeInfo
             //If getting the rule manager fails, then reflection failed, no point in getting the rest of the items and continuing.
             return;
         }
-
-        VennWireRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.VennWireRuleSet");
-        if (VennWireRuleSetType != null)
-        {
-            VennWireToStringMethod = VennWireRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-
-            VennWireStateType = ReflectionHelper.FindType("Assets.Scripts.Components.VennWire.VennWireState");
-            if (VennWireStateType != null)
-            {
-                VennWireStateRedField = VennWireStateType.GetField("HasRed", BindingFlags.Public | BindingFlags.Instance);
-                VennWireStateBlueField = VennWireStateType.GetField("HasBlue", BindingFlags.Public | BindingFlags.Instance);
-                VennWireStateSymbolField = VennWireStateType.GetField("HasSymbol", BindingFlags.Public | BindingFlags.Instance);
-                VennWireStateLEDField = VennWireStateType.GetField("HasLED", BindingFlags.Public | BindingFlags.Instance);
-            }
-
-            VennWireRuleDictionaryProperty = VennWireRuleSetType.GetProperty("RuleDict", BindingFlags.Public | BindingFlags.Instance);
-            VennWireCutInstructionType = ReflectionHelper.FindType("Assets.Scripts.Components.VennWire.CutInstruction");
-        }
-
-        PasswordRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.PasswordRuleSet");
-        if (PasswordRuleSetType != null)
-        {
-            PasswordToStringMethod = PasswordRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-            PasswordPossibilitesField = PasswordRuleSetType.GetField("possibilities", BindingFlags.Public | BindingFlags.Instance);
-        }
-
     }
 
     public static void DebugLog(string message, params object[] args)
@@ -74,7 +36,7 @@ public static class CommonReflectedTypeInfo
         return RuleManagerType != null;
     }
 
-    public static void GeneratePasswords(int seed, object passwordRuleSet)
+    public static void GeneratePasswords(int seed, PasswordRuleSet passwordRuleSet)
     {
         if (seed == 1)
             return;
@@ -104,7 +66,7 @@ public static class CommonReflectedTypeInfo
         try
         {
             DebugLog("Adding vanilla passwords to password pool");
-            Possibilites.AddRange((List<string>) PasswordPossibilitesField.GetValue(passwordRuleSet));
+            Possibilites.AddRange(passwordRuleSet.possibilities);
             DebugLog("Randomizing password pool");
             
             if (seed == 2)
@@ -117,69 +79,14 @@ public static class CommonReflectedTypeInfo
                 Possibilites = Possibilites.OrderBy(x => rng.Next()).Take(35).OrderBy(x => x).ToList();
             }
             DebugLog("Setting list of passwords to password ruleset");
-            PasswordPossibilitesField.SetValue(passwordRuleSet, Possibilites);
+
+            passwordRuleSet.possibilities = Possibilites;
         }
         catch (Exception ex)
         {
             DebugLog("Exception: {0} - Stack Trace: {1}", ex.Message, ex.StackTrace);
             return;
         }
-    }
-
-    private static void GenerateVennWireSVG(string rules)
-    {
-        /*List<string> lineTypes = new List<string>
-        {
-            "15,40,4,10",
-            string.Empty,
-            "3",
-            "8"
-        };
-        List<string> labels = new List<string>
-        {
-            "Wire has red\ncoloring",
-            "Wire has blue\ncoloring",
-            "Has ★ symbol",
-            "LED is on"
-        };
-
-        rules = rules.Replace("[", "").Replace(" ", "").Replace("]", "").Replace("True", "T").Replace("False", "F");
-        rules = rules.Replace("Red:", "").Replace("Blue:", "").Replace("Symbol:", "").Replace("LED:", "");
-        rules = rules.Replace("DoNotCut", "D").Replace("CutIfTwoOrMoreBatteriesPresent", "B");
-        rules = rules.Replace("CutIfParallelPortPresent", "P").Replace("CutIfSerialEven", "S").Replace("Cut", "C");
-
-        Dictionary<string, string> RuleLookup = new Dictionary<string, string>();
-        foreach (string rule in rules.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries))
-        {
-
-            var halves = rule.Split(new[] { ":" }, StringSplitOptions.None);
-            if (halves.Length != 2) continue;
-            RuleLookup.Add(halves[0], halves[1]);
-        }
-
-        List<string> VennList = new List<string>();
-        VennList.Add(RuleLookup["TFFF"]);
-        VennList.Add(RuleLookup["FTFF"]);
-        VennList.Add(RuleLookup["FFTF"]);
-        VennList.Add(RuleLookup["FFFT"]);
-        VennList.Add(RuleLookup["TFTF"]);
-        VennList.Add(RuleLookup["TTFF"]);
-        VennList.Add(RuleLookup["FTFT"]);
-        VennList.Add(RuleLookup["FFTT"]);
-        VennList.Add(RuleLookup["FTTF"]);
-        VennList.Add(RuleLookup["TFFT"]);
-        VennList.Add(RuleLookup["TTTF"]);
-        VennList.Add(RuleLookup["TTFT"]);
-        VennList.Add(RuleLookup["FTTT"]);
-        VennList.Add(RuleLookup["TFTT"]);
-        VennList.Add(RuleLookup["TTTT"]);
-        VennList.Add(RuleLookup["FFFF"]);
-        SVGGenerator vennSVG = new SVGGenerator(800, 650);
-        SVGGenerator legendSVG = new SVGGenerator(275, 200);
-        vennSVG.Draw4SetVennDiagram(VennList, lineTypes);
-        legendSVG.DrawVennDiagramLegend(labels, lineTypes);
-        VennDiagram = vennSVG.ToString();
-        VennDiagramLegend = legendSVG.ToString();*/
     }
 
     private static void SetFirstVennWireCutInstruction(int seed, VennWireRuleSet vennruleset)
@@ -253,10 +160,6 @@ public static class CommonReflectedTypeInfo
 
     }
 
-
-    
-    private static List<int> _previousSeeds = new List<int> {1};
-
     public static RuleManager GenerateRules(int seed)
     {
         DebugLog("Generating Rules for seed {0}", seed);
@@ -265,13 +168,10 @@ public static class CommonReflectedTypeInfo
             return null;
 
         GenerateRulesMethod.Invoke(ruleManager, new object[] {seed});
-        _previousSeeds.Add(seed);
 
+        //Run custom rule generators after the official ones have done their thing.
         SetFirstVennWireCutInstruction(seed, ruleManager.VennWireRuleSet);
-        GenerateVennWireSVG(ruleManager.VennWireRuleSet.ToString());
-
-        var passwordruleset = RuleManagerPasswordRuleSet.GetValue(ruleManager, null);
-        GeneratePasswords(seed, passwordruleset);
+        GeneratePasswords(seed, ruleManager.PasswordRuleSet);
 
         DebugLog("Done Generating Rules for seed {0}", seed);
         return ruleManager;
@@ -291,81 +191,6 @@ public static class CommonReflectedTypeInfo
         private set;
     }
 
-    public static PropertyInfo RuleManagerWireRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerWhosOnFirstRuleSet
-    {
-        get;
-        private set;
-    }
-
-
-
-    public static PropertyInfo RuleManagerKeypadRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerMemoryRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerNeedyKnobRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerButtonRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerWireSequenceRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerPasswordRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerMorseCodeRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerVennWireRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerMazeRuleSet
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo RuleManagerSimonRuleSet
-    {
-        get;
-        private set;
-    }
-
-
     public static FieldInfo RuleManagerInstanceField
     {
         get;
@@ -379,86 +204,5 @@ public static class CommonReflectedTypeInfo
     }
 
     #endregion
-
-    #region Password
-
-    public static Type PasswordRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo PasswordToStringMethod
-    {
-        get;
-        private set;
-    }
-
-    public static FieldInfo PasswordPossibilitesField
-    {
-        get;
-        private set;
-    }
-
-    #endregion
-
-    #region VennWires
-    public static Type VennWireRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo VennWireToStringMethod
-    {
-        get;
-        private set;
-    }
-
-    public static Type VennWireCutInstructionType
-    {
-        get;
-        private set;
-    }
-
-    public static Type VennWireStateType
-    {
-        get;
-        private set;
-    }
-
-    public static FieldInfo VennWireStateRedField
-    {
-        get;
-        private set;
-    }
-
-    public static FieldInfo VennWireStateBlueField
-    {
-        get;
-        private set;
-    }
-
-    public static FieldInfo VennWireStateSymbolField
-    {
-        get;
-        private set;
-    }
-
-    public static FieldInfo VennWireStateLEDField
-    {
-        get;
-        private set;
-    }
-
-    public static PropertyInfo VennWireRuleDictionaryProperty
-    {
-        get;
-        private set;
-    }
-
-    #endregion
-
-
 
 }

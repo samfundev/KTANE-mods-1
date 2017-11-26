@@ -22,7 +22,6 @@ public class VanillaRuleModifer : MonoBehaviour
     private List<ManualFileName> ManualFileNames = new List<ManualFileName>()  
     {
         //HTML Manuals
-        new ManualFileName("index.html",VanillaRuleModifierAssembly.Properties.Resources.index),
         new ManualFileName("Capacitor Discharge.html",VanillaRuleModifierAssembly.Properties.Resources.Capacitor_Discharge),
         new ManualFileName("Complicated Wires.html",VanillaRuleModifierAssembly.Properties.Resources.Complicated_Wires),
         new ManualFileName("Keypads.html",VanillaRuleModifierAssembly.Properties.Resources.Keypads),
@@ -37,6 +36,7 @@ public class VanillaRuleModifer : MonoBehaviour
         new ManualFileName("Who’s on First.html",VanillaRuleModifierAssembly.Properties.Resources.Whos_on_First_html),
         new ManualFileName("Wire Sequences.html",VanillaRuleModifierAssembly.Properties.Resources.Wire_Sequences),
         new ManualFileName("Wires.html",VanillaRuleModifierAssembly.Properties.Resources.Wires),
+        new ManualFileName("index.html",VanillaRuleModifierAssembly.Properties.Resources.index),
 
         //CSS
         new ManualFileName(Path.Combine("css","dark-theme.css"),VanillaRuleModifierAssembly.Properties.Resources.dark_theme),
@@ -352,7 +352,7 @@ public class VanillaRuleModifer : MonoBehaviour
                         }
                         else
                         {
-                            replacement += "                                <td> </td>\n";
+                            replacement += "                                <td>&nbsp;</td>\n";
                         }
                     }
                     replacement += "                                </tr>\n";
