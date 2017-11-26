@@ -12,80 +12,6 @@ using Assets.Scripts.Manual;
 using BombGame;
 using VanillaRuleModifierAssembly;
 
-public class ReplaceText
-{
-    public string original;
-    public string replacement;
-}
-
-[Serializable]
-public class ManualFileName
-{
-    public string Name;
-    public bool IsText;
-    public byte[] Bytes;
-    public string Text;
-
-    public ManualFileName(string name, byte[] bytes)
-    {
-        Name = name;
-        IsText = false;
-        Bytes = bytes;
-    }
-
-    public ManualFileName(string name, string text)
-    {
-        Name = name;
-        IsText = true;
-        Text = text;
-    }
-
-    public static void DebugLog(string message, params object[] args)
-    {
-        CommonReflectedTypeInfo.DebugLog(message, args);
-    }
-
-    public void WriteFile(string path, List<ReplaceText> textReplacements = null)
-    {
-        DebugLog("Writing Manaul file: {0}", Name);
-        var manualpath = Path.Combine(path, Name);
-        if (string.IsNullOrEmpty(manualpath))
-        {
-            DebugLog("Manual path is empty or null");
-            return;
-        }
-        string dirname = Path.GetDirectoryName(manualpath);
-        if (string.IsNullOrEmpty(dirname))
-        {
-            DebugLog("Directory name is empty or null");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(Text) && Bytes == null)
-        {
-            DebugLog("Can't write {0} as it is null.", Name);
-            return;
-        }
-
-        Directory.CreateDirectory(dirname);
-        try
-        {
-            if (textReplacements == null)
-                textReplacements = new List<ReplaceText>();
-            if (IsText)
-            {
-                File.WriteAllText(manualpath, textReplacements.Aggregate(Text, (current, replacement) => current.Replace(replacement.original, replacement.replacement)));
-            }
-            else
-                File.WriteAllBytes(manualpath, Bytes);
-        }
-        catch (Exception ex)
-        {
-            DebugLog("Failed to write file due to Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
-        }
-    }
-}
-
 public class VanillaRuleModifer : MonoBehaviour
 {
     private KMGameInfo _gameInfo = null;
@@ -96,6 +22,7 @@ public class VanillaRuleModifer : MonoBehaviour
     private List<ManualFileName> ManualFileNames = new List<ManualFileName>()  
     {
         //HTML Manuals
+        new ManualFileName("index.html",VanillaRuleModifierAssembly.Properties.Resources.index),
         new ManualFileName("Capacitor Discharge.html",VanillaRuleModifierAssembly.Properties.Resources.Capacitor_Discharge),
         new ManualFileName("Complicated Wires.html",VanillaRuleModifierAssembly.Properties.Resources.Complicated_Wires),
         new ManualFileName("Keypads.html",VanillaRuleModifierAssembly.Properties.Resources.Keypads),
@@ -140,6 +67,9 @@ public class VanillaRuleModifer : MonoBehaviour
         new ManualFileName(Path.Combine("font","trebucit.ttf"),VanillaRuleModifierAssembly.Properties.Resources.trebucit),
 
         //img
+        new ManualFileName(Path.Combine("img","Bomb.svg"),VanillaRuleModifierAssembly.Properties.Resources.Bomb),
+        new ManualFileName(Path.Combine("img","BombSide.svg"),VanillaRuleModifierAssembly.Properties.Resources.BombSide),
+        new ManualFileName(Path.Combine("img","ktane-logo.png"),VanillaRuleModifierAssembly.Properties.Resources.ktane_logo),
         new ManualFileName(Path.Combine("img","page-bg-noise-01.png"),VanillaRuleModifierAssembly.Properties.Resources.page_bg_noise_01),
         new ManualFileName(Path.Combine("img","page-bg-noise-02.png"),VanillaRuleModifierAssembly.Properties.Resources.page_bg_noise_02),
         new ManualFileName(Path.Combine("img","page-bg-noise-03.png"),VanillaRuleModifierAssembly.Properties.Resources.page_bg_noise_03),
@@ -148,7 +78,18 @@ public class VanillaRuleModifer : MonoBehaviour
         new ManualFileName(Path.Combine("img","page-bg-noise-06.png"),VanillaRuleModifierAssembly.Properties.Resources.page_bg_noise_06),
         new ManualFileName(Path.Combine("img","page-bg-noise-07.png"),VanillaRuleModifierAssembly.Properties.Resources.page_bg_noise_07),
         new ManualFileName(Path.Combine("img","web-background.jpg"),VanillaRuleModifierAssembly.Properties.Resources.web_background),
-        new ManualFileName(Path.Combine("img",Path.Combine("Simon Says","SimonComponent_ColourLegend.svg")),VanillaRuleModifierAssembly.Properties.Resources.Simon_Says1),
+        new ManualFileName(Path.Combine("img",Path.Combine("appendix-batteries","Battery-AA.svg")),VanillaRuleModifierAssembly.Properties.Resources.Battery_AA),
+        new ManualFileName(Path.Combine("img",Path.Combine("appendix-batteries","Battery-D.svg")),VanillaRuleModifierAssembly.Properties.Resources.Battery_D),
+        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","DVI.svg")),VanillaRuleModifierAssembly.Properties.Resources.DVI),
+        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","Parallel.svg")),VanillaRuleModifierAssembly.Properties.Resources.Parallel),
+        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","PS2.svg")),VanillaRuleModifierAssembly.Properties.Resources.PS2),
+        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","RJ45.svg")),VanillaRuleModifierAssembly.Properties.Resources.RJ45),
+        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","Serial.svg")),VanillaRuleModifierAssembly.Properties.Resources.Serial),
+        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","StereoRCA.svg")),VanillaRuleModifierAssembly.Properties.Resources.StereoRCA),
+        new ManualFileName(Path.Combine("img",Path.Combine("Component","Component.svg")),VanillaRuleModifierAssembly.Properties.Resources.Component),
+        new ManualFileName(Path.Combine("img",Path.Combine("Component","IndicatorWidget.svg")),VanillaRuleModifierAssembly.Properties.Resources.IndicatorWidget),
+        new ManualFileName(Path.Combine("img",Path.Combine("Component","NeedyComponent.svg")),VanillaRuleModifierAssembly.Properties.Resources.NeedyComponent),
+        new ManualFileName(Path.Combine("img",Path.Combine("Component","TimerComponent.svg")),VanillaRuleModifierAssembly.Properties.Resources.TimerComponent),
         new ManualFileName(Path.Combine("img",Path.Combine("Component","Capacitor Discharge.svg")),VanillaRuleModifierAssembly.Properties.Resources.Capacitor_Discharge1),
         new ManualFileName(Path.Combine("img",Path.Combine("Component","Complicated Wires.svg")),VanillaRuleModifierAssembly.Properties.Resources.Complicated_Wires1),
         new ManualFileName(Path.Combine("img",Path.Combine("Component","Keypads.svg")),VanillaRuleModifierAssembly.Properties.Resources.Keypads1),
@@ -163,39 +104,16 @@ public class VanillaRuleModifer : MonoBehaviour
         new ManualFileName(Path.Combine("img",Path.Combine("Component","Who’s on First.svg")),VanillaRuleModifierAssembly.Properties.Resources.Whos_on_First_component),
         new ManualFileName(Path.Combine("img",Path.Combine("Component","Wire Sequences.svg")),VanillaRuleModifierAssembly.Properties.Resources.Wire_Sequences1),
         new ManualFileName(Path.Combine("img",Path.Combine("Component","Wires.svg")),VanillaRuleModifierAssembly.Properties.Resources.Wires1),
+        new ManualFileName(Path.Combine("img",Path.Combine("Morsematics","International_Morse_Code.svg")),VanillaRuleModifierAssembly.Properties.Resources.International_Morse_Code),
+        new ManualFileName(Path.Combine("img",Path.Combine("Simon Says","SimonComponent_ColourLegend.svg")),VanillaRuleModifierAssembly.Properties.Resources.Simon_Says1),
+        new ManualFileName(Path.Combine("img",Path.Combine("Who’s on First","eye-icon.png")),VanillaRuleModifierAssembly.Properties.Resources.eye_icon),
 
         //js
         new ManualFileName(Path.Combine("js","highlighter.js"),VanillaRuleModifierAssembly.Properties.Resources.highlighter_js),
         new ManualFileName(Path.Combine("js","jquery-ui.1.12.1.min.js"),VanillaRuleModifierAssembly.Properties.Resources.jquery_3_1_1_min_js),
         new ManualFileName(Path.Combine("js","jquery.3.1.1.min.js"),VanillaRuleModifierAssembly.Properties.Resources.jquery_3_1_1_min_js),
-
-        //files that were forgotten
-        new ManualFileName(Path.Combine("img",Path.Combine("Who’s on First","eye-icon.png")),VanillaRuleModifierAssembly.Properties.Resources.eye_icon),
-
-        //html
-        new ManualFileName("index.html",VanillaRuleModifierAssembly.Properties.Resources.index),
-
-        //img
-        new ManualFileName(Path.Combine("img","Bomb.svg"),VanillaRuleModifierAssembly.Properties.Resources.Bomb),
-        new ManualFileName(Path.Combine("img","BombSide.svg"),VanillaRuleModifierAssembly.Properties.Resources.BombSide),
-        new ManualFileName(Path.Combine("img","ktane-logo.png"),VanillaRuleModifierAssembly.Properties.Resources.ktane_logo),
-        new ManualFileName(Path.Combine("img",Path.Combine("appendix-batteries","Battery-AA.svg")),VanillaRuleModifierAssembly.Properties.Resources.Battery_AA),
-        new ManualFileName(Path.Combine("img",Path.Combine("appendix-batteries","Battery-D.svg")),VanillaRuleModifierAssembly.Properties.Resources.Battery_D),
-        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","DVI.svg")),VanillaRuleModifierAssembly.Properties.Resources.DVI),
-        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","Parallel.svg")),VanillaRuleModifierAssembly.Properties.Resources.Parallel),
-        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","PS2.svg")),VanillaRuleModifierAssembly.Properties.Resources.PS2),
-        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","RJ45.svg")),VanillaRuleModifierAssembly.Properties.Resources.RJ45),
-        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","Serial.svg")),VanillaRuleModifierAssembly.Properties.Resources.Serial),
-        new ManualFileName(Path.Combine("img",Path.Combine("appendix-ports","StereoRCA.svg")),VanillaRuleModifierAssembly.Properties.Resources.StereoRCA),
-        new ManualFileName(Path.Combine("img",Path.Combine("Component","Component.svg")),VanillaRuleModifierAssembly.Properties.Resources.Component),
-        new ManualFileName(Path.Combine("img",Path.Combine("Component","IndicatorWidget.svg")),VanillaRuleModifierAssembly.Properties.Resources.IndicatorWidget),
-        new ManualFileName(Path.Combine("img",Path.Combine("Component","NeedyComponent.svg")),VanillaRuleModifierAssembly.Properties.Resources.NeedyComponent),
-        new ManualFileName(Path.Combine("img",Path.Combine("Component","TimerComponent.svg")),VanillaRuleModifierAssembly.Properties.Resources.TimerComponent),
-        new ManualFileName(Path.Combine("img",Path.Combine("Morsematics","International_Morse_Code.svg")),VanillaRuleModifierAssembly.Properties.Resources.International_Morse_Code),
     };
     
-    //public TextAsset[] KeypadImages;
-
     private List<ManualFileName> KeypadFiles = new List<ManualFileName>
     {
         new ManualFileName(Path.Combine("img",Path.Combine("Round Keypad","1-copyright.png")),VanillaRuleModifierAssembly.Properties.Resources._1_copyright),
@@ -241,6 +159,7 @@ public class VanillaRuleModifer : MonoBehaviour
     // Use this for initialization
     void Start ()
 	{
+        //Unofficial bug fix for cutting the 5th Wire.
         WireSolutions.WireIndex4 = new Solution {Text = "cut the fifth wire", SolutionMethod = ((BombComponent comp, Dictionary<string, object> args) => 4)};
 
         DebugLog("Starting service");
@@ -258,7 +177,6 @@ public class VanillaRuleModifer : MonoBehaviour
 	    _gameInfo = GetComponent<KMGameInfo>();
 	    _gameInfo.OnStateChange += OnStateChange;
 	    StartCoroutine(ModifyVanillaRules());
-	    //_modSettings.ReadSettings();
 	}
 
     private RuleManager _ruleManager;
@@ -274,9 +192,6 @@ public class VanillaRuleModifer : MonoBehaviour
     {
         var vennpath = Path.Combine(path, Path.Combine("img", "Complicated Wires"));
         Directory.CreateDirectory(vennpath);
-        /*if (string.IsNullOrEmpty(CommonReflectedTypeInfo.VennDiagram) ||
-            string.IsNullOrEmpty(CommonReflectedTypeInfo.VennDiagramLegend))
-            return;*/
 
         List<string> lineTypes = new List<string>
         {
@@ -293,12 +208,6 @@ public class VanillaRuleModifer : MonoBehaviour
             "LED is on"
         };
 
-
-
-        /*rules = rules.Replace("[", "").Replace(" ", "").Replace("]", "").Replace("True", "T").Replace("False", "F");
-        rules = rules.Replace("Red:", "").Replace("Blue:", "").Replace("Symbol:", "").Replace("LED:", "");
-        rules = rules.Replace("DoNotCut", "D").Replace("CutIfTwoOrMoreBatteriesPresent", "B");
-        rules = rules.Replace("CutIfParallelPortPresent", "P").Replace("CutIfSerialEven", "S").Replace("Cut", "C");*/
         var ruleset = _ruleManager.VennWireRuleSet;
         var CutInstructionList = new List<CutInstruction>();
         CutInstructionList.Add(ruleset.RuleDict[new VennWireState(true, false, false, false)]);
@@ -499,8 +408,8 @@ public class VanillaRuleModifer : MonoBehaviour
     {
 
 
-        var whosonfirstrules = CommonReflectedTypeInfo.WhosOnFirstRules.Split(new [] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
-        var step1 = whosonfirstrules[1].Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+        //var whosonfirstrules = _ruleManager.WhosOnFirstRuleSet.ToString().Split(new [] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+        //var step1 = whosonfirstrules[1].Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
 
         var step1precedentlist = _ruleManager.WhosOnFirstRuleSet.displayWordToButtonIndexMap;
 
@@ -516,7 +425,7 @@ public class VanillaRuleModifer : MonoBehaviour
             {
                 //var word = step1[(i * 6) + j].Split(':')[0];
                 //var index = step1[(i * 6) + j].Split(':')[1];
-                var word = WhosOnFirstRuleSet.DisplayWords[i];
+                var word = WhosOnFirstRuleSet.DisplayWords[(i*6)+j];
                 var index = step1precedentlist[word].ToString();
 
                 replace += "                                    <td>\n";
@@ -655,6 +564,7 @@ public class VanillaRuleModifer : MonoBehaviour
                 }
                 wiresequencetable += "</td></tr>";
             }
+            wiresequencetable += "</table>\n";
         }
 
         replacements.Add(new ReplaceText { original = "WIRESEQUENCETABLES", replacement = wiresequencetable });

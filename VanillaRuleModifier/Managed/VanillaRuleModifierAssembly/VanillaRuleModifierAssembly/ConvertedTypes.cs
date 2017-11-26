@@ -36,23 +36,6 @@ public static class CommonReflectedTypeInfo
             return;
         }
 
-        KeypadRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.KeypadRuleSet");
-        if (KeypadRuleSetType != null)
-        {
-            KeypadRulesToStringMethod = KeypadRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        MazeType = ReflectionHelper.FindType("Maze");
-        if (MazeType != null)
-        {
-            MazeGenerateSVGMetohd = MazeType.GetMethod("ToSVG", BindingFlags.Public | BindingFlags.Instance);
-            MazeRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.MazeRuleSet");
-            if (MazeRuleSetType != null)
-            {
-                MazeRuleSetMazesField = MazeRuleSetType.GetField("mazes", BindingFlags.NonPublic | BindingFlags.Instance);
-            }
-        }
-
         VennWireRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.VennWireRuleSet");
         if (VennWireRuleSetType != null)
         {
@@ -76,54 +59,6 @@ public static class CommonReflectedTypeInfo
         {
             PasswordToStringMethod = PasswordRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
             PasswordPossibilitesField = PasswordRuleSetType.GetField("possibilities", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        WireRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.WireRuleSet");
-        if (WireRuleSetType != null)
-        {
-            WireRulesToStringMethod = WireRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        MemoryRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.MemoryRuleSet");
-        if (MemoryRuleSetType != null)
-        {
-            MemoryRulesToStringMethod = MemoryRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        WhosOnFirstRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.WhosOnFirstRuleSet");
-        if (WhosOnFirstRuleSetType != null)
-        {
-            WhosOnFirstRulesToStringMethod = WhosOnFirstRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        NeedyKnobRuleSetType = ReflectionHelper.FindType("NeedyKnobRuleSet");
-        if (NeedyKnobRuleSetType != null)
-        {
-            NeedyKnobRulesToStringMethod = NeedyKnobRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        ButtonRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.ButtonRuleSet");
-        if (ButtonRuleSetType != null)
-        {
-            ButtonRulesToStringMethod = ButtonRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        WireSequenceRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.WireSequenceRuleSet");
-        if (WireSequenceRuleSetType != null)
-        {
-            WireSequenceRulesToStringMethod = WireSequenceRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        MorseCodeRuleSetType = ReflectionHelper.FindType("Assets.Scripts.Rules.MorseCodeRuleSet");
-        if (MorseCodeRuleSetType != null)
-        {
-            MorseCodeRulesToStringMethod = MorseCodeRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        SimonRuleSetType = ReflectionHelper.FindType("SimonRuleSet");
-        if (SimonRuleSetType != null)
-        {
-            SimonRulesToStringMethod = SimonRuleSetType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance);
         }
 
     }
@@ -189,26 +124,7 @@ public static class CommonReflectedTypeInfo
             DebugLog("Exception: {0} - Stack Trace: {1}", ex.Message, ex.StackTrace);
             return;
         }
-        PasswordRules = (string) PasswordToStringMethod.Invoke(passwordRuleSet, new object[0]);
     }
-
-    public static string VennDiagram;
-    public static string VennDiagramLegend;
-
-    public static string KeypadRules;
-
-    public static string PasswordRules;
-
-    public static string[] Mazes = new string[9];
-
-    public static string WireRules;
-    public static string WhosOnFirstRules;
-    public static string MemoryRules;
-    public static string NeedyKnobRules;
-    public static string ButtonRules;
-    public static string WireSequenceRules;
-    public static string MorseCodeRules;
-    public static string SimonRules;
 
     private static void GenerateVennWireSVG(string rules)
     {
@@ -351,63 +267,11 @@ public static class CommonReflectedTypeInfo
         GenerateRulesMethod.Invoke(ruleManager, new object[] {seed});
         _previousSeeds.Add(seed);
 
-        //var vennruleset = RuleManagerVennWireRuleSet.GetValue(ruleManager, null);
-        //SetFirstVennWireCutInstruction(seed, vennruleset);
-        //GenerateVennWireSVG((string) VennWireToStringMethod.Invoke(vennruleset, new object[0]));
         SetFirstVennWireCutInstruction(seed, ruleManager.VennWireRuleSet);
         GenerateVennWireSVG(ruleManager.VennWireRuleSet.ToString());
 
-
-        var mazeruleset = RuleManagerMazeRuleSet.GetValue(ruleManager, null);
-        var mazelist = (IList) CommonReflectedTypeInfo.MazeRuleSetMazesField.GetValue(mazeruleset);
-        int i = 0;
-        foreach (var maze in mazelist)
-        {
-            Mazes[i++] = (string) (MazeGenerateSVGMetohd.Invoke(maze, new object[0]));
-        }
-
-        var keypadruleset = RuleManagerKeypadRuleSet.GetValue(ruleManager, null);
-        KeypadRules = (string) KeypadRulesToStringMethod.Invoke(keypadruleset, new object[0]);
-
         var passwordruleset = RuleManagerPasswordRuleSet.GetValue(ruleManager, null);
         GeneratePasswords(seed, passwordruleset);
-        //DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Password", PasswordRules);
-
-        var whosonfirstruleset = RuleManagerWhosOnFirstRuleSet.GetValue(ruleManager, null);
-        WhosOnFirstRules = (string)WhosOnFirstRulesToStringMethod.Invoke(whosonfirstruleset, new object[0]);
-        //DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Who's On First", WhosOnFirstRules);
-
-        var needyknobruleset = RuleManagerNeedyKnobRuleSet.GetValue(ruleManager, null);
-        NeedyKnobRules = (string)NeedyKnobRulesToStringMethod.Invoke(needyknobruleset, new object[0]);
-        //DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Needy Knob", NeedyKnobRules);
-
-        var simonruleset = RuleManagerSimonRuleSet.GetValue(ruleManager, null);
-        SimonRules = (string)SimonRulesToStringMethod.Invoke(simonruleset, new object[0]);
-        //DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Simon Says", SimonRules);
-
-        var wiresequenceruleset = RuleManagerWireSequenceRuleSet.GetValue(ruleManager, null);
-        WireSequenceRules = (string)WireSequenceRulesToStringMethod.Invoke(wiresequenceruleset, new object[0]);
-        //DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Wire Sequence", WireSequenceRules);
-
-        var morsecoderuleset = RuleManagerMorseCodeRuleSet.GetValue(ruleManager, null);
-        MorseCodeRules = (string)MorseCodeRulesToStringMethod.Invoke(morsecoderuleset, new object[0]);
-        //DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Morse Code", MorseCodeRules);
-
-        var wireruleset = RuleManagerWireRuleSet.GetValue(ruleManager, null);
-        WireRules = (string) WireRulesToStringMethod.Invoke(wireruleset, null);
-        //DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Wires", WireRules);
-
-        var memoryruleset = RuleManagerMemoryRuleSet.GetValue(ruleManager, null);
-        MemoryRules = (string) MemoryRulesToStringMethod.Invoke(memoryruleset, new object[0]);
-        //DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Memory", MemoryRules);
-
-        var buttonruleset = RuleManagerButtonRuleSet.GetValue(ruleManager, null);
-        ButtonRules = (string) ButtonRulesToStringMethod.Invoke(buttonruleset, new object[0]);
-        DebugLog("---{0} Rules---\n{1}\n---End of {0} Rules---\n", "Button", ButtonRules);
-
-        
-
-        
 
         DebugLog("Done Generating Rules for seed {0}", seed);
         return ruleManager;
@@ -595,155 +459,6 @@ public static class CommonReflectedTypeInfo
 
     #endregion
 
-    #region Keypad
-    public static Type KeypadRuleSetType
-    {
-        get;
-        private set;
-    }
 
-    public static MethodInfo KeypadRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
 
-    #region Maze
-    public static Type MazeRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static FieldInfo MazeRuleSetMazesField
-    {
-        get;
-        private set;
-    }
-
-    public static Type MazeType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo MazeGenerateSVGMetohd
-    {
-        get;
-        private set;
-    }
-    #endregion
-
-    #region Wire
-    public static Type WireRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo WireRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
-
-    #region WhosOnFirst
-    public static Type WhosOnFirstRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo WhosOnFirstRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
-
-    #region Memory
-    public static Type MemoryRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo MemoryRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
-
-    #region NeedyKnob
-    public static Type NeedyKnobRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo NeedyKnobRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
-
-    #region Button
-    public static Type ButtonRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo ButtonRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
-
-    #region WireSequence
-    public static Type WireSequenceRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo WireSequenceRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
-
-    #region MorseCode
-    public static Type MorseCodeRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo MorseCodeRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
-
-    #region Simon
-    public static Type SimonRuleSetType
-    {
-        get;
-        private set;
-    }
-
-    public static MethodInfo SimonRulesToStringMethod
-    {
-        get;
-        private set;
-    }
-    #endregion
 }
