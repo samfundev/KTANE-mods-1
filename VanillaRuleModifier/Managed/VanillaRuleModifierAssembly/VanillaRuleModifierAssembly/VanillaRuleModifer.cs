@@ -249,28 +249,10 @@ public class VanillaRuleModifer : MonoBehaviour
         {
             File.WriteAllText(Path.Combine(mazepath, $"maze{i}.svg"), mazes[i].ToSVG());
         }
-
-        /*
-        if (string.IsNullOrEmpty(CommonReflectedTypeInfo.Mazes[0]))
-            return;
-        for (int i = 0; i < 9; i++)
-        {
-            File.WriteAllText(Path.Combine(mazepath, string.Format("maze{0}.svg",i)), CommonReflectedTypeInfo.Mazes[i]);
-        }*/
     }
 
     private void WriteSimonSaysManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        //var simonrules = CommonReflectedTypeInfo.SimonRules.Replace("Strikes","").Replace("\n", "").Replace("0", "").Replace("1", "").Replace("2", "").Replace("HASHASVOWEL", "").Replace("OTHERWISE", "").Replace(":", "").Replace(" ", "").Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries);
-        /*string[] SimonReplacements = new[]
-        {
-            "HASVOWEL0RED","HASVOWEL0BLUE","HASVOWEL0GREEN","HASVOWEL0YELLOW",
-            "HASVOWEL1RED","HASVOWEL1BLUE","HASVOWEL1GREEN","HASVOWEL1YELLOW",
-            "HASVOWEL2RED","HASVOWEL2BLUE","HASVOWEL2GREEN","HASVOWEL2YELLOW",
-            "OTHERWISE0RED", "OTHERWISE0BLUE", "OTHERWISE0GREEN", "OTHERWISE0YELLOW",
-            "OTHERWISE1RED", "OTHERWISE1BLUE", "OTHERWISE1GREEN", "OTHERWISE1YELLOW",
-            "OTHERWISE2RED", "OTHERWISE2BLUE", "OTHERWISE2GREEN", "OTHERWISE2YELLOW",
-        };*/
         var rules = _ruleManager.SimonRuleSet.RuleList;
         foreach (var keyValuePair in rules)
         {
@@ -283,10 +265,6 @@ public class VanillaRuleModifer : MonoBehaviour
                 }
             }
         }
-
-
-        //for(int i = 0; i < simonrules.Length; i++)
-        //    replacements.Add(new ReplaceText() { original = SimonReplacements[i], replacement = simonrules[i]});
         file.WriteFile(path, replacements);
     }
 
@@ -296,37 +274,11 @@ public class VanillaRuleModifer : MonoBehaviour
         for(int i = 0; i < passwordrules.Count; i++)
             replacements.Add(new ReplaceText {original = string.Format("PASSWORD{0:00}", i), replacement = passwordrules[i]});
 
-        //var passwordrules = CommonReflectedTypeInfo.PasswordRules.Replace("Possibilities: ", "").Replace(" ", "").Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries);
-        //for(int i = 0; i < passwordrules.Length; i++)
-        //    replacements.Add(new ReplaceText {original = string.Format("PASSWORD{0:00}",i), replacement = passwordrules[i]});
         file.WriteFile(path, replacements);
     }
 
     private void WriteNeedyKnobManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        /*var knobrules = CommonReflectedTypeInfo.NeedyKnobRules.Replace(Environment.NewLine,"").Replace("Left", "\nLeft").Replace("Right", "\nRight").Replace("Up", "\nUp").Replace("Down", "\nDown").Replace("O"," ").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
-        var replacement = string.Empty;
-        foreach (var pos in knobrules)
-        {
-            var header = pos.Split(':')[0];
-            var leds = pos.Split(':')[1];
-
-            replacement += string.Format("                            <h4>{0}:</h4>\n", header);
-            for (int i = 0; i < 2; i++)
-            {
-                var led = leds.Substring(i * 12, 12);
-                replacement += "                            <table style=\"display: inline-table\">\n";
-                for (int j = 0; j < 2; j++)
-                {
-                    var half = led.Substring(j * 6, 6);
-                    replacement += "                                <tr>\n";
-                    foreach (char l in half)
-                        replacement += string.Format("                                <td>{0}</td>\n", l);
-                    replacement += "                                </tr>\n";
-                }
-                replacement += "                            </table>\n";
-            }
-        }*/
         var replacement = string.Empty;
         var currentDirection = string.Empty;
         foreach (var rule in _ruleManager.NeedyKnobRuleSet.Rules)
@@ -369,14 +321,8 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteKeypadsManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        //string ruleset = CommonReflectedTypeInfo.KeypadRules;
-        //if (string.IsNullOrEmpty(ruleset))
-        //    return;
         string table = string.Empty;
-
-        //string[] rules = ruleset.Replace(",", "").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
         var rules = _ruleManager.KeypadRuleSet.PrecedenceLists;
-
 
         for (int i = 0; i < rules[0].Count; i++)
         {
@@ -406,11 +352,6 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteWhosOnFirstManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-
-
-        //var whosonfirstrules = _ruleManager.WhosOnFirstRuleSet.ToString().Split(new [] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
-        //var step1 = whosonfirstrules[1].Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-
         var step1precedentlist = _ruleManager.WhosOnFirstRuleSet.displayWordToButtonIndexMap;
 
         var replace = string.Empty;
@@ -423,8 +364,6 @@ public class VanillaRuleModifer : MonoBehaviour
             }
             for (var j = 0; j < ((i == 4) ? 4 : 6); j++)
             {
-                //var word = step1[(i * 6) + j].Split(':')[0];
-                //var index = step1[(i * 6) + j].Split(':')[1];
                 var word = WhosOnFirstRuleSet.DisplayWords[(i*6)+j];
                 var index = step1precedentlist[word].ToString();
 
@@ -464,11 +403,9 @@ public class VanillaRuleModifer : MonoBehaviour
         {
             replace += "                                <tr>\n";
             replace += "                                    <th>";
-            //replace += map.Split(':')[0].Trim();
             replace += map.Key;
             replace += "</th>\n";
             replace += "                                    <td>";
-            //replace += map.Split(':')[1].Trim();
             replace += string.Join(", ", map.Value.ToArray());
             replace += "</td>";
             replace += "                                </tr>\n";
@@ -481,51 +418,6 @@ public class VanillaRuleModifer : MonoBehaviour
     private void WriteWireSequenceManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
         var wiresequencetable = string.Empty;
-
-        /*var sequences = CommonReflectedTypeInfo.WireSequenceRules.Replace(Environment.NewLine, "\n").Replace("BLACK Wires: ", "").Replace("BLUE Wires: ", "").Replace("RED Wires: ", "").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
-        var tablenames = new[] {"Black", "Blue", "Red"};
-        
-
-        for (var i = sequences.Length - 1; i >= 0; i--)
-        {
-            wiresequencetable += "                        <table class=\'";
-            wiresequencetable += tablenames[i].ToLowerInvariant();
-            wiresequencetable += "'>";
-
-            wiresequencetable += "<tr><th colspan=\'2\' class=\'header\'>";
-            wiresequencetable += tablenames[i];
-            wiresequencetable += " Wire Occurrences</th></tr>";
-
-            wiresequencetable += "<tr><th class=\'first-col\'>Wire Occurrence</th><th class=\'second-col\'>Cut if connected to:</th></tr>";
-
-            foreach (var wire in sequences[i].Trim().Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries))
-            {
-                if (wire.Contains('['))
-                {
-                    wiresequencetable += "<tr><td class=\'first-col\'>";
-                    wiresequencetable += wire.Split(':')[0].Trim();
-                    wiresequencetable += "&nbsp;";
-                    wiresequencetable += tablenames[i].ToLowerInvariant();
-                    wiresequencetable += " occurrence</td><td class=\'second-col\'>";
-                    wiresequencetable += wire.Split(':')[1].Replace("[", "").Replace("]", "");
-                    if (wire.Contains(']'))
-                    {
-                        wiresequencetable += "</td></tr>";
-                    }
-                    else
-                    {
-                        wiresequencetable += ",";
-                    }
-                }
-                else
-                {
-                    wiresequencetable += wire.Replace("]", "");
-                    wiresequencetable += "</td></tr>";
-                }
-            }
-            wiresequencetable += "</table>\n";
-        }*/
-
         var wireLetters = new[] {"A", "B", "C"};
         for (int i = WireSequenceRuleSetGenerator.NUM_COLOURS - 1; i >= 0 ; i--)
         {
@@ -575,17 +467,14 @@ public class VanillaRuleModifer : MonoBehaviour
     {
         var worddict = _ruleManager.MorseCodeRuleSet.WordDict;
         var validFreqs = _ruleManager.MorseCodeRuleSet.ValidFrequencies;
-        //var worddict = CommonReflectedTypeInfo.MorseCodeRules.Replace(": ", ":").Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries).Skip(1);
         var morsecodetable = string.Empty;
         foreach (var freq in validFreqs)
         {
             morsecodetable += "                        <tr>\n";
             morsecodetable += "                            <td>";
-            //morsecodetable += word.Split(':')[0];
             morsecodetable += worddict[freq];
             morsecodetable += "</td>\n";
             morsecodetable += "                            <td>3.";
-            //morsecodetable += word.Split(':')[1];
             morsecodetable += freq.ToString();
             morsecodetable += " MHz</td>\n";
             morsecodetable += "                        </tr>\n";
@@ -627,34 +516,6 @@ public class VanillaRuleModifer : MonoBehaviour
     {
         var wirecuttinginstructions = string.Empty;
         var wirerules = _ruleManager.WireRuleSet.RulesDictionary;
-
-        /*
-        var wirerules = CommonReflectedTypeInfo.WireRules.Split(new[] {"\n\n"}, StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (var rule in wirerules)
-        {
-            var instructions = rule.Split('\n');
-            wirecuttinginstructions += "                        <tr>";
-            wirecuttinginstructions += "<td><strong><em>";
-            wirecuttinginstructions += instructions[0];
-            wirecuttinginstructions += "</em></strong><br />";
-            wirecuttinginstructions += instructions[1];
-            for(var i = 2; i < instructions.Length; i++)
-            {
-                if (i == (instructions.Length - 2))
-                {
-                    //Remove redundant 2nd last instruction if last instruction cuts the exact same wire.
-                    if (instructions[i].EndsWith(instructions[instructions.Length - 1].Replace("Otherwise, ", "")))
-                        continue;
-                }
-                wirecuttinginstructions += "<br />";
-                if (instructions[i].StartsWith("If "))
-                    wirecuttinginstructions += instructions[i].Replace("If ", "Otherwise, if ");
-                else
-                    wirecuttinginstructions += instructions[i];
-            }
-            wirecuttinginstructions += "</tr>\n";
-        }*/
 
         foreach (var rules in wirerules)
         {
@@ -698,22 +559,6 @@ public class VanillaRuleModifer : MonoBehaviour
     private void WriteMemoryManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
         var memoryinstructions = string.Empty;
-        /*
-        var memoryrules = CommonReflectedTypeInfo.MemoryRules.Split(new[] { "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
-        
-        foreach (var stage in memoryrules)
-        {
-            var instructions = stage.Split('\n');
-            memoryinstructions += "                        <h4>";
-            memoryinstructions += instructions[0];
-            memoryinstructions += "</h4><p>";
-            foreach (var instruction in instructions.Skip(1))
-            {
-                memoryinstructions += instruction;
-                memoryinstructions += "<br />";
-            }
-            memoryinstructions += "</p>\n";
-        }*/
 
         foreach (var stage in _ruleManager.MemoryRuleSet.RulesDictionary)
         {
@@ -734,22 +579,14 @@ public class VanillaRuleModifer : MonoBehaviour
         var buttonrules = _ruleManager.ButtonRuleSet.ToString().Split(new[] {"\n\n"}, StringSplitOptions.RemoveEmptyEntries);
         var initial = string.Empty;
         var onhold = string.Empty;
-
-        var unconditionalBatteryTap = "If there is more than 1 battery on the bomb, press and immediately release the button.";
-        var unconditionalBatteryHold = "If there is more than 1 battery on the bomb, hold the button and refer to \"Releasing a Held Button\".";
-        bool unconditionalBattery = false;
-
+        
         foreach (var press in buttonrules[0].Split('\n').Skip(1))
         {
             //More than 2 batteries is redundant, if more than 1 batteries came first, with no other conditions attached.
-            if (press.Contains("more than 2 batteries") && unconditionalBattery)
-                continue;
 
             initial += "                        <li>";
             initial += press;
             initial += "</li>\n";
-
-            unconditionalBattery |= press.Equals(unconditionalBatteryTap) | press.Equals(unconditionalBatteryHold);
         }
 
         foreach (var hold in buttonrules[1].Split('\n').Skip(1))
@@ -850,6 +687,7 @@ public class VanillaRuleModifer : MonoBehaviour
         DebugLog("Going into loop to enforce the new seed");
         while (true)
         {
+            /*
             CommonReflectedTypeInfo.RuleManagerInstanceField.SetValue(null, null);
             yield return new WaitUntil(() => CommonReflectedTypeInfo.RuleManagerInstanceField.GetValue(null) != null);
 
@@ -860,7 +698,14 @@ public class VanillaRuleModifer : MonoBehaviour
             WriteManual(seed);
 
             yield return new WaitUntil(() => _currentState == KMGameInfo.State.PostGame || _currentState == KMGameInfo.State.Setup);
-            DebugLog("Resetting the Rule Generator");
+            DebugLog("Resetting the Rule Generator");*/
+            yield return new WaitUntil(() => _currentState == KMGameInfo.State.PostGame || _currentState == KMGameInfo.State.Setup);
+            yield return new WaitUntil(() => _currentState == KMGameInfo.State.Transitioning);
+            _modSettings.ReadSettings();
+            var seed = _modSettings.Settings.RuleSeed;
+            DebugLog("Generating Rules based on Seed {0}", seed);
+            _ruleManager = CommonReflectedTypeInfo.GenerateRules(seed);
+            WriteManual(seed);
         }
     }
 }
