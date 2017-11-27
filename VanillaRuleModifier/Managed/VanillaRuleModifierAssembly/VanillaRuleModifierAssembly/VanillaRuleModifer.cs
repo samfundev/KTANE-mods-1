@@ -176,15 +176,25 @@ public class VanillaRuleModifer : MonoBehaviour
 
 	    _gameInfo = GetComponent<KMGameInfo>();
 	    _gameInfo.OnStateChange += OnStateChange;
-	    StartCoroutine(ModifyVanillaRules());
+	    //StartCoroutine(ModifyVanillaRules());
 	}
 
     private RuleManager _ruleManager;
 
     private KMGameInfo.State _currentState = KMGameInfo.State.Unlock;
+    private KMGameInfo.State _prevState = KMGameInfo.State.Unlock;
     void OnStateChange(KMGameInfo.State state)
     {
-        DebugLog("Transitioning to {0}", state);
+        DebugLog("Transitioning from {1} to {0}", state, _currentState);
+        if((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && _currentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
+        {
+            _modSettings.ReadSettings();
+            var seed = _modSettings.Settings.RuleSeed;
+            DebugLog("Generating Rules based on Seed {0}", seed);
+            _ruleManager = CommonReflectedTypeInfo.GenerateRules(seed);
+            WriteManual(seed);
+        }
+        _prevState = _currentState;
         _currentState = state;
     }
 
@@ -454,6 +464,8 @@ public class VanillaRuleModifer : MonoBehaviour
                     else if (k < list.Count - 2 && list.Count > 2)
                         wiresequencetable += ", ";
                 }
+                if (list.Count == 0)
+                    wiresequencetable += "Never Cut";
                 wiresequencetable += "</td></tr>";
             }
             wiresequencetable += "</table>\n";
@@ -670,6 +682,8 @@ public class VanillaRuleModifer : MonoBehaviour
 
         List<ReplaceText> replacements = new List<ReplaceText>();
         replacements.Add(new ReplaceText { original = "VANILLAMODIFICATIONSEED", replacement = seed.ToString() });
+        replacements.Add(new ReplaceText() { original = "<span class=\"page-header-doc-title\">Keep Talking and Nobody Explodes v. 1</span>", replacement = $"<span class=\"page-header-doc-title\">Keep Talking and Nobody Explodes - Seed #{seed}</span>" });
+        replacements.Add(new ReplaceText {original = "<span class=\"page-header-doc-title\">Keep Talking and Nobody Explodes</span>", replacement = $"<span class=\"page-header-doc-title\">Keep Talking and Nobody Explodes - Seed #{seed}</span>" });
         foreach (var manual in ManualFileNames)
         {
             WriteHTML(path, manual, ref replacements);
@@ -700,12 +714,7 @@ public class VanillaRuleModifer : MonoBehaviour
             yield return new WaitUntil(() => _currentState == KMGameInfo.State.PostGame || _currentState == KMGameInfo.State.Setup);
             DebugLog("Resetting the Rule Generator");*/
             yield return new WaitUntil(() => _currentState == KMGameInfo.State.PostGame || _currentState == KMGameInfo.State.Setup);
-            yield return new WaitUntil(() => _currentState == KMGameInfo.State.Transitioning);
-            _modSettings.ReadSettings();
-            var seed = _modSettings.Settings.RuleSeed;
-            DebugLog("Generating Rules based on Seed {0}", seed);
-            _ruleManager = CommonReflectedTypeInfo.GenerateRules(seed);
-            WriteManual(seed);
+            yield return new WaitUntil(() => _currentState == KMGameInfo.State.Transitioning && _prevState == KMGameInfo.State.Transitioning);
         }
     }
 }
