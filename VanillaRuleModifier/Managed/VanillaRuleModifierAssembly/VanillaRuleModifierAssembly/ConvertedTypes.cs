@@ -254,6 +254,8 @@ public static class CommonReflectedTypeInfo
         }
 
         DebugLog("Generating Rules for seed {0}", seed);
+        var previousLabels = IndicatorWidget.Labels;
+        IndicatorWidget.Labels = IndicatorLabels;
         GenerateRulesMethod.Invoke(ruleManager, new object[] {seed});
 
         //Run custom rule generators after the official ones have done their thing.
@@ -270,6 +272,7 @@ public static class CommonReflectedTypeInfo
         DebugLog("Done Generating Rules for seed {0}", seed);
         Seed = seed;
         SeedProperty.SetValue(ruleManager, RuleManager.DEFAULT_SEED, null);
+        IndicatorLabels = previousLabels;
         return ruleManager;
     }
 
@@ -280,8 +283,23 @@ public static class CommonReflectedTypeInfo
 
     public static int Seed { get; private set; }
 
+    public static List<string> IndicatorLabels = new List<string>
+    {
+        "SND",
+        "CLR",
+        "CAR",
+        "IND",
+        "FRQ",
+        "SIG",
+        "NSA",
+        "MSA",
+        "TRN",
+        "BOB",
+        "FRK"
+    };
+
     #region RuleManager
-    
+
 
     public static Type RuleManagerType
     {
