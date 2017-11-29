@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts.Rules;
 using BombGame;
 using UnityEngine;
@@ -10,15 +11,16 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
     {
         protected void RemoveRedundantRules()
         {
-            if (Seed == 1 || Seed == 2)
+            if (CommonReflectedTypeInfo.IsVanillaSeed)
                 return;
 
             var remainder = RuleSet.RuleList;
-            remainder[remainder.Count - 2].Solution = ButtonSolutions.Press;
+            if (remainder[remainder.Count - 2].Solution == ButtonSolutions.Hold)
+                remainder[remainder.Count - 2].Solution = SelectSolution(CreateSolutionsList(false));
 
             var twobattery = -1;
             var onebattery = -1;
-            var solution = String.Empty;
+            var solution = string.Empty;
             var samesolution = true;
 
             for (var i = remainder.Count - 1; i >= 0; i--)
@@ -104,7 +106,6 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         public ButtonRuleSet GenerateButtonRules(int seed)
         {
-            Seed = seed;
             RuleSet = (ButtonRuleSet)GenerateRuleSet(seed);
             RemoveRedundantRules();
             return RuleSet;
@@ -236,7 +237,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 };
                 SecondaryQueryList.Add(item5);
             }
-            if (Seed > 2)
+            if (CommonReflectedTypeInfo.IsModdedSeed)
             {
                 var list = new List<QueryableProperty>(QueryablePorts.PortList);
                 for (var i = 0; i < 3; i++)
@@ -281,9 +282,19 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             return rule;
         }
 
-        protected List<Solution> CreateSolutionsList()
+        protected List<Solution> CreateSolutionsList(bool holdAllowed = true)
         {
             var list = new List<Solution> {ButtonSolutions.Hold, ButtonSolutions.Press};
+            if (!holdAllowed)
+                list.Remove(ButtonSolutions.Hold);
+            if (CommonReflectedTypeInfo.IsModdedSeed)
+            {
+                list.Add(TapWhenSecondsMatch);
+                if (!solutionWeights.ContainsKey(TapWhenSecondsMatch))
+                {
+                    solutionWeights.Add(TapWhenSecondsMatch, 0.05f);
+                }
+            }
             if (!solutionWeights.ContainsKey(ButtonSolutions.Press))
             {
                 solutionWeights.Add(ButtonSolutions.Press, 0.1f);
@@ -308,7 +319,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 ButtonSolutions.ReleaseOnTimerText("3"),
                 ButtonSolutions.ReleaseOnTimerText("4")
             };
-            if (Seed > 2)
+            if (CommonReflectedTypeInfo.IsModdedSeed)
             {
                 list.AddRange(new []
                 {
@@ -318,6 +329,17 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     ButtonSolutions.ReleaseOnTimerText("9"),
                     ButtonSolutions.ReleaseOnTimerText("0")
                 });
+                for (var i = 0; i < 10; i++)
+                {
+                    list.Add(ReleaseWhenLeastSignificantSecondIs(i));
+                }
+                list.Add(ReleaseAtAnyTime);
+                list.Add(ReleaseOneSecondAfterSecondsAddToMultipleOfFour);
+                list.Add(ReleaseWhenSecondsDigitsAddsToFive);
+                list.Add(ReleaseWhenSecondsDigitsAddsToSeven);
+                list.Add(ReleaseWhenSecondsDigitsAddsToThreeOrThirteen);
+                list.Add(ReleaseWhenSecondsIsMultipleOfSeven);
+                list.Add(ReleaseWhenSecondsPrimeOrZero);
             }
             foreach (var key in list)
             {
@@ -344,7 +366,110 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             "FRK"
         };
 
-        protected int Seed;
+        protected static Solution ReleaseWhenSecondsDigitsAddsToSeven = new Solution
+        {
+            Text = "release when the two seconds digits add up to 7",
+            SolutionMethod = delegate(BombComponent comp, Dictionary<string, object> args)
+            {
+                var time = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
+                time = (time / 10) + (time % 10);
+                if (time > 10) time -= 10;
+                return time == 7 ? 0 : 1;
+            }
+        };
+
+        protected static Solution ReleaseWhenSecondsDigitsAddsToThreeOrThirteen = new Solution
+        {
+            Text = "release when the two seconds digits add up to 3 or 13",
+            SolutionMethod = delegate(BombComponent comp, Dictionary<string, object> args)
+            {
+                var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
+                time = (time / 10) + (time % 10);
+                if (time > 10) time -= 10;
+                return time == 3 ? 0 : 1;
+            }
+        };
+
+        protected static Solution ReleaseWhenSecondsDigitsAddsToFive = new Solution
+        {
+            Text = "release when the two seconds digits add up to 5",
+            SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
+            {
+                var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
+                time = (time / 10) + (time % 10);
+                if (time > 10) time -= 10;
+                return time == 5 ? 0 : 1;
+            }
+        };
+
+        protected static Solution ReleaseWhenSecondsIsMultipleOfSeven = new Solution
+        {
+            Text = "release when the number of seconds remaining is a multiple of 7",
+            SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
+            {
+                var time = (int)comp.Bomb.GetTimer().TimeRemaining;
+                return (time % 7) == 0 ? 0 : 1;
+            }
+        };
+
+        protected static Solution ReleaseWhenSecondsPrimeOrZero = new Solution
+        {
+            Text = "release when the number of seconds displayed is either prime or 0",
+            SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
+            {
+                var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
+                var valid = new[] {0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59};
+                return valid.Contains(time) ? 0 : 1;
+            }
+        };
+
+        protected static Solution ReleaseOneSecondAfterSecondsAddToMultipleOfFour = new Solution
+        {
+            Text = "release one second after the two seconds digits add up to a multiple of 4",
+            SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
+            {
+                var time = (int)comp.Bomb.GetTimer().TimeRemaining;
+                time++;
+                time %= 60;
+                time = (time / 10) + (time % 10);
+                return (time % 4) == 0 ? 0 : 1;
+            }
+        };
+
+        protected static Solution ReleaseWhenLeastSignificantSecondIs(int seconds)
+        {
+            seconds %= 10;
+            return new Solution
+            {
+                Text = $"release when right most seconds digit is {seconds}",
+                SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
+                {
+                    var time = (int)comp.Bomb.GetTimer().TimeRemaining % 10;
+                    return time == seconds ? 0 : 1;
+                }
+            };
+        }
+
+        protected static Solution ReleaseAtAnyTime = new Solution
+        {
+            Text = "release at any time",
+            SolutionMethod = (BombComponent comp, Dictionary<string, object> args) => 0
+        };
+
+        protected static Solution TapWhenSecondsMatch = new Solution()
+        {
+            Text = "press and immediately release when the two seconds digits on the timer match",
+            SolutionMethod = delegate(BombComponent comp, Dictionary<string, object> args)
+            {
+                var buttonComponent = comp as ButtonComponent;
+                // ReSharper disable once PossibleNullReferenceException
+                if (buttonComponent.IsHolding)
+                    return 1;
+                var seconds = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
+                return (seconds % 11) == 0 ? 0 : 1;
+            }
+        };
+
         protected List<Query> PrimaryQueryList;
         protected List<Query> SecondaryQueryList;
         protected List<Query> IndicatorColorQueryList;
