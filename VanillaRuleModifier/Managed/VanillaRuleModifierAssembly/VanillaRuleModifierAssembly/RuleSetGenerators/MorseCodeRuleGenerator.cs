@@ -23,7 +23,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             var dictionary = new Dictionary<int, string>();
             var list = new List<int>(PossibleFrequencies);
             var list2 = new List<string>(PossibleWords);
-            if (Seed > 2)
+            if (CommonReflectedTypeInfo.IsModdedSeed)
             {
                 list2.AddRange(PasswordRuleGenerator.Possibilities);
                 list2.AddRange(ExtendedWords);
@@ -45,12 +45,9 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         public MorseCodeRuleSet GenerateMorseCodeRuleSet(int seed)
         {
-            Seed = seed;
             return (MorseCodeRuleSet) GenerateRuleSet(seed);
         }
 
-
-        protected int Seed;
         protected static readonly int NumFrequenciesUsed = 16;
         protected List<int> PossibleFrequencies = new List<int>
         {

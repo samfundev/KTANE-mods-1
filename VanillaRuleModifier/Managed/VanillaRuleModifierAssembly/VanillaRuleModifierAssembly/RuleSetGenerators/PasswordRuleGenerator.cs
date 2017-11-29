@@ -14,7 +14,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
         public PasswordRuleSet GeneratePasswordRules(int seed)
         {
             var ruleset = (PasswordRuleSet) GenerateRuleSet(seed);
-            if (seed > 2)
+            if (CommonReflectedTypeInfo.IsModdedSeed)
                 ruleset.possibilities = Possibilities.Distinct().OrderBy(x => rand.Next()).Take(35).OrderBy(x => x).ToList();
             return ruleset;
         }

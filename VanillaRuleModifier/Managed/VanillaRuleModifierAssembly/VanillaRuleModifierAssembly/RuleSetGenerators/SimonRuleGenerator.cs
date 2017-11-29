@@ -28,7 +28,6 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         public SimonRuleSet GenerateSimonRuleSet(int seed)
         {
-            _seed = seed;
             return (SimonRuleSet)GenerateRuleSet(seed);
         }
 
@@ -43,7 +42,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 {
                     array[j] = (SimonColor)rand.Next(Enum.GetNames(typeof(SimonColor)).Length);
                 }
-                if (_seed > 2)
+                if (CommonReflectedTypeInfo.IsModdedSeed)
                 {
                     while (array.Distinct().Count() == 1)
                     {
@@ -102,6 +101,5 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             });
         }
         private const int MaxStrikes = 2;
-        private int _seed;
     }
 }
