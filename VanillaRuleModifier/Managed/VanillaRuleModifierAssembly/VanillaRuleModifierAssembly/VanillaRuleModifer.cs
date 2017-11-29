@@ -177,20 +177,32 @@ public class VanillaRuleModifer : MonoBehaviour
                     morseDictionary.Remove('y');
                 typeof(MorseCodeComponent).GetMethod("AddCharacterSignal", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, new object[] { 'y', "-.--" });
             }
+            DebugLog("Fix applied to MorseCode Successfully");
         }
         catch (Exception ex)
         {
             DebugLog("Failed to fix MorseCodeComponet letter typo due to an Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
         }
 
-        DebugLog("Applying Fix to Wires");
-        WireSolutions.WireIndex4 = new Solution { Text = "cut the fifth wire", SolutionMethod = ((BombComponent comp, Dictionary<string, object> args) => 4) };
+        try
+        {
+            DebugLog("Applying Fix to Wires");
+            WireSolutions.WireIndex4 = new Solution {Text = "cut the fifth wire", SolutionMethod = ((BombComponent comp, Dictionary<string, object> args) => 4)};
+            DebugLog("Fix applied to Wires Successfully");
+        }
+        catch (Exception ex)
+        {
+            DebugLog("Failed to fix Fifth wire index typo due to an Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
+        }
         FixesApplied = true;
     }
 
+    private bool _started = false;
     private void Start ()
-	{
+    {
+        _started = true;
 	    DebugLog("Starting service");
+	    ApplyBugFixes();
         //DestroyImmediate(GetComponent<KMService>()); //Hide from Mod Selector
         _modSettings = new Settings(GetComponent<KMModSettings>());
 
@@ -215,13 +227,13 @@ public class VanillaRuleModifer : MonoBehaviour
     private void OnDestroy()
     {
         OnDisable();
+        _started = false;
     }
 
     private void OnEnable()
     {
-        if (_enabled) return;
+        if (!_started || _enabled) return;
         DebugLog("Enabling Service");
-        ApplyBugFixes();
         _gameInfo.OnStateChange += OnStateChange;
         _enabled = true;
         _currentState = KMGameInfo.State.Setup;
