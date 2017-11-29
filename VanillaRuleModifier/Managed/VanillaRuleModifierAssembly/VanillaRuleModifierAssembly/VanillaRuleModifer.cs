@@ -161,35 +161,38 @@ public class VanillaRuleModifer : MonoBehaviour
     // Use this for initialization
     // ReSharper disable once UnusedMember.Local
     private static bool FixesApplied = false;
+
+    private void ApplyBugFixes()
+    {
+        if (FixesApplied) return;
+
+        try
+        {
+            DebugLog("Applying fix to MorseCode");
+            typeof(MorseCodeComponent).GetMethod("CreateSignalDictionary", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
+            var morseDictionary = (IDictionary)typeof(MorseCodeComponent).GetField("signalDict", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
+            if (morseDictionary != null)
+            {
+                if (morseDictionary.Contains('y'))
+                    morseDictionary.Remove('y');
+                typeof(MorseCodeComponent).GetMethod("AddCharacterSignal", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, new object[] { 'y', "-.--" });
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugLog("Failed to fix MorseCodeComponet letter typo due to an Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
+        }
+
+        DebugLog("Applying Fix to Wires");
+        WireSolutions.WireIndex4 = new Solution { Text = "cut the fifth wire", SolutionMethod = ((BombComponent comp, Dictionary<string, object> args) => 4) };
+        FixesApplied = true;
+    }
+
     private void Start ()
 	{
 	    DebugLog("Starting service");
         //DestroyImmediate(GetComponent<KMService>()); //Hide from Mod Selector
         _modSettings = new Settings(GetComponent<KMModSettings>());
-	    if (!FixesApplied)
-	    {
-	        try
-	        {
-	            DebugLog("Applying fix to MorseCode");
-	            typeof(MorseCodeComponent).GetMethod("CreateSignalDictionary", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
-	            var morseDictionary = (IDictionary) typeof(MorseCodeComponent).GetField("signalDict", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
-	            if (morseDictionary != null)
-	            {
-	                if (morseDictionary.Contains('y'))
-	                    morseDictionary.Remove('y');
-	                typeof(MorseCodeComponent).GetMethod("AddCharacterSignal", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, new object[] {'y', "-.--"});
-	            }
-	        }
-	        catch (Exception ex)
-	        {
-	            DebugLog("Failed to fix MorseCodeComponet letter typo due to an Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
-	        }
-
-	        DebugLog("Applying Fix to Wires");
-	        WireSolutions.WireIndex4 = new Solution {Text = "cut the fifth wire", SolutionMethod = ((BombComponent comp, Dictionary<string, object> args) => 4)};
-	        FixesApplied = true;
-	    }
-
 
 	    if (!CommonReflectedTypeInfo.Initialize())
 	    {
@@ -203,17 +206,35 @@ public class VanillaRuleModifer : MonoBehaviour
 	    }
 
 	    _gameInfo = GetComponent<KMGameInfo>();
-	    _gameInfo.OnStateChange += OnStateChange;
+	    OnEnable();
 	    DebugLog("Service started");
     }
 
+    private bool _enabled;
     // ReSharper disable once UnusedMember.Local
     private void OnDestroy()
     {
-        DebugLog("Cleaning up");
+        OnDisable();
+    }
+
+    private void OnEnable()
+    {
+        if (_enabled) return;
+        DebugLog("Enabling Service");
+        ApplyBugFixes();
+        _gameInfo.OnStateChange += OnStateChange;
+        _enabled = true;
+        _currentState = KMGameInfo.State.Setup;
+        _prevState = KMGameInfo.State.Setup;
+    }
+
+    private void OnDisable()
+    {
+        if (!_enabled) return;
+        DebugLog("Disabling Service");
+        CommonReflectedTypeInfo.UnloadRuleManager();
         _gameInfo.OnStateChange -= OnStateChange;
-        RuleManager.Instance.GenerateBombRules(RuleManager.DEFAULT_SEED + 1);
-        DebugLog("Vanilla Rule Modifier unloaded");
+        _enabled = false;
     }
 
     private RuleManager _ruleManager;

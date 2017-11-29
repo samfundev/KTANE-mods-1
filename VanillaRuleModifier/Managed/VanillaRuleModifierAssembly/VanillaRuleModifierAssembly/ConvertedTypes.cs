@@ -122,6 +122,12 @@ namespace VanillaRuleModifierAssembly
             return ruleManager;
         }
 
+        public static void UnloadRuleManager()
+        {
+            SeedProperty.SetValue(RuleManager.Instance, int.MinValue, null);
+            Seed = int.MinValue;
+        }
+
 
         public static bool IsRulesReady()
         {
