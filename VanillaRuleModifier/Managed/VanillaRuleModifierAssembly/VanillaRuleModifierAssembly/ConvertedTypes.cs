@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using Assets.Scripts.Manual;
 using Assets.Scripts.Rules;
-using BombGame;
 using UnityEngine;
 using VanillaRuleModifierAssembly.RuleSetGenerators;
 
@@ -48,31 +46,6 @@ namespace VanillaRuleModifierAssembly
             return RuleManagerType != null;
         }
 
-        public static void SimonTwoDistinct(int seed, RuleManager ruleManager)
-        {
-            if (seed == 1 || seed == 2)
-                return;
-            var fieldInfo = ruleManager.GetType().GetField("simonRuleSetGenerator", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (fieldInfo == null) return;
-            var simonrulesetgenerator = fieldInfo.GetValue(ruleManager);
-            var field = simonrulesetgenerator.GetType().GetField("rand", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null) return;
-            var rng = (System.Random) field.GetValue(simonrulesetgenerator);
-            var vowel = ruleManager.SimonRuleSet.RuleList[SimonRuleSet.HAS_VOWEL_STRING];
-            var otherwise = ruleManager.SimonRuleSet.RuleList[SimonRuleSet.OTHERWISE_STRING];
-            for (var i = 0; i < 3; i++)
-            {
-                if (vowel[i].Distinct().Count() == 1)
-                {
-                    vowel[i][rng.Next(4)] = (SimonColor) rng.Next(4);
-                }
-                if (otherwise[i].Distinct().Count() == 1)
-                {
-                    otherwise[i][rng.Next(4)] = (SimonColor)rng.Next(4);
-                }
-            }
-        }
-
         private static BombRules Initialize(int seed)
         {
             DebugLog("Generating Rules for seed {0}", seed);
@@ -110,14 +83,15 @@ namespace VanillaRuleModifierAssembly
         {
             var ruleManager = RuleManager.Instance;
 
-            if (seed == Seed)
+            if (seed == Seed && !_forceRegnerate)
             {
                 DebugLog("Rule Manager already initialized with seed {0}. Skipping initialization.", seed);
                 return ruleManager;
             }
+            _forceRegnerate = false;
             Seed = seed;
 
-            CurrentRulesProperty.SetValue(ruleManager, Initialize(seed), null);
+            CurrentRulesProperty.SetValue(ruleManager, Initialize(seed == int.MinValue ? 0 : seed), null);
             SeedProperty.SetValue(ruleManager, RuleManager.DEFAULT_SEED, null);
             return ruleManager;
         }
@@ -125,9 +99,11 @@ namespace VanillaRuleModifierAssembly
         public static void UnloadRuleManager()
         {
             SeedProperty.SetValue(RuleManager.Instance, int.MinValue, null);
-            Seed = int.MinValue;
+            _forceRegnerate = true;
         }
 
+        public static bool IsVanillaSeed => (Seed == 1 || Seed == 2 || Seed < -2);
+        public static bool IsModdedSeed => !IsVanillaSeed;
 
         public static bool IsRulesReady()
         {
@@ -135,6 +111,7 @@ namespace VanillaRuleModifierAssembly
         }
 
         public static int Seed { get; private set; }
+        private static bool _forceRegnerate = true;
 
         #region RuleManager
 
