@@ -679,26 +679,30 @@ public class VanillaRuleModifer : MonoBehaviour
 
     private void WriteButtonManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
     {
-        var buttonrules = _ruleManager.ButtonRuleSet.ToString().Split(new[] {"\n\n"}, StringSplitOptions.RemoveEmptyEntries);
         var initial = string.Empty;
         var onhold = string.Empty;
-        
-        foreach (var press in buttonrules[0].Split('\n').Skip(1))
+        var portsused = false;
+
+        foreach (var press in _ruleManager.ButtonRuleSet.RuleList)
         {
             initial += "                        <li>";
-            initial += press;
+            initial += $"If {press.GetQueryString()}, {press.GetSolutionString()}.";
             initial += "</li>\n";
+            foreach (var query in press.Queries)
+            {
+                portsused |= query.Property == QueryablePorts.EmptyPortPlate;
+                portsused |= QueryablePorts.PortList.Contains(query.Property);
+            }
         }
 
-        foreach (var hold in buttonrules[1].Split('\n').Skip(1))
+        foreach (var hold in _ruleManager.ButtonRuleSet.HoldRuleList)
         {
-            if (!hold.Contains(':'))
-                continue;
             onhold += "                        <li><em>";
-            onhold += hold.Replace(":", "</em>:").Replace("..",".");
+            onhold += $"{hold.GetQueryString()}</em> {hold.GetSolutionString()}";
             onhold += "</li>\n";
         }
 
+        replacements.Add(new ReplaceText { Original = "APPENDIXCREFERENCE", Replacement = portsused ? "<br />See Appendix C for port identification reference." : "" });
         replacements.Add(new ReplaceText { Original = "INITIALBUTTONRULES", Replacement = initial });
         replacements.Add(new ReplaceText { Original = "ONBUTTONHOLDRULES", Replacement = onhold });
         file.WriteFile(path, replacements);
