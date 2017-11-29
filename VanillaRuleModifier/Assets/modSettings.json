@@ -5,6 +5,9 @@
   "ResetToDefault": false,
   "HowToReset": "Changing this setting to true will reset ALL your setting back to default.",
 
-  "AlarmClockBuzzerTime": 60.0,
-  "HowToUse1": "Sets the number of seconds the Alarm clock will buzz for."
+  "RuleSeed": 6502,
+  "HowToUse1": "Sets the seed that will be used to generate the ruleset.",
+  "HowToUse2": "1 = Vanilla",
+  "HowToUse3": "2 = LtHummus Hack",
+  "HowToUse4": "6502 = VanillaRuleModifier Default Seed"
 }

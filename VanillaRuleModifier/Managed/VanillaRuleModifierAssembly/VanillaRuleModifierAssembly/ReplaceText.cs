@@ -1,5 +1,9 @@
-public class ReplaceText
-{
-    public string original;
-    public string replacement;
-}
+
+    namespace VanillaRuleModifierAssembly
+    {
+        public class ReplaceText
+        {
+            public string Original;
+            public string Replacement;
+        }
+    }
