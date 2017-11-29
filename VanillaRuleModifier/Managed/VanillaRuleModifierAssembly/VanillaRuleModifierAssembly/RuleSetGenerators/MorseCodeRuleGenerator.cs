@@ -77,7 +77,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             "strike", "tango", "timer", "penguin", "elias", "manual", "zulu",
             "november", "kaboom", "unicorn", "quebec", "bashly", "slick", "victor",
             "timwi", "kitty", "bitstim", "market", "oxtrot", "foxtrot","hexicube",
-            "lthummus","caitsith","samfun","rexkix"
+            "lthummus","caitsith2","samfun","rexkix"
         };
     }
 }

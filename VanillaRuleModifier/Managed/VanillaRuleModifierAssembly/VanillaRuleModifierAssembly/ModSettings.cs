@@ -24,7 +24,8 @@ namespace VanillaRuleModifierAssembly
         public string HowToUse1 = "Sets the seed that will be used to generate the ruleset.";
         public string HowToUse2 = "1 = Vanilla";
         public string HowToUse3 = "2 = LtHummus Hack";
-        public string HowToUse4 = DefaultSeed + " = VanillaRuleModifier Default Seed";
+        public string HowToUse4 = "666 = All hail the maker of this mod.";
+        public string HowToUse5 = DefaultSeed + " = VanillaRuleModifier Default Seed";        
     }
 
     public class ModSettings
