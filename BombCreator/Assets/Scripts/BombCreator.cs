@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 public class BombCreator : MonoBehaviour
 {
     public TextMesh TimeText;
@@ -13,10 +14,6 @@ public class BombCreator : MonoBehaviour
     public TextMesh ModulesText;
     public KMSelectable ModulesMinusButton;
     public KMSelectable ModulesPlusButton;
-
-    public TextMesh BombsText;
-    public KMSelectable BombsMinusButton;
-    public KMSelectable BombsPlusButton;
 
     public TextMesh StrikesText;
     public KMSelectable StrikesMinusButton;
@@ -43,57 +40,57 @@ public class BombCreator : MonoBehaviour
     public TextMesh FrontFaceText;
     public KMSelectable FrontFaceButton;
 
+    public TextMesh BombsText;
+    public KMSelectable BombsMinusButton;
+    public KMSelectable BombsPlusButton;
+
+    public TextMesh DuplicateText;
+    public KMSelectable DuplicateButton;
+
+    public KMSelectable ResetButton;
     public KMSelectable StartButton;
-    List<KMGameInfo.KMModuleInfo> vanillaModules;
+    public KMSelectable SaveButton;
+    private List<KMGameInfo.KMModuleInfo> _vanillaModules;
 
     public KMAudio Audio;
 
-    int maxModules = 11;
-    int maxFrontFace = 5;
+    private int _maxModules = 11;
+    private int _maxFrontFace = 5;
 
-    private ModSettings settings = new ModSettings("BombCreator");
+    private readonly ModSettings _modSettings = new ModSettings("BombCreator");
+    private ModuleSettings Settings { get { return _modSettings.Settings; } }
 
-    void Start()
+    private void Start()
     {
-        settings.ReadSettings();
+        _modSettings.ReadSettings();
 
-        vanillaModules = GetComponent<KMGameInfo>().GetAvailableModuleInfo().Where(x => !x.IsMod).ToList();
-        maxModules = GetComponent<KMGameInfo>().GetMaximumBombModules();
-        maxFrontFace = CommonReflectedTypeInfo.GetMaximumFrontFace();
-        if (maxFrontFace < 0)
-            maxFrontFace = (maxModules / 2);
+        _vanillaModules = GetComponent<KMGameInfo>().GetAvailableModuleInfo().Where(x => !x.IsMod).ToList();
+        _maxModules = GetComponent<KMGameInfo>().GetMaximumBombModules();
+        _maxFrontFace = CommonReflectedTypeInfo.GetMaximumFrontFace();
+        if (_maxFrontFace < 0)
+            _maxFrontFace = (_maxModules / 2);
 
         
-        settings.Settings.modules = Mathf.Clamp(settings.Settings.modules, 1, settings.Settings.FrontFaceOnly ? maxFrontFace : maxModules);
-        if (vanillaModules == null)
+        Settings.Modules = Mathf.Clamp(Settings.Modules, 1, Settings.FrontFaceOnly ? _maxFrontFace : _maxModules);
+        if (_vanillaModules == null)
         {
-            vanillaModules = CreateTempModules();
+            _vanillaModules = CreateTempModules();
         }
 
         UpdateDisplay();
         ChangeModuleDisableIndex(0);
 
-        TimeMinusButton.OnInteract += delegate () { StartCoroutine(AddTimer(-30)); return false; };
-        TimePlusButton.OnInteract += delegate () { StartCoroutine(AddTimer(30)); return false; };
-        ModulesMinusButton.OnInteract += delegate () { StartCoroutine(AddModules(-1)); return false; };
-        ModulesPlusButton.OnInteract += delegate () { StartCoroutine(AddModules(1)); return false; };
-        WidgetsMinusButton.OnInteract += delegate () {  StartCoroutine(AddWidgets(-1)); return false; };
-        WidgetsPlusButton.OnInteract += delegate () {  StartCoroutine(AddWidgets(1)); return false; };
-        BombsMinusButton.OnInteract += delegate () { StartCoroutine(AddBombs(-1)); return false; };
-        BombsPlusButton.OnInteract += delegate () { StartCoroutine(AddBombs(1)); return false; };
-        StrikesMinusButton.OnInteract += delegate () {  StartCoroutine(AddStrikes(-1)); return false; };
-        StrikesPlusButton.OnInteract += delegate () { StartCoroutine(AddStrikes(1)); return false; };
+        TimeMinusButton.OnInteract += delegate { StartCoroutine(AddTimer(-30)); return false; };
+        TimePlusButton.OnInteract += delegate { StartCoroutine(AddTimer(30)); return false; };
 
-        TimeMinusButton.OnInteractEnded += StopAllCoroutines;
-        TimePlusButton.OnInteractEnded += StopAllCoroutines;
-        ModulesMinusButton.OnInteractEnded += StopAllCoroutines;
-        ModulesPlusButton.OnInteractEnded += StopAllCoroutines;
-        WidgetsMinusButton.OnInteractEnded += StopAllCoroutines;
-        WidgetsPlusButton.OnInteractEnded += StopAllCoroutines;
-        BombsMinusButton.OnInteractEnded += StopAllCoroutines;
-        BombsPlusButton.OnInteractEnded += StopAllCoroutines;
-        StrikesMinusButton.OnInteractEnded += StopAllCoroutines;
-        StrikesPlusButton.OnInteractEnded += StopAllCoroutines;
+        ModulesMinusButton.OnInteract += delegate { StartCoroutine(AddModules(-1)); return false; };
+        ModulesPlusButton.OnInteract += delegate { StartCoroutine(AddModules(1)); return false; };
+
+        WidgetsMinusButton.OnInteract += delegate {  StartCoroutine(AddWidgets(-1)); return false; };
+        WidgetsPlusButton.OnInteract += delegate {  StartCoroutine(AddWidgets(1)); return false; };
+
+        StrikesMinusButton.OnInteract += delegate {  StartCoroutine(AddStrikes(-1)); return false; };
+        StrikesPlusButton.OnInteract += delegate { StartCoroutine(AddStrikes(1)); return false; };
 
         ModuleDisableMinusButton.OnInteract += () => ChangeModuleDisableIndex(-1);
         ModuleDisablePlusButton.OnInteract += () => ChangeModuleDisableIndex(1);
@@ -105,121 +102,257 @@ public class BombCreator : MonoBehaviour
         PacingEventsButton.OnInteract += ChangePacingEvent;
         FrontFaceButton.OnInteract += ChangeFrontFace;
 
+        BombsMinusButton.OnInteract += delegate { StartCoroutine(AddBombs(-1)); return false; };
+        BombsPlusButton.OnInteract += delegate { StartCoroutine(AddBombs(1)); return false; };
+        DuplicateButton.OnInteract += DuplicatesAllowed;
+
         StartButton.OnInteract += StartMission;
+        SaveButton.OnInteract += SaveSettings;
+        ResetButton.OnInteract += delegate { StartCoroutine(ResetSettings()); return false; };
+
+
+
+        TimeMinusButton.OnInteractEnded += delegate { EndInteract(); };
+        TimePlusButton.OnInteractEnded += delegate { EndInteract(); };
+
+        ModulesMinusButton.OnInteractEnded += delegate { EndInteract(); };
+        ModulesPlusButton.OnInteractEnded += delegate { EndInteract(); };
+
+        WidgetsMinusButton.OnInteractEnded += delegate { EndInteract(); };
+        WidgetsPlusButton.OnInteractEnded += delegate { EndInteract(); };
+
+        StrikesMinusButton.OnInteractEnded += delegate { EndInteract(); };
+        StrikesPlusButton.OnInteractEnded += delegate { EndInteract(); };
+
+        ModuleDisableMinusButton.OnInteractEnded += delegate { EndInteract(false); };
+        ModuleDisablePlusButton.OnInteractEnded += delegate { EndInteract(false); };
+        ModuleDisableButton.OnInteractEnded += delegate { EndInteract(false); };
+
+        NeedyButton.OnInteractEnded += delegate { EndInteract(false); };
+        PlayModeButton.OnInteractEnded += delegate { EndInteract(false); };
+
+        PacingEventsButton.OnInteractEnded += delegate { EndInteract(false); };
+        FrontFaceButton.OnInteractEnded += delegate { EndInteract(false); };
+
+        BombsMinusButton.OnInteractEnded += delegate { EndInteract(); };
+        BombsPlusButton.OnInteractEnded += delegate { EndInteract(); };
+        DuplicateButton.OnInteractEnded += delegate { EndInteract(false); };
+
+        ResetButton.OnInteractEnded += CancelSettingsReset;
+        StartButton.OnInteractEnded += delegate { EndInteract(false); };
+        SaveButton.OnInteractEnded += delegate { EndInteract(false); };
     }
 
-    private static float startDelay = 0.2f;
-    private static float Acceleration = 0.005f;
-    private static float minDelay = 0.01f;
+    private bool DuplicatesAllowed()
+    {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        Settings.DuplicatesAllowed = !Settings.DuplicatesAllowed;
+        UpdateDisplay();
+        return false;
+    }
+
+    private void EndInteract(bool stop=true)
+    {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
+        if(stop)
+            StopAllCoroutines();
+        UpdateDisplay();
+    }
+
+    private int GetMaxModules()
+    {
+        _maxModules = GetComponent<KMGameInfo>().GetMaximumBombModules();
+        _maxFrontFace = Mathf.Max(CommonReflectedTypeInfo.GetMaximumFrontFace(), 5);
+        if (_maxFrontFace < 0)
+            _maxFrontFace = _maxModules / 2;
+        return Settings.FrontFaceOnly ? _maxFrontFace : _maxModules;
+    }
+
+    private const float StartDelay = 0.2f;
+    private const float Acceleration = 0.005f;
+    private const float MinDelay = 0.01f;
 
     private IEnumerator AddTimer(int timer)
     {
-        float delay = startDelay;
-        while(true)
+        var delay = StartDelay;
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        while (true)
         {
-            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-            settings.Settings.time += ((timer / 30) * 30);
-            settings.Settings.time = Mathf.Max(30, settings.Settings.time);
+            
+            Settings.Time += ((timer / 30) * 30);
             UpdateDisplay();
-            yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
+            yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
             delay -= Acceleration;
             if (timer > 0)
                 timer++;
             else
                 timer--;
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
         }
+        // ReSharper disable once IteratorNeverReturns
     }
 
     private IEnumerator AddModules(int count)
     {
-        maxModules = GetComponent<KMGameInfo>().GetMaximumBombModules();
-        maxFrontFace = CommonReflectedTypeInfo.GetMaximumFrontFace();
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
         float countFloat = count;
-        if (maxFrontFace < 0)
-            maxFrontFace = maxModules / 2;
-        float delay = startDelay;
+        var delay = StartDelay;
         while (true)
         {
-            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-            settings.Settings.modules += (int)countFloat;
-            settings.Settings.modules = Mathf.Clamp(settings.Settings.modules, 1, settings.Settings.FrontFaceOnly ? maxFrontFace : maxModules);
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
+            Settings.Modules += (int)countFloat;
             UpdateDisplay();
-            yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
+            yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
             delay -= Acceleration;
             if (count > 0)
                 countFloat += (1.0f / 30.0f);
             else
                 countFloat -= (1.0f / 30.0f);
         }
+        // ReSharper disable once IteratorNeverReturns
     }
 
     private IEnumerator AddBombs(int count)
     {
-        float delay = startDelay;
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        var delay = StartDelay;
         while (true)
         {
-            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-            settings.Settings.bombs += count;
-            settings.Settings.bombs = Mathf.Max(1, settings.Settings.bombs);
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
+            Settings.Bombs += count;
             UpdateDisplay();
-            yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
+            yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
             delay -= Acceleration;
         }
+        // ReSharper disable once IteratorNeverReturns
     }
 
     private IEnumerator AddStrikes(int count)
     {
-        float delay = startDelay;
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        var delay = StartDelay;
         float countFloat = count;
         while (true)
         {
-            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-            settings.Settings.strikes += (int)countFloat;
-            settings.Settings.strikes = Mathf.Max(1, settings.Settings.strikes);
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
+            Settings.Strikes += (int)countFloat;
             UpdateDisplay();
-            yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
+            yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
             delay -= Acceleration;
             if (count > 0)
                 countFloat += (1.0f / 30.0f);
             else
                 countFloat -= (1.0f / 30.0f);
         }
+        // ReSharper disable once IteratorNeverReturns
     }
 
     private IEnumerator AddWidgets(int count)
     {
-        float delay = startDelay;
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        var delay = StartDelay;
         while (true)
         {
-            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-            settings.Settings.widgets += count;
-            settings.Settings.widgets = Mathf.Clamp(settings.Settings.widgets, 0, 50);
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
+            Settings.Widgets += count;
             UpdateDisplay();
-            yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
+            yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
             delay -= Acceleration;
         }
+        // ReSharper disable once IteratorNeverReturns
     }
 
-    private List<KMGameInfo.KMModuleInfo> CreateTempModules()
+    private bool _resetting = false;
+
+    private IEnumerator ResetSettings()
     {
-        List<KMGameInfo.KMModuleInfo> tempModules = new List<KMGameInfo.KMModuleInfo>();
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.NormalTimerBeep, transform);
+        _resetting = true;
+        var prev = 4;
+        for (var i = 5f; i > 0; i-=Time.deltaTime)
+        {
+            if (prev > i)
+            {
+                Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.NormalTimerBeep, transform);
+                prev = Mathf.FloorToInt(i);
+            }
+            BombsText.text = string.Format("Reset in {0:0.00}", i);
+            yield return null;
+        }
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BombExplode, transform);
+        _modSettings.Settings = new ModuleSettings();
+        _resetting = false;
 
-        KMGameInfo.KMModuleInfo info1 = new KMGameInfo.KMModuleInfo();
-        info1.DisplayName = "Module 1";
-        info1.ModuleId = "Module1";
-        tempModules.Add(info1);
+        UpdateDisplay();
+        UpdateModuleDisableDisplay();
 
-        KMGameInfo.KMModuleInfo info2 = new KMGameInfo.KMModuleInfo();
-        info2.DisplayName = "Module 2";
-        info1.ModuleId = "Module2";
-        tempModules.Add(info2);
-        
-        return tempModules;
+        BombsText.text = "Settings Reset";
+        yield return new WaitForSeconds(3);
+
+        UpdateDisplay();
+        UpdateModuleDisableDisplay();
     }
 
-    void UpdateDisplay()
+    private void CancelSettingsReset()
     {
-        var t = TimeSpan.FromSeconds(settings.Settings.time);
+        if (!_resetting)
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
+        else
+            EndInteract();
+
+        _resetting = false;
+    }
+
+    private bool SaveSettings()
+    {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        _modSettings.WriteSettings();
+        return false;
+    }
+
+    private static List<KMGameInfo.KMModuleInfo> CreateTempModules()
+    {
+        return new List<KMGameInfo.KMModuleInfo>
+        {
+            new KMGameInfo.KMModuleInfo
+            {
+                DisplayName = "Module 1",
+                ModuleId = "Module1"
+            },
+
+            new KMGameInfo.KMModuleInfo
+            {
+                DisplayName = "Module 2",
+                ModuleId = "Module2"
+            }
+        };
+    }
+
+    private void ClampSettings()
+    {
+        Settings.Time = Mathf.Max(30, Settings.Time);
+        Settings.Modules = Mathf.Clamp(Settings.Modules, 1, GetMaxModules());
+        Settings.Strikes = Mathf.Max(1, Settings.Strikes);
+        Settings.Bombs = Mathf.Max(1, Settings.Bombs);
+        Settings.Widgets = Mathf.Clamp(Settings.Widgets, 0, 50);
+
+        if (Settings.NeedyModules > Settings.Modules)
+            Settings.NeedyModules = Settings.Modules - 1;
+
+        if (Settings.Playmode > PlayMode.ModsOnly)
+            Settings.Playmode = PlayMode.AllModules;
+        if (Settings.Playmode != PlayMode.ModsOnly) return;
+
+        if (GetComponent<KMGameInfo>().GetAvailableModuleInfo().All(x => !x.IsMod))
+            Settings.Playmode = PlayMode.AllModules;
+    }
+
+    private void UpdateDisplay()
+    {
+        ClampSettings();
+
+        var t = TimeSpan.FromSeconds(Settings.Time);
         TimeText.text = t.ToString();
         if (TimeText.text.StartsWith("00:0"))
         {
@@ -233,74 +366,69 @@ public class BombCreator : MonoBehaviour
         {
             TimeText.text = TimeText.text.Remove(0, 1);
         }
-        ModulesText.text = "" + settings.Settings.modules;
-        WidgetsText.text = "" + settings.Settings.widgets;
-        BombsText.text = "" + settings.Settings.bombs;
-        StrikesText.text = "" + settings.Settings.strikes;
-        NeediesText.text = settings.Settings.neediesEnabled ? "Needy On" : "Needy Off";
-        if (settings.Settings.playmode == PlayMode.AllModules)
+        ModulesText.text = "" + Settings.Modules;
+        WidgetsText.text = "" + Settings.Widgets;
+        //BombsText.text = "Bombs: " + Settings.Bombs;
+        StrikesText.text = "" + Settings.Strikes;
+        NeediesText.text = Settings.NeedyModules > 0 ? string.Format("Needies: {0}",Settings.NeedyModules) : "Needy Off";
+        DuplicateText.text = Settings.DuplicatesAllowed ? "Duplicates" : "No Duplicates";
+        if (Settings.Playmode == PlayMode.AllModules)
             PlayModeText.text = "All Modules";
-        else if (settings.Settings.playmode == PlayMode.VanillaOnly)
+        else if (Settings.Playmode == PlayMode.VanillaOnly)
             PlayModeText.text = "Vanilla Only";
         else
             PlayModeText.text = "Mods Only";
 
-        PacingEventsText.text = settings.Settings.PacingEvents ? "Pacing Events On" : "Pacing Events Off";
-        FrontFaceText.text = settings.Settings.FrontFaceOnly ? "Front Face Only" : "All Faces";
+        PacingEventsText.text = Settings.PacingEvents ? "Pacing Events On" : "Pacing Events Off";
+        FrontFaceText.text = Settings.FrontFaceOnly ? "Front Face Only" : "All Faces";
     }
 
-    bool ChangeModuleDisableIndex(int diff)
+    private bool ChangeModuleDisableIndex(int diff)
     {
         if (diff != 0)
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
 
-        if (vanillaModules.Count == 0)
+        if (_vanillaModules.Count == 0)
             return false;
 
-        settings.Settings.moduleDisableIndex += diff;
-        if (settings.Settings.moduleDisableIndex < 0)
+        Settings.ModuleDisableIndex += diff;
+        if (Settings.ModuleDisableIndex < 0)
         {
-            settings.Settings.moduleDisableIndex = vanillaModules.Count - 1;
+            Settings.ModuleDisableIndex = _vanillaModules.Count - 1;
         }
-        else if (settings.Settings.moduleDisableIndex >= vanillaModules.Count)
+        else if (Settings.ModuleDisableIndex >= _vanillaModules.Count)
         {
-            settings.Settings.moduleDisableIndex = 0;
+            Settings.ModuleDisableIndex = 0;
         }
 
         UpdateModuleDisableDisplay();
         return false;
     }
 
-    void UpdateModuleDisableDisplay()
+    private void UpdateModuleDisableDisplay()
     {
-        if(vanillaModules.Count > 0)
-        {
-            KMGameInfo.KMModuleInfo moduleInfo = vanillaModules[settings.Settings.moduleDisableIndex];
-            ModuleDisableText.text = moduleInfo.DisplayName;
-            if(settings.Settings.disabledModuleIds.Contains(moduleInfo.ModuleId))
-            {
-                ModuleDisableText.color = Color.red;
-            }
-            else
-            {
-                ModuleDisableText.color = Color.white;
-            }
-        }
+        if (_vanillaModules.Count <= 0) return;
+
+        var moduleInfo = _vanillaModules[Settings.ModuleDisableIndex];
+        ModuleDisableText.text = moduleInfo.DisplayName;
+        ModuleDisableText.color = Settings.DisabledModuleIds.Contains(moduleInfo.ModuleId) 
+            ? Color.red 
+            : Color.white;
     }
 
-    bool ModuleDisableButtonPressed()
+    private bool ModuleDisableButtonPressed()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        if (vanillaModules.Count > 0)
+        if (_vanillaModules.Count > 0)
         {
-            KMGameInfo.KMModuleInfo moduleInfo = vanillaModules[settings.Settings.moduleDisableIndex];
-            if(settings.Settings.disabledModuleIds.Contains(moduleInfo.ModuleId))
+            var moduleInfo = _vanillaModules[Settings.ModuleDisableIndex];
+            if(Settings.DisabledModuleIds.Contains(moduleInfo.ModuleId))
             {
-                settings.Settings.disabledModuleIds.Remove(moduleInfo.ModuleId);
+                Settings.DisabledModuleIds.Remove(moduleInfo.ModuleId);
             }
             else
             {
-                settings.Settings.disabledModuleIds.Add(moduleInfo.ModuleId);
+                Settings.DisabledModuleIds.Add(moduleInfo.ModuleId);
             }
 
             UpdateModuleDisableDisplay();
@@ -308,146 +436,262 @@ public class BombCreator : MonoBehaviour
         return false;
     }
 
-    bool ChangeNeedyMode()
+    private bool ChangeNeedyMode()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        settings.Settings.neediesEnabled = !settings.Settings.neediesEnabled;
+        Settings.NeedyModules++;
+        var maxNeedies = 8;
+
+        if (Settings.Modules <= maxNeedies)
+            maxNeedies = Settings.Modules - 1;
+
+        if (Settings.NeedyModules > maxNeedies)
+            Settings.NeedyModules = 0;
         UpdateDisplay();
         return false;
     }
 
-    bool ChangePlayMode()
+    private bool ChangePlayMode()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        settings.Settings.playmode++;
-        if (settings.Settings.playmode > PlayMode.ModsOnly)
-            settings.Settings.playmode = PlayMode.AllModules;
-
-        if (settings.Settings.playmode == PlayMode.ModsOnly)
-        {
-            if (GetComponent<KMGameInfo>().GetAvailableModuleInfo().All(x => !x.IsMod))
-                settings.Settings.playmode = PlayMode.AllModules;
-        }
-
+        Settings.Playmode++;
         UpdateDisplay();
         return false;
     }
 
-    bool ChangePacingEvent()
+    private bool ChangePacingEvent()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        settings.Settings.PacingEvents = !settings.Settings.PacingEvents;
+        Settings.PacingEvents = !Settings.PacingEvents;
         UpdateDisplay();
         return false;
     }
 
-    bool ChangeFrontFace()
+    private bool ChangeFrontFace()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        settings.Settings.FrontFaceOnly = !settings.Settings.FrontFaceOnly;
+        Settings.FrontFaceOnly = !Settings.FrontFaceOnly;
         UpdateDisplay();
         return false;
     }
 
-    bool StartMission()
+    private bool StartMission()
     {
-        var maxAll = GetComponent<KMGameInfo>().GetMaximumBombModules();
-        var maxFront = CommonReflectedTypeInfo.GetMaximumFrontFace();
-        if (maxFrontFace < 0)
-            maxFrontFace = maxModules / 2;
-
-        if (settings.Settings.modules > (settings.Settings.FrontFaceOnly ? maxFront : maxAll))
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        if (Settings.Modules > GetMaxModules())
         {
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
             return false;
         }
 
-        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        KMGeneratorSetting generatorSettings = new KMGeneratorSetting();
-        generatorSettings.NumStrikes = settings.Settings.strikes;
-        generatorSettings.TimeLimit = settings.Settings.time;
-        generatorSettings.FrontFaceOnly = settings.Settings.FrontFaceOnly;
-        
-        generatorSettings.ComponentPools = BuildComponentPools();
+        var generatorSettings = new KMGeneratorSetting
+        {
+            NumStrikes = Settings.Strikes,
+            TimeLimit = Settings.Time,
+            FrontFaceOnly = Settings.FrontFaceOnly,
+            ComponentPools = Settings.DuplicatesAllowed ? BuildComponentPools() : BuildNoDuplicatesPool()
+        };
+
         if (generatorSettings.ComponentPools.Count == 0)
         {
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
             return false;
         }
 
-        generatorSettings.OptionalWidgetCount = settings.Settings.widgets;
+        generatorSettings.OptionalWidgetCount = Settings.Widgets;
 
-        KMMission mission = ScriptableObject.CreateInstance<KMMission>() as KMMission;
+        var mission = ScriptableObject.CreateInstance<KMMission>();
         mission.DisplayName = "Custom Freeplay";
         mission.GeneratorSetting = generatorSettings;
-        mission.PacingEventsEnabled = settings.Settings.PacingEvents;
+        mission.PacingEventsEnabled = Settings.PacingEvents;
 
-        //GetComponent<KMGameCommands>().StartMission(mission, "" + UnityEngine.Random.Range(0, int.MaxValue));
         GetComponent<KMGameCommands>().StartMission(mission, "" + -1);
-        settings.WriteSettings();
+        _modSettings.WriteSettings();
         return false;
     }
 
-    List<KMComponentPool> BuildComponentPools()
+    private KMComponentPool AddComponent(KMGameInfo.KMModuleInfo module)
     {
-        List<KMComponentPool> pools = new List<KMComponentPool>();
-
-        KMComponentPool solvablePool = new KMComponentPool();
-        solvablePool.ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>();
-        solvablePool.ModTypes = new List<string>();
-
-        KMComponentPool needyPool = new KMComponentPool();
-        needyPool.ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>();
-        needyPool.ModTypes = new List<string>();
-
-        KMComponentPool bombPool = new KMComponentPool();
-        bombPool.ModTypes = new List<string>();
-
-        foreach (KMGameInfo.KMModuleInfo moduleInfo in GetComponent<KMGameInfo>().GetAvailableModuleInfo())
+        var pool = new KMComponentPool
         {
-            if(!settings.Settings.disabledModuleIds.Contains(moduleInfo.ModuleId))
+            ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+            ModTypes = new List<string>()
+        };
+        if (module.IsMod)
+            pool.ModTypes.Add(module.ModuleId);
+        else
+            pool.ComponentTypes.Add(module.ModuleType);
+        pool.Count = 1;
+        return pool;
+    }
+
+    private List<KMComponentPool> BuildNoDuplicatesPool()
+    {
+        var pools = new List<KMComponentPool>();
+
+        var moddedSolvableModules = GetComponent<KMGameInfo>().GetAvailableModuleInfo().Where(x => x.IsMod && !x.IsNeedy).ToList();
+        var moddedNeedyModules = GetComponent<KMGameInfo>().GetAvailableModuleInfo().Where(x => x.IsMod && x.IsNeedy).ToList();
+
+        var vanillaSolvableModules = GetComponent<KMGameInfo>().GetAvailableModuleInfo().Where(x => !x.IsMod && !x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
+        var vanillaNeedyModules = GetComponent<KMGameInfo>().GetAvailableModuleInfo().Where(x => !x.IsMod && x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
+
+        var solvableModules = new List<KMGameInfo.KMModuleInfo>();
+        var needyModules = new List<KMGameInfo.KMModuleInfo>();
+
+        for (var i = 0; i < Settings.NeedyModules; i++)
+        {
+            if (needyModules.Count == 0)
             {
-                KMComponentPool pool = moduleInfo.IsNeedy ? needyPool : solvablePool;
-                if (moduleInfo.IsNeedy && !settings.Settings.neediesEnabled)
+                switch (Settings.Playmode)
+                {
+                    case PlayMode.AllModules:
+                        if(moddedNeedyModules.Count > 0)
+                            needyModules.AddRange(moddedNeedyModules);
+                        if(vanillaNeedyModules.Count > 0)
+                            needyModules.AddRange(vanillaNeedyModules);
+                        break;
+                    case PlayMode.VanillaOnly:
+                        if (vanillaNeedyModules.Count > 0)
+                            needyModules.AddRange(vanillaNeedyModules);
+                        break;
+                    case PlayMode.ModsOnly:
+                        if (moddedNeedyModules.Count > 0)
+                            needyModules.AddRange(moddedNeedyModules);
+                        break;
+                }
+                if (needyModules.Count == 0)
+                {
+                    pools.Clear();
+                    return pools;
+                }
+                needyModules = needyModules.OrderBy(x => UnityEngine.Random.value).ToList();
+            }
+            pools.Add(AddComponent(needyModules[0]));
+            needyModules.RemoveAt(0);
+        }
+
+        for (var i = Settings.NeedyModules; i < Settings.Modules; i++)
+        {
+            if (solvableModules.Count == 0)
+            {
+                switch (Settings.Playmode)
+                {
+                    case PlayMode.AllModules:
+                        if (moddedSolvableModules.Count > 0)
+                            solvableModules.AddRange(moddedSolvableModules);
+                        if (vanillaSolvableModules.Count > 0)
+                            solvableModules.AddRange(vanillaSolvableModules);
+                        break;
+                    case PlayMode.VanillaOnly:
+                        if (vanillaSolvableModules.Count > 0)
+                            solvableModules.AddRange(vanillaSolvableModules);
+                        break;
+                    case PlayMode.ModsOnly:
+                        if (moddedSolvableModules.Count > 0)
+                            solvableModules.AddRange(moddedSolvableModules);
+                        break;
+                }
+                if (solvableModules.Count == 0)
+                {
+                    pools.Clear();
+                    return pools;
+                }
+                solvableModules = solvableModules.OrderBy(x => UnityEngine.Random.value).ToList();
+            }
+            pools.Add(AddComponent(solvableModules[0]));
+            solvableModules.RemoveAt(0);
+        }
+
+        /*if (Settings.Bombs > 1)
+        {
+            pools.Add(new KMComponentPool
+            {
+                ModTypes = new List<string> { "Multiple Bombs" },
+                Count = Settings.Bombs - 1
+            });
+        }*/
+
+        return pools;
+    }
+
+    private List<KMComponentPool> BuildComponentPools()
+    {
+        var pools = new List<KMComponentPool>();
+
+        var solvablePool = new KMComponentPool
+        {
+            ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+            ModTypes = new List<string>()
+        };
+
+        var needyPool = new KMComponentPool
+        {
+            ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+            ModTypes = new List<string>()
+        };
+
+        foreach (var moduleInfo in GetComponent<KMGameInfo>().GetAvailableModuleInfo())
+        {
+            if (Settings.DisabledModuleIds.Contains(moduleInfo.ModuleId)) continue;
+            KMComponentPool pool;
+
+            if (moduleInfo.IsNeedy)
+            {
+                if (Settings.NeedyModules < 1)
                     continue;
-                if(moduleInfo.IsMod)
-                {
-                    if (settings.Settings.playmode == PlayMode.VanillaOnly)
-                        continue;
-                    pool.ModTypes.Add(moduleInfo.ModuleId);
-                }
-                else
-                {
-                    if (settings.Settings.playmode == PlayMode.ModsOnly)
-                        continue;
-                    pool.ComponentTypes.Add(moduleInfo.ModuleType);
-                }
-                
+                pool = needyPool;
+            }
+            else
+            {
+                pool = solvablePool;
+            }
+
+            if(moduleInfo.IsMod)
+            {
+                if (Settings.Playmode == PlayMode.VanillaOnly)
+                    continue;
+                pool.ModTypes.Add(moduleInfo.ModuleId);
+            }
+            else
+            {
+                if (Settings.Playmode == PlayMode.ModsOnly)
+                    continue;
+                pool.ComponentTypes.Add(moduleInfo.ModuleType);
             }
         }
         
 
-        solvablePool.Count = needyPool.ComponentTypes.Count + needyPool.ModTypes.Count > 0 ? settings.Settings.modules - 1 : settings.Settings.modules;
-        needyPool.Count = needyPool.ComponentTypes.Count + needyPool.ModTypes.Count > 0 ? 1 : 0;
+        solvablePool.Count = ((needyPool.ComponentTypes.Count + needyPool.ModTypes.Count) > 0) 
+            ? Settings.Modules - Settings.NeedyModules 
+            : Settings.Modules;
 
-        if(solvablePool.ComponentTypes.Count + solvablePool.ModTypes.Count > 0)
+        needyPool.Count = ((needyPool.ComponentTypes.Count + needyPool.ModTypes.Count) > 0) 
+            ? Settings.NeedyModules 
+            : 0;
+
+        if ((solvablePool.ComponentTypes.Count + solvablePool.ModTypes.Count) > 0)
             pools.Add(solvablePool);
+        else
+            return pools;
 
-        if(needyPool.ComponentTypes.Count + needyPool.ModTypes.Count > 0 && pools.Count > 0)
-            pools.Add(needyPool);
-
-        /*
-        if (settings.Settings.bombs > 1 && pools.Count > 0)
+        if((needyPool.ComponentTypes.Count + needyPool.ModTypes.Count) > 0)
         {
-            bombPool.ModTypes.Add("Multiple Bombs");
-            bombPool.Count = settings.Settings.bombs - 1;
-            pools.Add(bombPool);
-        }*/
-
-        if (settings.Settings.neediesEnabled && !pools.Contains(needyPool))
+            pools.Add(needyPool);
+        }
+        else if (Settings.NeedyModules > 0)
         {
             pools.Clear();
+            return pools;
         }
+
+        /*if (Settings.Bombs > 1)
+        {
+            pools.Add(new KMComponentPool
+            {
+                ModTypes = new List<string> { "Multiple Bombs" },
+                Count = Settings.Bombs - 1
+            });
+        }*/
 
         return pools;
     }

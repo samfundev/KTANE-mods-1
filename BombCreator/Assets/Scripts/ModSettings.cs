@@ -17,17 +17,18 @@ public class ModuleSettings
 
     //Add your own settings here.  If you wish to have explanations, define them as strings similar to as shown above.
     //Make sure those strings are JSON compliant.
-    public int time = 300;
-    public int modules = 3;
-    public int bombs = 1;
-    public int strikes = 3;
-    public int widgets = 5;
-    public int moduleDisableIndex = 0;
-    public bool neediesEnabled = false;
-    public PlayMode playmode = PlayMode.AllModules;
-    public List<string> disabledModuleIds = new List<string>();
+    public int Time = 300;
+    public int Modules = 3;
+    public int Bombs = 1;
+    public int Strikes = 3;
+    public int Widgets = 5;
+    public int ModuleDisableIndex = 0;
+    public int NeedyModules = 0;
+    public PlayMode Playmode = PlayMode.AllModules;
+    public List<string> DisabledModuleIds = new List<string>();
     public bool PacingEvents = true;
     public bool FrontFaceOnly = false;
+    public bool DuplicatesAllowed = true;
 
     public string HowToUse1 = "The settings are saved automatically and persist across multiple sessions. No need to modify them here.";
     public string HowToUse2 = "The only thing you might need to do here is use ResetToDefault, or simply remove the variables outright.";
