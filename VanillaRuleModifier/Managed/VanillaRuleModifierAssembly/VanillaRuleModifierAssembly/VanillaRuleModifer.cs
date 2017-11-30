@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Assets.Scripts.Components.VennWire;
 using Assets.Scripts.Rules;
 using Assets.Scripts.Utility;
@@ -160,48 +158,19 @@ public class VanillaRuleModifer : MonoBehaviour
 
     // Use this for initialization
     // ReSharper disable once UnusedMember.Local
-    private static bool FixesApplied = false;
-
-    private void ApplyBugFixes()
+    private static bool _fixesApplied = false;
+    private static void ApplyBugFixes()
     {
-        if (FixesApplied) return;
-
-        try
-        {
-            DebugLog("Applying fix to MorseCode");
-            typeof(MorseCodeComponent).GetMethod("CreateSignalDictionary", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
-            var morseDictionary = (IDictionary)typeof(MorseCodeComponent).GetField("signalDict", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
-            if (morseDictionary != null)
-            {
-                if (morseDictionary.Contains('y'))
-                    morseDictionary.Remove('y');
-                typeof(MorseCodeComponent).GetMethod("AddCharacterSignal", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, new object[] { 'y', "-.--" });
-            }
-            DebugLog("Fix applied to MorseCode Successfully");
-        }
-        catch (Exception ex)
-        {
-            DebugLog("Failed to fix MorseCodeComponet letter typo due to an Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
-        }
-
-        try
-        {
-            DebugLog("Applying Fix to Wires");
-            WireSolutions.WireIndex4 = new Solution {Text = "cut the fifth wire", SolutionMethod = ((BombComponent comp, Dictionary<string, object> args) => 4)};
-            DebugLog("Fix applied to Wires Successfully");
-        }
-        catch (Exception ex)
-        {
-            DebugLog("Failed to fix Fifth wire index typo due to an Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
-        }
-        FixesApplied = true;
+        if (_fixesApplied) return;
+        //DebugLog("No Fixes to apply. :)");
+        _fixesApplied = true;
     }
 
     private bool _started = false;
     private void Start ()
     {
         _started = true;
-	    DebugLog("Starting service");
+	    DebugLog("Service prefab Instantiated.");
 	    ApplyBugFixes();
         //DestroyImmediate(GetComponent<KMService>()); //Hide from Mod Selector
         _modSettings = new Settings(GetComponent<KMModSettings>());
@@ -218,7 +187,7 @@ public class VanillaRuleModifer : MonoBehaviour
 	    }
 
 	    _gameInfo = GetComponent<KMGameInfo>();
-	    OnEnable();
+        LoadMod();
 	    DebugLog("Service started");
     }
 
@@ -226,27 +195,39 @@ public class VanillaRuleModifer : MonoBehaviour
     // ReSharper disable once UnusedMember.Local
     private void OnDestroy()
     {
-        OnDisable();
+        DebugLog("Service prefab destroyed. Shutting down.");
+        UnloadMod();
         _started = false;
     }
 
     private void OnEnable()
     {
         if (!_started || _enabled) return;
-        DebugLog("Enabling Service");
+        DebugLog("Service prefab Enabled.");
+        LoadMod();
+    }
+
+    private void OnDisable()
+    {
+        if (!_enabled) return;
+        DebugLog("Service Prefab Disabled.");
+        UnloadMod();
+    }
+
+    private void LoadMod()
+    {
         _gameInfo.OnStateChange += OnStateChange;
         _enabled = true;
         _currentState = KMGameInfo.State.Setup;
         _prevState = KMGameInfo.State.Setup;
     }
 
-    private void OnDisable()
+    private void UnloadMod()
     {
-        if (!_enabled) return;
-        DebugLog("Disabling Service");
         CommonReflectedTypeInfo.UnloadRuleManager();
         _gameInfo.OnStateChange -= OnStateChange;
         _enabled = false;
+        StopAllCoroutines();
     }
 
     private RuleManager _ruleManager;
