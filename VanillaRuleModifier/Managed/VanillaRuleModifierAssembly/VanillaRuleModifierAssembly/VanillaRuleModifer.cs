@@ -510,22 +510,12 @@ public class VanillaRuleModifer : MonoBehaviour
         for (var i = WireSequenceRuleSetGenerator.NUM_COLOURS - 1; i >= 0 ; i--)
         {
             var color = (WireColor) i;
-            wiresequencetable += "                        <table class=\'";
-            wiresequencetable += color.ToString();
-            wiresequencetable += "'>";
-
-            wiresequencetable += "<tr><th colspan=\'2\' class=\'header\'>";
-            wiresequencetable += color.ToString().Capitalize();
-            wiresequencetable += " Wire Occurrences</th></tr>";
-
+            wiresequencetable += $"<table class=\'{color}'>";
+            wiresequencetable += $"<tr><th colspan=\'2\' class=\'header\'>{color.ToString().Capitalize()} Wire Occurrences</th></tr>";
             wiresequencetable += "<tr><th class=\'first-col\'>Wire Occurrence</th><th class=\'second-col\'>Cut if connected to:</th></tr>";
             for (var j = 0; j < WireSequenceRuleSetGenerator.NumWiresPerColour; j++)
             {
-                wiresequencetable += "<tr><td class=\'first-col\'>";
-                wiresequencetable += Util.OrdinalWord(j + 1);
-                wiresequencetable += "&nbsp;";
-                wiresequencetable += color.ToString();
-                wiresequencetable += " occurrence</td><td class=\'second-col\'>";
+                wiresequencetable += $"<tr><td class=\'first-col\'>{Util.OrdinalWord(j + 1)}&nbsp;{color} occurrence</td><td class=\'second-col\'>";
                 var list = new List<string>();
                 for (var k = 0; k < WireSequenceRuleSetGenerator.NUM_PER_PAGE; k++)
                 {
@@ -557,49 +547,9 @@ public class VanillaRuleModifer : MonoBehaviour
     {
         var worddict = _ruleManager.MorseCodeRuleSet.WordDict;
         var validFreqs = _ruleManager.MorseCodeRuleSet.ValidFrequencies;
-        var morsecodetable = string.Empty;
-        foreach (var freq in validFreqs)
-        {
-            morsecodetable += "                        <tr>\n";
-            morsecodetable += "                            <td>";
-            morsecodetable += worddict[freq];
-            morsecodetable += "</td>\n";
-            morsecodetable += "                            <td>3.";
-            morsecodetable += freq.ToString();
-            morsecodetable += " MHz</td>\n";
-            morsecodetable += "                        </tr>\n";
-        }
+        var morsecodetable = validFreqs.Aggregate(string.Empty, (current, freq) => current + $"<tr><td>{worddict[freq]}</td><td>3.{freq} MHz</td></tr>\n");
         replacements.Add(new ReplaceText {Original = "MORSECODELOOKUP", Replacement = morsecodetable });
         file.WriteFile(path, replacements);
-    }
-
-    private bool IsWireQueryValid(Rule rule)
-    {
-        if (rule.Queries.Count == 1)
-            return true;
-        var query = rule.GetQueryString();
-        var lastwirecolor = QueryableWireProperty.LastWireIsColor.Text;
-        var exactlyonecolor = QueryableWireProperty.IsExactlyOneColorWire.Text;
-        var morethanonecolor = QueryableWireProperty.MoreThanOneColorWire.Text;
-        var nocolor = QueryableWireProperty.IsExactlyZeroColorWire.Text;
-        for (var i = 0; i < 4; i++)
-        {
-            if (query.Contains(exactlyonecolor.Replace("{color}", ((WireColor) i).ToString())) && query.Contains(nocolor.Replace("{color}", ((WireColor) i).ToString())))
-                return false;
-            if (query.Contains(exactlyonecolor.Replace("{color}", ((WireColor) i).ToString())) && query.Contains(morethanonecolor.Replace("{color}", ((WireColor) i).ToString())))
-                return false;
-            if (query.Contains(morethanonecolor.Replace("{color}", ((WireColor) i).ToString())) && query.Contains(nocolor.Replace("{color}", ((WireColor) i).ToString())))
-                return false;
-
-            if (!query.Contains(lastwirecolor.Replace("{color}", ((WireColor) i).ToString()))) continue;
-            if (query.Contains(nocolor.Replace("{color}", ((WireColor) i).ToString()))) return false;
-            for (var j = i + 1; j < 5; j++)
-            {
-                if (query.Contains(lastwirecolor.Replace("{color}", ((WireColor) j).ToString())))
-                    return false;
-            }
-        }
-        return true;
     }
 
     private void WriteWiresManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
@@ -611,27 +561,7 @@ public class VanillaRuleModifer : MonoBehaviour
         {
             var rule = new List<Rule>(rules.Value);
 
-            var lastrule = rule.Last();
-            var remainder = rule.Take(rule.Count - 1).ToList();
-
-            for(var i = remainder.Count - 1; i >= 0; i--)
-            {
-                if (!IsWireQueryValid(remainder[i]))
-                    remainder.Remove(remainder[i]);
-            }
-
-            while (remainder.Last().GetSolutionString().Equals(lastrule.GetSolutionString()))
-            {
-                remainder.Remove(remainder.Last());
-            }
-
-            rule = remainder;
-            rule.Add(lastrule);
-
-            wirecuttinginstructions += "                        <tr>";
-            wirecuttinginstructions += "<td><strong><em>";
-            wirecuttinginstructions += rules.Key.ToString();
-            wirecuttinginstructions += " wires:</em></strong><br />";
+            wirecuttinginstructions += $"<tr><td><strong><em>{rules.Key} wires:</em></strong><br />";
             if (rule.Count == 1)
             {
                 wirecuttinginstructions += $"{rule[0].GetSolutionString()}.";
@@ -678,22 +608,12 @@ public class VanillaRuleModifer : MonoBehaviour
 
         foreach (var press in _ruleManager.ButtonRuleSet.RuleList)
         {
-            initial += "                        <li>";
-            initial += $"If {press.GetQueryString()}, {press.GetSolutionString()}.";
-            initial += "</li>\n";
-            foreach (var query in press.Queries)
-            {
-                portsused |= query.Property == QueryablePorts.EmptyPortPlate;
-                portsused |= QueryablePorts.PortList.Contains(query.Property);
-            }
+            portsused = press.Queries.Aggregate(portsused, (current, query) => current | query.Property == QueryablePorts.EmptyPortPlate);
+            portsused = press.Queries.Aggregate(portsused, (current, query) => current | QueryablePorts.PortList.Contains(query.Property));
         }
 
-        foreach (var hold in _ruleManager.ButtonRuleSet.HoldRuleList)
-        {
-            onhold += "                        <li><em>";
-            onhold += $"{hold.GetQueryString()}</em> {hold.GetSolutionString()}";
-            onhold += "</li>\n";
-        }
+        initial = _ruleManager.ButtonRuleSet.RuleList.Aggregate(initial, (current, press) => current + $"<li>If {press.GetQueryString()}, {press.GetSolutionString()}.</li>\n");
+        onhold = _ruleManager.ButtonRuleSet.HoldRuleList.Aggregate(onhold, (current, hold) => current + $"<li><em>{hold.GetQueryString()}</em> {hold.GetSolutionString()}</li>\n");
 
         replacements.Add(new ReplaceText { Original = "APPENDIXCREFERENCE", Replacement = portsused ? "<br />See Appendix C for port identification reference." : "" });
         replacements.Add(new ReplaceText { Original = "INITIALBUTTONRULES", Replacement = initial });

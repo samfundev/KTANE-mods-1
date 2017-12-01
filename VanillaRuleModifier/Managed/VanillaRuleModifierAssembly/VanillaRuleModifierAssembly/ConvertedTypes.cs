@@ -19,7 +19,7 @@ namespace VanillaRuleModifierAssembly
             SeedProperty = RuleManagerType.GetProperty("Seed", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             CurrentRulesProperty = RuleManagerType.GetProperty("CurrentRules", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            WireRuleSetGenerator = new WireRuleSetGenerator();
+            WireRuleSetGenerator = new WireRuleGenerator();
             WhosOnFirstRuleSetGenerator = new WhosOnFirstRuleSetGenerator();
             MemoryRuleSetGenerator = new MemoryRuleSetGenerator();
             KeypadRuleSetGenerator = new KeypadRuleSetGenerator();
@@ -141,7 +141,7 @@ namespace VanillaRuleModifierAssembly
             get;
         }
 
-        private static readonly WireRuleSetGenerator WireRuleSetGenerator;
+        private static readonly WireRuleGenerator WireRuleSetGenerator;
         private static readonly WhosOnFirstRuleSetGenerator WhosOnFirstRuleSetGenerator;
         private static readonly MemoryRuleSetGenerator MemoryRuleSetGenerator;
         private static readonly KeypadRuleSetGenerator KeypadRuleSetGenerator;
