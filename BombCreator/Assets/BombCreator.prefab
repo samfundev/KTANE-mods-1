@@ -623,7 +623,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &1248744122420044
 GameObject:
   m_ObjectHideFlags: 1
@@ -1900,7 +1900,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &1815004748151610
 GameObject:
   m_ObjectHideFlags: 1
@@ -8061,7 +8061,7 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1575991619386198}
-  m_Text: 
+  m_Text: 'Bombs: 1'
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1

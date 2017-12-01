@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 // ReSharper disable once CheckNamespace
@@ -63,6 +64,7 @@ public class BombCreator : MonoBehaviour
     private void Start()
     {
         _modSettings.ReadSettings();
+        StartCoroutine(LookForMultipleBombs());
 
         _vanillaModules = GetComponent<KMGameInfo>().GetAvailableModuleInfo().Where(x => !x.IsMod).ToList();
         _maxModules = GetComponent<KMGameInfo>().GetMaximumBombModules();
@@ -143,6 +145,53 @@ public class BombCreator : MonoBehaviour
         SaveButton.OnInteractEnded += delegate { EndInteract(false); };
     }
 
+    IEnumerator LookForMultipleBombs()
+    {
+        while (!IsMultipleBombsInstalled())
+        {
+            CheckForMultipleBombs();
+            yield return null;
+        }
+    }
+
+    void CheckForMultipleBombs()
+    {
+        try
+        {
+            if (IsMultipleBombsInstalled())
+                return;
+
+            if (_multipleBombsType == null)
+                _multipleBombsType = ReflectionHelper.FindType("MultipleBombsAssembly.MultipleBombs");
+            if (_multipleBombsType != null)
+            {
+                _bombsCountField = _multipleBombsType.GetMethod("GetCurrentMaximumBombCount", BindingFlags.Public | BindingFlags.Instance);
+                UnityEngine.Object[] objects = _multipleBombsType != null ? FindObjectsOfType(_multipleBombsType) : null;
+                _multipleBombs = (objects == null || objects.Length == 0) ? null : (MonoBehaviour)objects[0];
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private bool IsMultipleBombsInstalled()
+    {
+        return _multipleBombsType != null && _bombsCountField != null && _multipleBombs != null;
+    }
+
+    private static MethodInfo _bombsCountField = null;
+    private MonoBehaviour _multipleBombs = null;
+
+    private int GetMaximumBombs()
+    {
+        if (!IsMultipleBombsInstalled())
+            return 1;
+        return (int) _bombsCountField.Invoke(_multipleBombs, null);
+    }
+
+
     private bool DuplicatesAllowed()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
@@ -153,6 +202,7 @@ public class BombCreator : MonoBehaviour
 
     private void EndInteract(bool stop=true)
     {
+        CheckForMultipleBombs();
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
         if(stop)
             StopAllCoroutines();
@@ -334,7 +384,7 @@ public class BombCreator : MonoBehaviour
         Settings.Time = Mathf.Max(30, Settings.Time);
         Settings.Modules = Mathf.Clamp(Settings.Modules, 1, GetMaxModules());
         Settings.Strikes = Mathf.Max(1, Settings.Strikes);
-        Settings.Bombs = Mathf.Max(1, Settings.Bombs);
+        Settings.Bombs = Mathf.Clamp(Settings.Bombs, 1, GetMaximumBombs());
         Settings.Widgets = Mathf.Clamp(Settings.Widgets, 0, 50);
 
         if (Settings.NeedyModules > Settings.Modules)
@@ -368,7 +418,7 @@ public class BombCreator : MonoBehaviour
         }
         ModulesText.text = "" + Settings.Modules;
         WidgetsText.text = "" + Settings.Widgets;
-        //BombsText.text = "Bombs: " + Settings.Bombs;
+        BombsText.text = !IsMultipleBombsInstalled() ? "" : "Bombs: " + Settings.Bombs;
         StrikesText.text = "" + Settings.Strikes;
         NeediesText.text = Settings.NeedyModules > 0 ? string.Format("Needies: {0}",Settings.NeedyModules) : "Needy Off";
         DuplicateText.text = Settings.DuplicatesAllowed ? "Duplicates" : "No Duplicates";
@@ -602,14 +652,14 @@ public class BombCreator : MonoBehaviour
             solvableModules.RemoveAt(0);
         }
 
-        /*if (Settings.Bombs > 1)
+        if (Settings.Bombs > 1)
         {
             pools.Add(new KMComponentPool
             {
                 ModTypes = new List<string> { "Multiple Bombs" },
                 Count = Settings.Bombs - 1
             });
-        }*/
+        }
 
         return pools;
     }
@@ -684,17 +734,19 @@ public class BombCreator : MonoBehaviour
             return pools;
         }
 
-        /*if (Settings.Bombs > 1)
+        if (Settings.Bombs > 1)
         {
             pools.Add(new KMComponentPool
             {
                 ModTypes = new List<string> { "Multiple Bombs" },
                 Count = Settings.Bombs - 1
             });
-        }*/
+        }
 
         return pools;
     }
+
+    private static Type _multipleBombsType = null;
 }
 
 public enum PlayMode
