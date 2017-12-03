@@ -190,13 +190,20 @@ public class VanillaRuleModifer : MonoBehaviour
         GameObject gameobject = new GameObject(VanillaRuleModiferAPI.VanillaRuleModifierAPIIdentifier);
         VanillaRuleModiferAPI api = gameobject.AddComponent<VanillaRuleModiferAPI>();
         api.HandleGetRuleSeed += () => _modSettings.Settings.RuleSeed;
-        api.HandleGetRuleManual += () => Path.Combine(Application.persistentDataPath, "ModifiedVanillaManuals");
+        api.HandleGetRuleManual += GenerateManual;
         api.HandleSetRuleSeed += delegate { _modSettings.Settings.RuleSeed = api.Seed; if(api.WriteSettings) _modSettings.WriteSettings(); };
         gameobject.transform.SetParent(transform);
 
 	    _gameInfo = GetComponent<KMGameInfo>();
         LoadMod();
 	    DebugLog("Service started");
+    }
+
+    private string GenerateManual()
+    {
+        CommonReflectedTypeInfo.GenerateRules(_modSettings.Settings.RuleSeed);
+        WriteManual(_modSettings.Settings.RuleSeed);
+        return Path.Combine(Application.persistentDataPath, Path.Combine("ModifiedVanillaManuals", _modSettings.Settings.RuleSeed.ToString()));
     }
 
     private bool _enabled;

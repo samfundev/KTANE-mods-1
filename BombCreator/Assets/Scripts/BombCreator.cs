@@ -24,14 +24,15 @@ public class BombCreator : MonoBehaviour
     public KMSelectable WidgetsMinusButton;
     public KMSelectable WidgetsPlusButton;
 
-    public TextMesh SeedText;
-    public KMSelectable SeedMinusButton;
-    public KMSelectable SeedPlusButton;
-
     public TextMesh ModuleDisableText;
     public KMSelectable ModuleDisableMinusButton;
     public KMSelectable ModuleDisablePlusButton;
     public KMSelectable ModuleDisableButton;
+
+    public TextMesh SeedText;
+    public KMSelectable SeedMinusButton;
+    public KMSelectable SeedManualButton;
+    public KMSelectable SeedPlusButton;
 
     public TextMesh NeediesText;
     public KMSelectable NeedyButton;
@@ -106,6 +107,7 @@ public class BombCreator : MonoBehaviour
         ModuleDisableButton.OnInteract += ModuleDisableButtonPressed;
 
         SeedMinusButton.OnInteract += delegate { StartCoroutine(AddSeed(-1)); return false; };
+        SeedManualButton.OnInteract += OpenManualDirectory;
         SeedPlusButton.OnInteract += delegate { StartCoroutine(AddSeed(1)); return false; };
 
         NeedyButton.OnInteract += ChangeNeedyMode;
@@ -141,6 +143,7 @@ public class BombCreator : MonoBehaviour
         ModuleDisableButton.OnInteractEnded += () => EndInteract(false);
 
         SeedMinusButton.OnInteractEnded += () => EndInteract();
+        SeedManualButton.OnInteractEnded += () => EndInteract(false);
         SeedPlusButton.OnInteractEnded += () => EndInteract();
 
         NeedyButton.OnInteractEnded += () => EndInteract(false);
@@ -157,6 +160,14 @@ public class BombCreator : MonoBehaviour
         StartButton.OnInteractEnded += () => EndInteract(false);
         SaveButton.OnInteractEnded += () => EndInteract(false);
 
+    }
+
+    bool OpenManualDirectory()
+    {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        if (seedAPI != null)
+            Application.OpenURL("file:///" + seedAPI.GetRuleManual());
+        return false;
     }
 
     IEnumerator LookForMultipleBombs()
