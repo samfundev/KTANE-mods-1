@@ -24,6 +24,10 @@ public class BombCreator : MonoBehaviour
     public KMSelectable WidgetsMinusButton;
     public KMSelectable WidgetsPlusButton;
 
+    public TextMesh SeedText;
+    public KMSelectable SeedMinusButton;
+    public KMSelectable SeedPlusButton;
+
     public TextMesh ModuleDisableText;
     public KMSelectable ModuleDisableMinusButton;
     public KMSelectable ModuleDisablePlusButton;
@@ -61,10 +65,13 @@ public class BombCreator : MonoBehaviour
     private readonly ModSettings _modSettings = new ModSettings("BombCreator");
     private ModuleSettings Settings { get { return _modSettings.Settings; } }
 
+    private VanillaRuleModiferAPI seedAPI;
+
     private void Start()
     {
         _modSettings.ReadSettings();
         StartCoroutine(LookForMultipleBombs());
+        StartCoroutine(LookForVanillaRuleModifer());
 
         _vanillaModules = GetComponent<KMGameInfo>().GetAvailableModuleInfo().Where(x => !x.IsMod).ToList();
         _maxModules = GetComponent<KMGameInfo>().GetMaximumBombModules();
@@ -98,6 +105,9 @@ public class BombCreator : MonoBehaviour
         ModuleDisablePlusButton.OnInteract += () => ChangeModuleDisableIndex(1);
         ModuleDisableButton.OnInteract += ModuleDisableButtonPressed;
 
+        SeedMinusButton.OnInteract += delegate { StartCoroutine(AddSeed(-1)); return false; };
+        SeedPlusButton.OnInteract += delegate { StartCoroutine(AddSeed(1)); return false; };
+
         NeedyButton.OnInteract += ChangeNeedyMode;
         PlayModeButton.OnInteract += ChangePlayMode;
 
@@ -109,40 +119,44 @@ public class BombCreator : MonoBehaviour
         DuplicateButton.OnInteract += DuplicatesAllowed;
 
         StartButton.OnInteract += StartMission;
-        SaveButton.OnInteract += SaveSettings;
+        SaveButton.OnInteract += () => SaveSettings();
         ResetButton.OnInteract += delegate { StartCoroutine(ResetSettings()); return false; };
 
 
 
-        TimeMinusButton.OnInteractEnded += delegate { EndInteract(); };
-        TimePlusButton.OnInteractEnded += delegate { EndInteract(); };
+        TimeMinusButton.OnInteractEnded += () => EndInteract();
+        TimePlusButton.OnInteractEnded += () => EndInteract();
 
-        ModulesMinusButton.OnInteractEnded += delegate { EndInteract(); };
-        ModulesPlusButton.OnInteractEnded += delegate { EndInteract(); };
+        ModulesMinusButton.OnInteractEnded += () => EndInteract();
+        ModulesPlusButton.OnInteractEnded += () => EndInteract();
 
-        WidgetsMinusButton.OnInteractEnded += delegate { EndInteract(); };
-        WidgetsPlusButton.OnInteractEnded += delegate { EndInteract(); };
+        WidgetsMinusButton.OnInteractEnded += () => EndInteract();
+        WidgetsPlusButton.OnInteractEnded += () => EndInteract();
 
-        StrikesMinusButton.OnInteractEnded += delegate { EndInteract(); };
-        StrikesPlusButton.OnInteractEnded += delegate { EndInteract(); };
+        StrikesMinusButton.OnInteractEnded += () => EndInteract();
+        StrikesPlusButton.OnInteractEnded += () => EndInteract();
 
-        ModuleDisableMinusButton.OnInteractEnded += delegate { EndInteract(false); };
-        ModuleDisablePlusButton.OnInteractEnded += delegate { EndInteract(false); };
-        ModuleDisableButton.OnInteractEnded += delegate { EndInteract(false); };
+        ModuleDisableMinusButton.OnInteractEnded += () => EndInteract(false);
+        ModuleDisablePlusButton.OnInteractEnded += () => EndInteract(false);
+        ModuleDisableButton.OnInteractEnded += () => EndInteract(false);
 
-        NeedyButton.OnInteractEnded += delegate { EndInteract(false); };
-        PlayModeButton.OnInteractEnded += delegate { EndInteract(false); };
+        SeedMinusButton.OnInteractEnded += () => EndInteract();
+        SeedPlusButton.OnInteractEnded += () => EndInteract();
 
-        PacingEventsButton.OnInteractEnded += delegate { EndInteract(false); };
-        FrontFaceButton.OnInteractEnded += delegate { EndInteract(false); };
+        NeedyButton.OnInteractEnded += () => EndInteract(false);
+        PlayModeButton.OnInteractEnded += () => EndInteract(false);
 
-        BombsMinusButton.OnInteractEnded += delegate { EndInteract(); };
-        BombsPlusButton.OnInteractEnded += delegate { EndInteract(); };
-        DuplicateButton.OnInteractEnded += delegate { EndInteract(false); };
+        PacingEventsButton.OnInteractEnded += () => EndInteract(false);
+        FrontFaceButton.OnInteractEnded += () => EndInteract(false);
+
+        BombsMinusButton.OnInteractEnded += () => EndInteract();
+        BombsPlusButton.OnInteractEnded += () => EndInteract();
+        DuplicateButton.OnInteractEnded += () => EndInteract(false);
 
         ResetButton.OnInteractEnded += CancelSettingsReset;
-        StartButton.OnInteractEnded += delegate { EndInteract(false); };
-        SaveButton.OnInteractEnded += delegate { EndInteract(false); };
+        StartButton.OnInteractEnded += () => EndInteract(false);
+        SaveButton.OnInteractEnded += () => EndInteract(false);
+
     }
 
     IEnumerator LookForMultipleBombs()
@@ -152,7 +166,25 @@ public class BombCreator : MonoBehaviour
             CheckForMultipleBombs();
             yield return null;
         }
+        UpdateDisplay();
+        UpdateModuleDisableDisplay();
     }
+
+    IEnumerator LookForVanillaRuleModifer()
+    {
+        while (seedAPI == null)
+        {
+            yield return null;
+            GameObject gameobject = GameObject.Find(VanillaRuleModiferAPI.VanillaRuleModifierAPIIdentifier);
+            if (gameobject == null)
+                continue;
+            seedAPI = gameobject.transform.GetComponent<VanillaRuleModiferAPI>();
+        }
+        UpdateDisplay();
+        UpdateModuleDisableDisplay();
+    }
+
+
 
     void CheckForMultipleBombs()
     {
@@ -207,6 +239,7 @@ public class BombCreator : MonoBehaviour
         if(stop)
             StopAllCoroutines();
         UpdateDisplay();
+        UpdateModuleDisableDisplay();
     }
 
     private int GetMaxModules()
@@ -312,6 +345,28 @@ public class BombCreator : MonoBehaviour
         // ReSharper disable once IteratorNeverReturns
     }
 
+    private IEnumerator AddSeed(int count)
+    {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        if (seedAPI == null)
+            yield break;
+        var delay = StartDelay;
+        float countFloat = count;
+        while (true)
+        {
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
+            seedAPI.SetRuleSeed(seedAPI.GetRuleSeed() + (int)countFloat);
+            UpdateDisplay();
+            yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
+            delay -= Acceleration;
+            if (count > 0)
+                countFloat += (1.0f / 30.0f);
+            else
+                countFloat -= (1.0f / 30.0f);
+        }
+        // ReSharper disable once IteratorNeverReturns
+    }
+
     private bool _resetting = false;
 
     private IEnumerator ResetSettings()
@@ -354,10 +409,13 @@ public class BombCreator : MonoBehaviour
         _resetting = false;
     }
 
-    private bool SaveSettings()
+    private bool SaveSettings(bool sound=true)
     {
-        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        if(sound)
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
         _modSettings.WriteSettings();
+        if (seedAPI != null)
+            seedAPI.SetRuleSeed(seedAPI.GetRuleSeed(), true);
         return false;
     }
 
@@ -431,6 +489,15 @@ public class BombCreator : MonoBehaviour
 
         PacingEventsText.text = Settings.PacingEvents ? "Pacing Events On" : "Pacing Events Off";
         FrontFaceText.text = Settings.FrontFaceOnly ? "Front Face Only" : "All Faces";
+
+        if (seedAPI != null)
+        {
+            SeedText.text = seedAPI.GetRuleSeed().ToString();
+        }
+        else
+        {
+            SeedText.text = "1";
+        }
     }
 
     private bool ChangeModuleDisableIndex(int diff)
@@ -556,8 +623,7 @@ public class BombCreator : MonoBehaviour
         mission.PacingEventsEnabled = Settings.PacingEvents;
 
         GetComponent<KMGameCommands>().StartMission(mission, "" + -1);
-        _modSettings.WriteSettings();
-        return false;
+        return SaveSettings();
     }
 
     private KMComponentPool AddComponent(KMGameInfo.KMModuleInfo module)

@@ -12,6 +12,7 @@ using VanillaRuleModifierAssembly;
 using Settings = VanillaRuleModifierAssembly.ModSettings;
 using Resources = VanillaRuleModifierAssembly.Properties.Resources;
 
+
 // ReSharper disable once CheckNamespace
 public class VanillaRuleModifer : MonoBehaviour
 {
@@ -185,6 +186,13 @@ public class VanillaRuleModifer : MonoBehaviour
 	        DebugLog("Failed to initialize Mod settings. Aborting load");
 	        return;
 	    }
+
+        GameObject gameobject = new GameObject(VanillaRuleModiferAPI.VanillaRuleModifierAPIIdentifier);
+        VanillaRuleModiferAPI api = gameobject.AddComponent<VanillaRuleModiferAPI>();
+        api.HandleGetRuleSeed += () => _modSettings.Settings.RuleSeed;
+        api.HandleGetRuleManual += () => Path.Combine(Application.persistentDataPath, "ModifiedVanillaManuals");
+        api.HandleSetRuleSeed += delegate { _modSettings.Settings.RuleSeed = api.Seed; if(api.WriteSettings) _modSettings.WriteSettings(); };
+        gameobject.transform.SetParent(transform);
 
 	    _gameInfo = GetComponent<KMGameInfo>();
         LoadMod();

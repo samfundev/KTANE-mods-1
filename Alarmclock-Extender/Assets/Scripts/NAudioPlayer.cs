@@ -1,9 +1,11 @@
 using UnityEngine;
 using System.IO;
 using System;
+using System.Collections;
 using System.Linq;
 using NAudio;
 using NAudio.Wave;
+using UnityEngine.Networking;
 
 public static class NAudioPlayer {
     public static string[] audioExtensions = new string[] {
@@ -30,11 +32,10 @@ public static class NAudioPlayer {
                 AudioClip clip = new WWW("file:///" + FilePath).GetAudioClipCompressed();
                 while (clip.loadState != AudioDataLoadState.Loaded)
                 {
-                    if(clip.loadState == AudioDataLoadState.Failed)
+                    if (clip.loadState == AudioDataLoadState.Failed)
                         throw new Exception("Failed to load the audio clip.");
                 }
                 return clip;
-            //    return NAudioPlayer.FromOggData(File.ReadAllBytes(FilePath));
             default:
                 throw new NotSupportedException(string.Format("File type {0} is not supported.", ext));
         }
