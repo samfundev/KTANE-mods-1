@@ -13,7 +13,52 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: VanillaRuleModifier
   title: Vanilla Rule Modifier
-  description: 
+  description: 'Ever wish you could change the rules you play the vanilla modules
+    under?  This mod was inspired by LtHummus''s original Unofficial KTaNE manual
+    hack.
+
+
+    The Default seed for this mod is Seed #6502.
+
+
+    Seed #1 is Vanilla.
+
+    Seed #2 is the original LtHummus Hack.
+
+
+    You can change this seed in the settings json.
+
+
+    The API for this is as follows.
+
+
+    GameObject gameObject = GameObject.Find("VanillaRuleModifierProperties");
+
+    IDictionary<string, object> Properties = gameObject.GetComponent<IDictionary<string,
+    object>>();
+
+
+    Get the current rule seed with Properties["RuleSeed"].
+
+    Set the rule seed with Properties["RuleSeed"] = seed.
+
+
+    Lock in the rule seed with Properties["RuleSeed"] = new object[] {seed, true};  The
+    rule seed is always readable, but can only be written to / saved during setup
+    or post game.
+
+
+    Generate the manual and get the Directory of the generated manual with Properties["GetRuleManual"].
+    This property is read only, and can only be read during setup or post game.
+
+
+    Find out if a given seed uses the original rule generator or modified rule generators
+    with Propeties["IsSeedVanilla"] or Properties["IsSeedModded"].  These properties
+    are read only.
+
+
+    Seeds 1, 2 and everything less than or equal to -3 are vanilla seeds. The rest
+    of them are modded seeds.'
   version: 1.0
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
-  previewImage: {fileID: 0}
+  previewImage: {fileID: 2800000, guid: b73cdd829aaf4854a9f499830a8ef7f1, type: 3}

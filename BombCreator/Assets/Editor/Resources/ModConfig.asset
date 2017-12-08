@@ -13,7 +13,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: BombCreator
   title: BombCreator
-  description: 
-  version: 
+  description: 'Ever wish you could have freeplay bombs without vanilla needy modules,
+    or freeplay bombs with more than one needy module,  or with more than 3 strikes?  Ever
+    wish you could have the alarm clock not go off in freeplay.
+
+
+    Ever wish you could guarantee that all modules that spawn are unique.  This is
+    your solution to all of these things.  '
+  version: 1.0
   outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
-  previewImage: {fileID: 0}
+  previewImage: {fileID: 2800000, guid: c1a0391444526554b97064c0f4995e63, type: 3}

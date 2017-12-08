@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.Design.Serialization;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 public class VanillaRuleModiferAPI : MonoBehaviour
 {
     public delegate int GetRuleSeedHandler();
@@ -12,8 +13,32 @@ public class VanillaRuleModiferAPI : MonoBehaviour
     public delegate void SetRuleSeedHandler(int seed, bool writeSettings);
     public SetRuleSeedHandler HandleSetRuleSeed;
 
+    public delegate bool IsSeedVanillaHandler();
+    public IsSeedVanillaHandler HandleIsSeedVanilla;
+
     public bool WriteSettings { get; private set; }
     public int Seed { get; private set; }
+
+    private static VanillaRuleModiferAPI _instance;
+    public static VanillaRuleModiferAPI Instance
+    {
+        get
+        {
+            if (_instance != null) return _instance;
+
+            var gameobject = GameObject.Find(VanillaRuleModifierAPIIdentifier);
+            if (gameobject == null)
+                return null;
+            _instance = gameobject.GetComponent<VanillaRuleModiferAPI>();
+            return _instance;
+        }
+
+        set
+        {
+            if (value != null)
+                _instance = value;
+        }
+    }
 
     public int GetRuleSeed()
     {
@@ -32,5 +57,15 @@ public class VanillaRuleModiferAPI : MonoBehaviour
         HandleSetRuleSeed?.Invoke(seed, writeSettings);
     }
 
+    public bool IsSeedVanilla()
+    {
+        return HandleIsSeedVanilla?.Invoke() ?? false;
+    }
+
     public static readonly string VanillaRuleModifierAPIIdentifier = "VanillaRuleModifierAPI";
+
+    public VanillaRuleModiferAPI(GetRuleManualHandler handleGetRuleManual)
+    {
+        HandleGetRuleManual = handleGetRuleManual;
+    }
 }

@@ -3,8 +3,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
@@ -111,6 +109,8 @@ public class AlarmClockExtender : MonoBehaviour
     private IEnumerator _newTrack;
     private IEnumerator KeepTrackQueueFull()
     {
+        yield return new WaitUntil(() => _gamestate == KMGameInfo.State.Setup);
+        yield return new WaitUntil(() => _gamestate == KMGameInfo.State.Transitioning);
         Random.InitState((int)Time.time);
         if (_newTrack != null)
         {
@@ -145,6 +145,8 @@ public class AlarmClockExtender : MonoBehaviour
         if (AvailableTracks.AudioFiles.Count == 0 || getTracks)
         {
             AvailableTracks.FilePath = _modSettings.Settings.SoundFileDirectory;
+            if (getTracks)
+                AvailableTracks.AudioFiles.Clear();
             AvailableTracks.Start();
             while (!AvailableTracks.Update())
                 yield return null;
@@ -197,6 +199,16 @@ public class AlarmClockExtender : MonoBehaviour
         }
         if (AlarmClock == null)
             yield break;
+
+        if (_modSettings.Settings.RescanDirectory)
+        {
+            DebugLog("Rescanning the Sound Directory");
+            var rescan = PickNextTrack(_modSettings.Settings.RescanDirectory);
+            while (rescan.MoveNext())
+                yield return rescan.Current;
+            DebugLog("Rescan complete");
+        }
+
         while (_gamestate == KMGameInfo.State.Gameplay)
         {
             if ((bool) CommonReflectedTypeInfo.BuzzerStateField.GetValue(AlarmClock))
@@ -254,7 +266,8 @@ public class AlarmClockExtender : MonoBehaviour
 
                                 DebugLog("Retrieved the clip successfully. The Clip name is {0} and the length is {1} seconds", varAudio.clip.name, varAudio.clip.length);
                                 bool looped = varAudio.clip.name.ToLowerInvariant().Contains("[looped]");
-                                looped |= clip.IsVanilla;
+                                looped |= varAudio.clip.name.Equals("alarm_clock_beep");
+                                looped |= (clip.IsVanilla && AvailableTracks.AudioFiles.Count > 0);
                                 bool tracked = varAudio.clip.name.ToLowerInvariant().EndsWith(".it");
                                 tracked |= varAudio.clip.name.ToLowerInvariant().EndsWith(".s3m");
                                 tracked |= varAudio.clip.name.ToLowerInvariant().EndsWith(".xm");

@@ -13,5 +13,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: ColoredQuadrupleDeckerBomb
   title: Colored Quadruple Decker Bomb
+  description: "Colored cases for the Quadruple Decker bomb, provided by Hatsune Miku\r\n\r\nSource
+    code at https://github.com/CaitSith2/KtaneColoredQuadrupleDecker"
   version: 1.0
   outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: 4697b90660a3e914b8f7366a6543c709, type: 3}

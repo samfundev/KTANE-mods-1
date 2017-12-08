@@ -1,7 +1,0 @@
-H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAPI\bin\Debug\VanillaRuleModifierAPI.dll
-H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAPI\bin\Debug\VanillaRuleModifierAPI.pdb
-H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAPI\bin\Debug\UnityEngine.dll
-H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAPI\bin\Debug\UnityEngine.xml
-H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAPI\obj\Debug\VanillaRuleModifierAPI.csprojResolveAssemblyReference.cache
-H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAPI\obj\Debug\VanillaRuleModifierAPI.dll
-H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAPI\obj\Debug\VanillaRuleModifierAPI.pdb

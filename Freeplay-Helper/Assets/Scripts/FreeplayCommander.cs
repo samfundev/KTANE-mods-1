@@ -36,7 +36,7 @@ public class FreeplayCommander
         _hardcoreToggleField = _freeplayDeviceType.GetField("HardcoreToggle", BindingFlags.Public | BindingFlags.Instance);
         _modsOnlyToggleField = _freeplayDeviceType.GetField("ModsOnly", BindingFlags.Public | BindingFlags.Instance);
         _startButtonField = _freeplayDeviceType.GetField("StartButton", BindingFlags.Public | BindingFlags.Instance);
-        _currentSettingsField = _freeplayDeviceType.GetField("currentSettings", BindingFlags.NonPublic | BindingFlags.Instance);
+        _currentSettingsField = _freeplayDeviceType.GetProperty("CurrentSettings", BindingFlags.Public | BindingFlags.Instance);
 
         _freeplaySettingsType = ReflectionHelper.FindType("Assets.Scripts.Settings.FreeplaySettings");
         _moduleCountField = _freeplaySettingsType.GetField("ModuleCount", BindingFlags.Public | BindingFlags.Instance);
@@ -88,21 +88,12 @@ public class FreeplayCommander
 
         _inputManager = (MonoBehaviour)_instanceProperty.GetValue(null, null);
 
-        _multipleBombsType = ReflectionHelper.FindType("MultipleBombsAssembly.MultipleBombs");
-        if (_multipleBombsType == null)
-        {
-            DebugLog("Static Constructor Initialization complete - MultipleBombs service not present");
-            return;
-        }
-        _bombsCountField = _multipleBombsType.GetField("bombsCount", BindingFlags.NonPublic | BindingFlags.Instance);
-
         DebugLog("Static Constructor Initialization complete - MultipleBombs service present");
     }
 
-    public FreeplayCommander(MonoBehaviour freeplayDevice, MonoBehaviour multipleBombs)
+    public FreeplayCommander(MonoBehaviour freeplayDevice)
     {
         FreeplayDevice = freeplayDevice;
-        MultipleBombs = multipleBombs;
         Selectable = (MonoBehaviour)FreeplayDevice.GetComponent(_selectableType);
         DebugLog("Freeplay device: Attempting to get the Selectable list.");
         SelectableChildren = (MonoBehaviour[]) _childrenField.GetValue(Selectable);
@@ -118,6 +109,9 @@ public class FreeplayCommander
 
     public IEnumerator HandleInput()
     {
+        Selectable = (MonoBehaviour)FreeplayDevice.GetComponent(_selectableType);
+        SelectableChildren = (MonoBehaviour[])_childrenField.GetValue(Selectable);
+
         if (!Input.GetKeyDown(KeyCode.LeftArrow) && !Input.GetKeyDown(KeyCode.RightArrow) &&
             !Input.GetKeyDown(KeyCode.UpArrow) && !Input.GetKeyDown(KeyCode.DownArrow) &&
             !Input.GetKeyDown(KeyCode.Return) && !Input.GetKeyDown(KeyCode.KeypadEnter))
@@ -142,21 +136,19 @@ public class FreeplayCommander
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             _index--;
-            if (_index == freeplaySelection.Bombs && !IsDualBombInstalled())
+            if (_index == freeplaySelection.Bombs && !MultipleBombs.Installed())
                 _index = freeplaySelection.Timer;
             if (_index < freeplaySelection.Timer)
-                //    _index = freeplaySelection.ModsOnly;
-                _index = freeplaySelection.Modules;
+                _index = freeplaySelection.ModsOnly;
             ToggleIndex();
             yield break;
         }
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             _index++;
-            if (_index == freeplaySelection.Bombs && !IsDualBombInstalled())
+            if (_index == freeplaySelection.Bombs && !MultipleBombs.Installed())
                 _index = freeplaySelection.Modules;
-            //if (_index > freeplaySelection.ModsOnly)
-            if (_index > freeplaySelection.Modules)
+            if (_index > freeplaySelection.ModsOnly)
                 _index = freeplaySelection.Timer;
             ToggleIndex();
             yield break;
@@ -196,9 +188,9 @@ public class FreeplayCommander
 
     public void ToggleIndex()
     {
-        object currentSettings = _currentSettingsField.GetValue(FreeplayDevice);
+        object currentSettings = _currentSettingsField.GetValue(FreeplayDevice, null);
         int currentModuleCount = (int)_moduleCountField.GetValue(currentSettings);
-        int currentBombsCount = IsDualBombInstalled() ? (int) _bombsCountField.GetValue(MultipleBombs) : 1;
+        int currentBombsCount = MultipleBombs.GetBombCount();
         float currentTime = (float) _timeField.GetValue(currentSettings);
         bool onlyMods = (bool) _onlyModsField.GetValue(currentSettings);
         switch (_index)
@@ -221,10 +213,12 @@ public class FreeplayCommander
             case freeplaySelection.Bombs:
                 try
                 {
+                    if (!MultipleBombs.Installed())
+                        break;
                     MonoBehaviour bombsUp = SelectableChildren[3];
                     MonoBehaviour bombsDown = SelectableChildren[2];
                     SelectObject(bombsUp);
-                    if (currentBombsCount == (int) _bombsCountField.GetValue(MultipleBombs))
+                    if (currentBombsCount == MultipleBombs.GetBombCount())
                         break;
                     SelectObject(bombsDown);
 
@@ -237,8 +231,6 @@ public class FreeplayCommander
             case freeplaySelection.Modules:
                 try
                 {
-                    if (!IsDualBombInstalled())
-                        break;
                     MonoBehaviour moduleUp = (MonoBehaviour) _moduleCountIncrementField.GetValue(FreeplayDevice);
                     MonoBehaviour moduleDown = (MonoBehaviour) _moduleCountDecrementField.GetValue(FreeplayDevice);
                     SelectObject((MonoBehaviour) moduleUp.GetComponent(_selectableType));
@@ -255,10 +247,8 @@ public class FreeplayCommander
                 try
                 {
                     MonoBehaviour needyToggle = (MonoBehaviour) _needyToggleField.GetValue(FreeplayDevice);
-                    _toggleMethod.Invoke(needyToggle, null);
-                    _toggleMethod.Invoke(needyToggle, null);
-                    //SelectObject((MonoBehaviour) needyToggle.GetComponent(_selectableType));
-                    //SelectObject((MonoBehaviour) needyToggle.GetComponent(_selectableType));
+                    SelectObject((MonoBehaviour) needyToggle.GetComponent(_selectableType));
+                    SelectObject((MonoBehaviour) needyToggle.GetComponent(_selectableType));
                 }
                 catch (Exception ex)
                 {
@@ -269,10 +259,8 @@ public class FreeplayCommander
                 try
                 {
                     MonoBehaviour hardcoreToggle = (MonoBehaviour) _hardcoreToggleField.GetValue(FreeplayDevice);
-                    _toggleMethod.Invoke(hardcoreToggle, null);
-                    _toggleMethod.Invoke(hardcoreToggle, null);
-                    //SelectObject((MonoBehaviour) hardcoreToggle.GetComponent(_selectableType));
-                    //SelectObject((MonoBehaviour) hardcoreToggle.GetComponent(_selectableType));
+                    SelectObject((MonoBehaviour) hardcoreToggle.GetComponent(_selectableType));
+                    SelectObject((MonoBehaviour) hardcoreToggle.GetComponent(_selectableType));
                 }
                 catch (Exception ex)
                 {
@@ -283,11 +271,9 @@ public class FreeplayCommander
                 try
                 {
                     MonoBehaviour modsToggle = (MonoBehaviour) _modsOnlyToggleField.GetValue(FreeplayDevice);
-                    _toggleMethod.Invoke(modsToggle, null);
-                    //SelectObject((MonoBehaviour) modsToggle.GetComponent(_selectableType));
+                    SelectObject((MonoBehaviour) modsToggle.GetComponent(_selectableType));
                     bool onlyModsCurrent = (bool) _onlyModsField.GetValue(currentSettings);
-                    _toggleMethod.Invoke(modsToggle, null);
-                    //SelectObject((MonoBehaviour) modsToggle.GetComponent(_selectableType));
+                    SelectObject((MonoBehaviour) modsToggle.GetComponent(_selectableType));
                     if (onlyMods == onlyModsCurrent)
                     {
                         if (Input.GetKey(KeyCode.DownArrow))
@@ -366,33 +352,9 @@ public class FreeplayCommander
         }
     }
 
-    public bool IsDualBombInstalled()
-    {
-        bool result = MultipleBombs != null;
-
-        if (result && _multipleBombsType == null)
-        {
-            _multipleBombsType = ReflectionHelper.FindType("MultipleBombsAssembly.MultipleBombs");
-            if (_multipleBombsType == null)
-            {
-                MultipleBombs = null;
-                return false;
-            }
-            _bombsCountField = _multipleBombsType.GetField("bombsCount", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (_bombsCountField == null)
-            {
-                MultipleBombs = null;
-                return false;
-            }
-            DebugLog("MultipleBombs appeared later - Its static variables are initialized now.");
-        }
-
-        return result;
-    }
-
     public IEnumerator IncrementBombCount()
     {
-        if (!IsDualBombInstalled())
+        if (!MultipleBombs.Installed())
             yield break;
         float delay = startDelay;
         while (Input.GetKey(KeyCode.RightArrow))
@@ -405,7 +367,7 @@ public class FreeplayCommander
 
     public IEnumerator DecrementBombCount()
     {
-        if (!IsDualBombInstalled())
+        if (!MultipleBombs.Installed())
             yield break;
         float delay = startDelay;
         while (Input.GetKey(KeyCode.LeftArrow))
@@ -419,13 +381,13 @@ public class FreeplayCommander
     public IEnumerator SetNeedy()
     {
         bool on = !Input.GetKeyDown(KeyCode.LeftArrow);
-        object currentSettings = _currentSettingsField.GetValue(FreeplayDevice);
+        object currentSettings = _currentSettingsField.GetValue(FreeplayDevice, null);
         bool hasNeedy = (bool)_hasNeedyField.GetValue(currentSettings);
         if (hasNeedy != on)
         {
             MonoBehaviour needyToggle = (MonoBehaviour)_needyToggleField.GetValue(FreeplayDevice);
-            _toggleMethod.Invoke(needyToggle, null);
-            //SelectObject( (MonoBehaviour)needyToggle.GetComponent(_selectableType) );
+            //_toggleMethod.Invoke(needyToggle, null);
+            SelectObject( (MonoBehaviour)needyToggle.GetComponent(_selectableType) );
 
         }
         yield return null;
@@ -434,13 +396,13 @@ public class FreeplayCommander
     public IEnumerator SetHardcore()
     {
         bool on = !Input.GetKeyDown(KeyCode.LeftArrow);
-        object currentSettings = _currentSettingsField.GetValue(FreeplayDevice);
+        object currentSettings = _currentSettingsField.GetValue(FreeplayDevice, null);
         bool isHardcore = (bool)_isHardCoreField.GetValue(currentSettings);
         if (isHardcore != on)
         {
             MonoBehaviour hardcoreToggle = (MonoBehaviour)_hardcoreToggleField.GetValue(FreeplayDevice);
-            _toggleMethod.Invoke(hardcoreToggle, null);
-            //SelectObject( (MonoBehaviour)hardcoreToggle.GetComponent(_selectableType) );
+            //_toggleMethod.Invoke(hardcoreToggle, null);
+            SelectObject( (MonoBehaviour)hardcoreToggle.GetComponent(_selectableType) );
         }
         yield return null;
     }
@@ -448,13 +410,13 @@ public class FreeplayCommander
     public IEnumerator SetModsOnly()
     {
         bool on = !Input.GetKeyDown(KeyCode.LeftArrow);
-        object currentSettings = _currentSettingsField.GetValue(FreeplayDevice);
+        object currentSettings = _currentSettingsField.GetValue(FreeplayDevice, null);
         bool onlyMods = (bool)_onlyModsField.GetValue(currentSettings);
         if (onlyMods != on)
         {
             MonoBehaviour modsToggle = (MonoBehaviour)_modsOnlyToggleField.GetValue(FreeplayDevice);
-            _toggleMethod.Invoke(modsToggle, null);
-            //SelectObject( (MonoBehaviour)modsToggle.GetComponent(_selectableType) );
+            //_toggleMethod.Invoke(modsToggle, null);
+            SelectObject( (MonoBehaviour)modsToggle.GetComponent(_selectableType) );
         }
         yield return null;
     }
@@ -524,13 +486,12 @@ public class FreeplayCommander
         _handleFaceSelectionMethod.Invoke(SelectableManager, null);
     }
 
-    private MonoBehaviour MultipleBombs = null;
     #endregion
 
     #region Readonly Fields
     public readonly MonoBehaviour FreeplayDevice = null;
-    public readonly MonoBehaviour Selectable = null;
-    public readonly MonoBehaviour[] SelectableChildren = null;
+    public MonoBehaviour Selectable = null;
+    public MonoBehaviour[] SelectableChildren = null;
     public readonly MonoBehaviour FloatingHoldable = null;
     private readonly MonoBehaviour SelectableManager = null;
     #endregion
@@ -545,7 +506,7 @@ public class FreeplayCommander
     private static FieldInfo _hardcoreToggleField = null;
     private static FieldInfo _modsOnlyToggleField = null;
     private static FieldInfo _startButtonField = null;
-    private static FieldInfo _currentSettingsField = null;
+    private static PropertyInfo _currentSettingsField = null;
 
     private static Type _freeplaySettingsType = null;
     private static FieldInfo _moduleCountField = null;
@@ -580,9 +541,6 @@ public class FreeplayCommander
     private static PropertyInfo _selectableManagerProperty = null;
 
     private static MonoBehaviour _inputManager = null;
-
-    private static Type _multipleBombsType = null;
-    private static FieldInfo _bombsCountField = null;
     #endregion
 }
 

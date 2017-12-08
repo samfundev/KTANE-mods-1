@@ -13,5 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: ColoredDoubleDecker
   title: Colored Double Decker
+  description: Colored Douple Decker bombs
   version: 1.0
   outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: c4c7f8daf5d37314fafecb5c614c0d9c, type: 3}

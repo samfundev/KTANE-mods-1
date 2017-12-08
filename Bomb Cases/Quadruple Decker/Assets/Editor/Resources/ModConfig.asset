@@ -13,5 +13,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: QuadrupleDeckerBomb
   title: Quadruple Decker Bomb
+  description: "Inspired by the Double Decker bomb.\r\n\r\nColored cases now live
+    at http://steamcommunity.com/sharedfiles/filedetails/?id=928473637\r\n\r\nSource
+    code at https://github.com/CaitSith2/KtaneQuadDeckerBomb"
   version: 1.0
   outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: c100c61fc3d55e44b90203890eea177d, type: 3}

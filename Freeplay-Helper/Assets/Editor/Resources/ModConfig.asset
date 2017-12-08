@@ -13,7 +13,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: FreeplayTimerModuleHelper
   title: Freeplay Timer and Module Helper
-  description: 
+  description: "This service helps out for those large bomb cases that have been released
+    recently, so that you don't have to keep clicking your mouse button over and over
+    to max out the modules and/or time for the selected bomb case loaded.\r\n\r\nThe
+    controls are as follows\r\nUp/Down arrow - Selects the desired freeplay option\r\nLeft/Right
+    arrows - Sets the option.\r\nEnter - Starts the bomb.  (same as if you clicked
+    the Start button)\r\n\r\nIf the freeplay case is currently not open, pressing
+    any of those above keys will open the freeplay case, and the Timer option will
+    be selected.\r\n\r\nFor as long as Left/Right is held while modules or time is
+    selected, that option will increase/decrease continuously, starting slowly, but
+    get faster till it reaches top speed, the longer you hold that key.  This is definitely
+    faster than clicking your mouse button over and over to get to the desired high
+    setting.\r\n\r\nCredits to at_bash for the freeplay reflection code from twitch-plays
+    on which I based this on."
   version: 1.2
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
   previewImage: {fileID: 2800000, guid: aef2c52a12bda4444990a56c8017537a, type: 3}

@@ -23,8 +23,8 @@ GameObject:
   - component: {fileID: 114000012133778314}
   - component: {fileID: 114000010564246356}
   - component: {fileID: 114000011252456116}
-  - component: {fileID: 114000013322751724}
   - component: {fileID: 114000012518995834}
+  - component: {fileID: 114453895052089874}
   m_Layer: 0
   m_Name: VanillaRuleModifier
   m_TagString: Untagged
@@ -102,7 +102,7 @@ MonoBehaviour:
   m_Script: {fileID: -271661043, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &114000013322751724
+--- !u!114 &114453895052089874
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -110,8 +110,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1000012025334904}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 2132808317, guid: 555752c2f0fe3664da0cb920c2ea667d, type: 3}
+  m_Script: {fileID: -726306544, guid: 555752c2f0fe3664da0cb920c2ea667d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ManualDataFiles: []
-  KeypadImages: []

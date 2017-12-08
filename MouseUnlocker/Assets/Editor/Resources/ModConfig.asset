@@ -13,5 +13,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: MouseUnlocker
   title: Mouse Unlocker
+  description: 'Has having to alt-tab out of the game in order to be able to do stuff
+    on your secondary monitor gotton on your last nerve?  This mod makes it so you
+    don''t have to use the alt-tab to break game focus, and allows you to freely move
+    the mouse to focus a different app if desired.
+
+
+    Note, as of Version 1.6.0 of the game, there is now a persistent setting inside
+    of PlayerSettings.xml that this mod will set to false for you. This persistent
+    setting is called LockMouseToWindow, and is true by default, and undocumented,
+    with no in-game way to change it.
+
+
+    Once you have run this mod once, you can freely disable this mod, and the unlocking
+    will persist.'
   version: 1.0
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: e3e6d3294bff9914e8f11dc5defd5bf0, type: 3}

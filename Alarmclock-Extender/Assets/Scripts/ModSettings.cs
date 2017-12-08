@@ -29,6 +29,7 @@ public class ModuleSettings
     public int ChanceOfNormalBeep = 5;
     public string HowToUse4_1 = "Set this between 0 and 100. This determines how likely you will get the annoying beep instead of music.";
     public string HowToUse4_2 = "Note: If there are no tracks loaded, you will ALWAYS get the beep instead.";
+    public string HowToUse4_3 = "Also, if anything has replaced the normal beep, those are what will play when the normal beep is played.";
 
 
 }

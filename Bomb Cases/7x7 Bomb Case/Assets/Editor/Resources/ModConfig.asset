@@ -13,5 +13,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 7x7-MonsterBomb
   title: 7x7 Monster Bomb
+  description: "Along the lines of the large bombs, this is my largest one yet.  It
+    has 4 modules less than Bashly's bomb case.\r\n\r\nIt is recommended that you
+    grab the Camera Zoom add-on as well.\r\n\r\nSource code at https://github.com/CaitSith2/KtaneQuadDeckerBomb
+    under the 7x7-Case branch"
   version: 1.0
   outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
+  previewImage: {fileID: 2800000, guid: 555a6100695550240ab76e11d52b4077, type: 3}

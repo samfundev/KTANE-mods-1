@@ -1,11 +1,8 @@
 using UnityEngine;
 using System.IO;
 using System;
-using System.Collections;
 using System.Linq;
-using NAudio;
 using NAudio.Wave;
-using UnityEngine.Networking;
 
 public static class NAudioPlayer {
     public static string[] audioExtensions = new string[] {

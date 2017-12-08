@@ -82,6 +82,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         public VennWireRuleSet GenerateVennWireRules(int seed)
         {
+            CutInstructionWeights.Clear();
             switch (seed)
             {
                 case 1:
