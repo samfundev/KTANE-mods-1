@@ -57,7 +57,7 @@ namespace VanillaRuleModifierAssembly
                     BombClassification = ManualMetaData.BOMB_CLASSIFICATION,
                     LockCode = ManualMetaData.LOCK_CODE
                 },
-                WireRuleSet = (WireRuleSet) WireRuleSetGenerator.GenerateRuleSet(seed),
+                WireRuleSet = WireRuleSetGenerator.CreateWireRules(seed),
                 WhosOnFirstRuleSet = (WhosOnFirstRuleSet) WhosOnFirstRuleSetGenerator.GenerateRuleSet(seed),
                 MemoryRuleSet = (MemoryRuleSet) MemoryRuleSetGenerator.GenerateRuleSet(seed),
                 KeypadRuleSet = (KeypadRuleSet) KeypadRuleSetGenerator.GenerateRuleSet(seed),

@@ -14,7 +14,7 @@ namespace VanillaRuleModifierAssembly
 
         private object RuleSeed_Get()
         {
-            return VanillaRuleModifer.GetCurrentSeed();
+            return VanillaRuleModifer._modSettings.Settings.RuleSeed;
         }
 
         private void RuleSeed_Set(object seed)

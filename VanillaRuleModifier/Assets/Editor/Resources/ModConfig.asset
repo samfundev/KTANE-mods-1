@@ -13,52 +13,39 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: VanillaRuleModifier
   title: Vanilla Rule Modifier
-  description: 'Ever wish you could change the rules you play the vanilla modules
-    under?  This mod was inspired by LtHummus''s original Unofficial KTaNE manual
-    hack.
-
-
-    The Default seed for this mod is Seed #6502.
-
-
-    Seed #1 is Vanilla.
-
-    Seed #2 is the original LtHummus Hack.
-
-
-    You can change this seed in the settings json.
-
-
-    The API for this is as follows.
-
-
-    GameObject gameObject = GameObject.Find("VanillaRuleModifierProperties");
-
-    IDictionary<string, object> Properties = gameObject.GetComponent<IDictionary<string,
-    object>>();
-
-
-    Get the current rule seed with Properties["RuleSeed"].
-
-    Set the rule seed with Properties["RuleSeed"] = seed.
-
-
-    Lock in the rule seed with Properties["RuleSeed"] = new object[] {seed, true};  The
-    rule seed is always readable, but can only be written to / saved during setup
-    or post game.
-
-
-    Generate the manual and get the Directory of the generated manual with Properties["GetRuleManual"].
-    This property is read only, and can only be read during setup or post game.
-
-
-    Find out if a given seed uses the original rule generator or modified rule generators
-    with Propeties["IsSeedVanilla"] or Properties["IsSeedModded"].  These properties
-    are read only.
-
-
-    Seeds 1, 2 and everything less than or equal to -3 are vanilla seeds. The rest
-    of them are modded seeds.'
+  description: "Ever wish you could change the rules you play the vanilla modules
+    under?  This mod was inspired by LtHummus's original Unofficial KTaNE manual hack.\r\n\r\nThe
+    Default seed for this mod is Seed #6502. (Manual included)\r\n\r\nYou can change
+    this seed in the settings json.  In doing so, the game will generate the manual
+    when you load up the next bomb.  The manauls will appear in the following directory,
+    with a directory named for the seed you specified.\r\n[table]\r\n[tr][td]Platform[/td][td]Path[/td][/tr]\r\n[tr][td]Windows[/td][td]%APPDATA%\\..\\LocalLow\\Steel
+    Crate Games\\Keep Talking and Nobody Explodes\\ModifiedVanillaManuals[/td][/tr]\r\n[tr][td]Mac[/td][td]~/Library/Application
+    Support/com.steelcrategames.keeptalkingandnobodyexplodes/ModifiedVanillaManuals[/td][/tr]\r\n[/table]\r\n\r\n\r\n[h1]For
+    mod developers[/h1]\r\n[u]Mod API[/u]\r\nThe mod exposes a public API that can
+    be used by other mods to interoperate with it.\r\nThe API is exposed through a
+    GameObject named [i]VanillaRuleModifierProperties[/i] that has an [i]IDicionary<string,
+    object>[/i] component. This IDictionary contains keys and values (in this text
+    also called properties) that allow for interoperation with the mod. The full set
+    of keys is described in the table below.\r\nIf the GameObject does not exist it
+    means that the Multiple Bombs mod is not installed.\r\nPlease note that the IDictionary
+    is delcared with a generic value type of [i]object[/i] to allow each property
+    to have their own types. The type of each property is detailed in the properties
+    table. Make sure to cast the values to the right type and to pass objects of the
+    right type when setting properties.\r\nAvailable properties:\r\n[table]\r\n[tr][th]Key[/th][th]Type[/th][th]Can
+    Set[/th][th]Description[/th][/tr]\r\n[tr][td]RuleSeed[/td][td]int[/td][td]True[/td][td]Gets
+    or Sets the rule seed.\r\nNote: This property can only be written to during setup.[/td][/tr]\r\n[tr][td]GetRuleManual[/td][td]string[/td][td]False[/td][td]Genenerates
+    the manual for the currently set seed and returns the path to the directory containing
+    that manual.\r\nNote: This property can only be read during setup.[/td][/tr]\r\n[tr][td]IsSeedVanilla[/td][td]bool[/td][td]False[/td][td]This
+    is used to determine which rule set generator is in use.[/td][/tr]\r\n[tr][td]IsSeedModded[/td][td]bool[/td][td]False[/td][td]Vanilla
+    seed numbers are 1, 2, and everything -3 and below.[/td][/tr]\r\n[/table]\r\n\r\nAPI
+    usage example:\r\n[code]\r\n//Example method that uses the API to set the rule
+    seed.\r\npublic void SetRuleSeed(int seed, bool applyNextBomb)\r\n{\r\n\tGameObject
+    vanillaRuleModifierAPIGameObject = GameObject.Find(\"VanillaRuleModifierProperties\");\r\n\tif(vanillaRuleModifierAPIGameObject
+    == null) //If the Vanilla Rule Modifer is not installed, return.\r\n\t\treturn;\r\n\tIDictionary<string,
+    object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string,
+    object>>();\r\n\tif(applyNextBomb)\r\n\t\tvanillaRuleModifierAPI[\"RuleSeed\"]
+    = new object[] {seed, true};\r\n\telse\r\n\t\tvanillaRuleModifierAPI[\"RuleSeed\"]
+    = seed;\r\n}\r\n[/code]"
   version: 1.0
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
   previewImage: {fileID: 2800000, guid: b73cdd829aaf4854a9f499830a8ef7f1, type: 3}

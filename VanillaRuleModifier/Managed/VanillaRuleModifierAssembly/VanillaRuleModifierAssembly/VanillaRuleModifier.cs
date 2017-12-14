@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
@@ -17,7 +18,7 @@ using Resources = VanillaRuleModifierAssembly.Properties.Resources;
 public class VanillaRuleModifier : MonoBehaviour
 {
     private KMGameInfo _gameInfo = null;
-    private Settings _modSettings;
+    public Settings _modSettings;
 
     //public TextAsset[] ManualDataFiles;
     private readonly List<ManualFileName> _manualFileNames = new List<ManualFileName>()  
@@ -167,10 +168,7 @@ public class VanillaRuleModifier : MonoBehaviour
         _fixesApplied = true;
     }
 
-    public int GetCurrentSeed()
-    {
-        return _modSettings.Settings.RuleSeed;
-    }
+    private int _currentSeed;
 
     public bool IsSeedVanilla()
     {
@@ -205,8 +203,11 @@ public class VanillaRuleModifier : MonoBehaviour
 
 	    _gameInfo = GetComponent<KMGameInfo>();
         LoadMod();
+        
 	    DebugLog("Service started");
     }
+
+    
 
     public void SetRuleSeed(int seed, bool writeSettings)
     {
@@ -352,8 +353,8 @@ public class VanillaRuleModifier : MonoBehaviour
         vennSVG.Draw4SetVennDiagram(vennList, lineTypes);
         legendSVG.DrawVennDiagramLegend(labels, lineTypes);
 
-        File.WriteAllText(Path.Combine(vennpath, "venndiagram.svg"), vennSVG.ToString());
-        File.WriteAllText(Path.Combine(vennpath, "legend.svg"), legendSVG.ToString());
+        File.WriteAllText(Path.Combine(vennpath, $"venndiagram-{_currentSeed}.svg"), vennSVG.ToString());
+        File.WriteAllText(Path.Combine(vennpath, $"legend-{_currentSeed}.svg"), legendSVG.ToString());
     }
 
     private void WriteMazesManual(string path)
@@ -363,7 +364,7 @@ public class VanillaRuleModifier : MonoBehaviour
         var mazes = _ruleManager.MazeRuleSet.GetMazes();
         for (var i = 0; i < mazes.Count; i++)
         {
-            File.WriteAllText(Path.Combine(mazepath, $"maze{i}.svg"), mazes[i].ToSVG());
+            File.WriteAllText(Path.Combine(mazepath, $"maze{i}-{_currentSeed}.svg"), mazes[i].ToSVG());
         }
     }
 
@@ -591,19 +592,19 @@ public class VanillaRuleModifier : MonoBehaviour
         {
             var rule = new List<Rule>(rules.Value);
 
-            wirecuttinginstructions += $"<tr><td><strong><em>{rules.Key} wires:</em></strong><br />";
+            wirecuttinginstructions += $"<tr><td><strong><em>{rules.Key} wires:</em></strong><br />\n";
             if (rule.Count == 1)
             {
-                wirecuttinginstructions += $"{rule[0].GetSolutionString()}.";
+                wirecuttinginstructions += $"{rule[0].GetSolutionString()}.\n";
             }
             else
             {
-                wirecuttinginstructions += $"If {rule[0].GetQueryString()}, {rule[0].GetSolutionString()}.";
+                wirecuttinginstructions += $"If {rule[0].GetQueryString()}, {rule[0].GetSolutionString()}.\n";
                 for (var i = 1; i < rule.Count - 1; i++)
                 {
-                    wirecuttinginstructions += $"<br />Otherwise, If {rule[i].GetQueryString()}, {rule[i].GetSolutionString()}.";
+                    wirecuttinginstructions += $"<br />Otherwise, If {rule[i].GetQueryString()}, {rule[i].GetSolutionString()}.\n";
                 }
-                wirecuttinginstructions += $"<br />Otherwise, {rule.Last().GetSolutionString()}.";
+                wirecuttinginstructions += $"<br />Otherwise, {rule.Last().GetSolutionString()}.\n";
             }
         }
 
@@ -687,6 +688,8 @@ public class VanillaRuleModifier : MonoBehaviour
             case "Keypads.html":
                 WriteKeypadsManual(path, file, ref replacements);
                 break;
+            case "Mazes.html":
+            case "Complicated Wires.html":
             case "index.html":
                 file.WriteFile(path, replacements);
                 break;
@@ -699,6 +702,7 @@ public class VanillaRuleModifier : MonoBehaviour
     private static readonly List<int> PreviousSeeds = new List<int>();
     private void WriteManual(int seed)
     {
+        _currentSeed = seed;
         if (PreviousSeeds.Contains(seed))
         {
             if (seed != 1)

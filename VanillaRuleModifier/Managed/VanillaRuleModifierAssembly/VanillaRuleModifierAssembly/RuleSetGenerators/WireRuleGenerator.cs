@@ -36,6 +36,338 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             return true;
         }
 
+        public WireRuleSet CreateWireRules(int seed)
+        {
+            switch (seed)
+            {
+                case 1:
+                    {
+                        WireRuleSet wireRuleSet = new WireRuleSet();
+                        wireRuleSet.RulesDictionary[3] = new List<Rule>
+                    {
+                        new Rule
+                        {
+                            Queries = new List<Query> {new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.IsExactlyZeroColorWire}},
+                            Solution = WireSolutions.WireIndex1
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query> {new Query {Args = new Dictionary<string, object>() {{"color", WireColor.white}}, Property = QueryableWireProperty.LastWireIsColor}},
+                            Solution = WireSolutions.WireLast
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query> {new Query {Args = new Dictionary<string, object>() {{"color", WireColor.blue}}, Property = QueryableWireProperty.MoreThanOneColorWire}},
+                            Solution = WireSolutions.WireColorCutLast,
+                            SolutionArgs = new Dictionary<string, object> { {"color", WireColor.blue} }
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query> {new Query {Property = QueryableProperty.Otherwise}},
+                            Solution = WireSolutions.WireLast
+                        }
+                    };
+
+                        wireRuleSet.RulesDictionary[4] = new List<Rule>
+                    {
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.MoreThanOneColorWire},
+                                new Query {Property = QueryableProperty.IsSerialNumberOdd},
+                            },
+                            Solution = WireSolutions.WireColorCutLast,
+                            SolutionArgs = new Dictionary<string, object> { {"color", WireColor.red} }
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.yellow}}, Property = QueryableWireProperty.LastWireIsColor},
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.IsExactlyZeroColorWire},
+                            },
+                            Solution = WireSolutions.WireIndex0
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.blue}}, Property = QueryableWireProperty.IsExactlyOneColorWire}
+                            },
+                            Solution = WireSolutions.WireIndex0
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.yellow}}, Property = QueryableWireProperty.MoreThanOneColorWire}
+                            },
+                            Solution = WireSolutions.WireLast
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Property = QueryableProperty.Otherwise}
+                            },
+                            Solution = WireSolutions.WireIndex1
+                        }
+                    };
+
+                        wireRuleSet.RulesDictionary[5] = new List<Rule>
+                    {
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.black}}, Property = QueryableWireProperty.LastWireIsColor},
+                                new Query {Property = QueryableProperty.IsSerialNumberOdd},
+                            },
+                            Solution = WireSolutions.WireIndex3
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.IsExactlyOneColorWire},
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.yellow}}, Property = QueryableWireProperty.MoreThanOneColorWire},
+                            },
+                            Solution = WireSolutions.WireIndex0
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.black}}, Property = QueryableWireProperty.IsExactlyZeroColorWire}
+                            },
+                            Solution = WireSolutions.WireIndex1
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Property = QueryableProperty.Otherwise}
+                            },
+                            Solution = WireSolutions.WireIndex0
+                        }
+                    };
+
+                        wireRuleSet.RulesDictionary[6] = new List<Rule>
+                    {
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.yellow}}, Property = QueryableWireProperty.IsExactlyZeroColorWire},
+                                new Query {Property = QueryableProperty.IsSerialNumberOdd},
+                            },
+                            Solution = WireSolutions.WireIndex2
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.yellow}}, Property = QueryableWireProperty.IsExactlyOneColorWire},
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.white}}, Property = QueryableWireProperty.MoreThanOneColorWire},
+                            },
+                            Solution = WireSolutions.WireIndex3
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.IsExactlyZeroColorWire}
+                            },
+                            Solution = WireSolutions.WireLast
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Property = QueryableProperty.Otherwise}
+                            },
+                            Solution = WireSolutions.WireIndex3
+                        }
+                    };
+
+                        return wireRuleSet;
+                    }
+                case 2:
+                    {
+                        WireRuleSet wireRuleSet = new WireRuleSet();
+                        wireRuleSet.RulesDictionary[3] = new List<Rule>
+                    {
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.white}}, Property = QueryableWireProperty.IsExactlyZeroColorWire},
+                                new Query {Property = QueryableProperty.DoesSerialNumberStartWithLetter},
+                            },
+                            Solution = WireSolutions.WireIndex1
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.IsExactlyOneColorWire}
+
+                            },
+                            Solution = WireSolutions.WireIndex0
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.blue}}, Property = QueryableWireProperty.MoreThanOneColorWire}
+
+                            },
+                            Solution = WireSolutions.WireColorCutFirst,
+                            SolutionArgs = new Dictionary<string, object> { {"color", WireColor.blue} }
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.LastWireIsColor}
+
+                            },
+                            Solution = WireSolutions.WireLast
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query> {new Query {Property = QueryableProperty.Otherwise}},
+                            Solution = WireSolutions.WireIndex1
+                        }
+                    };
+
+                        wireRuleSet.RulesDictionary[4] = new List<Rule>
+                    {
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.yellow}}, Property = QueryableWireProperty.IsExactlyOneColorWire},
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.LastWireIsColor},
+                            },
+                            Solution = WireSolutions.WireIndex2
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.white}}, Property = QueryableWireProperty.LastWireIsColor},
+                            },
+                            Solution = WireSolutions.WireIndex1
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.yellow}}, Property = QueryableWireProperty.IsExactlyZeroColorWire}
+                            },
+                            Solution = WireSolutions.WireIndex0
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Property = QueryableProperty.Otherwise}
+                            },
+                            Solution = WireSolutions.WireLast
+                        }
+                    };
+
+                        wireRuleSet.RulesDictionary[5] = new List<Rule>
+                    {
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.black}}, Property = QueryableWireProperty.MoreThanOneColorWire},
+                                new Query {Property = QueryableProperty.DoesSerialNumberStartWithLetter},
+                            },
+                            Solution = WireSolutions.WireIndex1
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.blue}}, Property = QueryableWireProperty.LastWireIsColor},
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.IsExactlyOneColorWire},
+                            },
+                            Solution = WireSolutions.WireIndex0
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.LastWireIsColor},
+                            },
+                            Solution = WireSolutions.WireIndex3
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.IsExactlyZeroColorWire}
+                            },
+                            Solution = WireSolutions.WireIndex2
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Property = QueryableProperty.Otherwise}
+                            },
+                            Solution = WireSolutions.WireIndex0
+                        }
+                    };
+
+                        wireRuleSet.RulesDictionary[6] = new List<Rule>
+                    {
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.IsExactlyOneColorWire},
+                            },
+                            Solution = WireSolutions.WireColorExactlyOne,
+                            SolutionArgs = new Dictionary<string, object> { {"color", WireColor.red} }
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.red}}, Property = QueryableWireProperty.LastWireIsColor},
+                            },
+                            Solution = WireSolutions.WireLast
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Args = new Dictionary<string, object>() {{"color", WireColor.yellow}}, Property = QueryableWireProperty.IsExactlyZeroColorWire}
+                            },
+                            Solution = WireSolutions.WireIndex3
+                        },
+                        new Rule
+                        {
+                            Queries = new List<Query>
+                            {
+                                new Query {Property = QueryableProperty.Otherwise}
+                            },
+                            Solution = WireSolutions.WireIndex1
+                        }
+                    };
+                        return wireRuleSet;
+                    }
+                default:
+                    return (WireRuleSet)GenerateRuleSet(seed);
+            }
+        }
+
         protected override AbstractRuleSet CreateRules(bool useDefault)
         {
             WireRuleSet wireRuleSet = new WireRuleSet();
@@ -53,19 +385,19 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     list.Add(portQueries);
                 this.queryPropertyWeights.Clear();
                 this.solutionWeights.Clear();
-                int numRules = base.GetNumRules();
+                int numRules = GetNumRules();
                 for (int j = 0; j < numRules; j++)
                 {
                     List<WireColor> listOfWireColors = RuleUtil.GetListOfWireColors();
                     Rule rule = new Rule();
-                    int numQueriesForRule = base.GetNumQueriesForRule();
+                    int numQueriesForRule = GetNumQueriesForRule();
                     List<WireColor> list3 = new List<WireColor>();
                     int num = i - 1;
                     for (int k = 0; k < numQueriesForRule; k++)
                     {
                         bool compoundQueriesAllowed = k > 0;
                         List<QueryableProperty> possibleQueryableProperties = this.CalculatePossibleQueryableProperties(list, num, compoundQueriesAllowed);
-                        QueryableProperty queryableProperty = base.SelectQueryableProperty(possibleQueryableProperties);
+                        QueryableProperty queryableProperty = SelectQueryableProperty(possibleQueryableProperties);
                         Query query = new Query();
                         query.Property = queryableProperty;
                         if (queryableProperty is QueryableWireProperty)
@@ -86,7 +418,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                         rule.Queries.Add(query);
                     }
                     List<Solution> possibleSolutions = this.CalculatePossibleSolutions(i, rule);
-                    Solution solution = base.SelectSolution(possibleSolutions);
+                    Solution solution = SelectSolution(possibleSolutions);
                     rule.Solution = solution;
                     if (list3.Count > 0)
                     {
@@ -98,7 +430,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                         j--;    //Previous rule was never valid.
 
                 }
-                list2.Sort((Rule r1, Rule r2) => r2.Queries.Count.CompareTo(r1.Queries.Count));
+                list2 = list2.OrderByDescending(x => x.Queries.Count).ToList();
                 Rule rule2 = new Rule();
                 Query query2 = new Query();
                 query2.Property = QueryableProperty.Otherwise;
