@@ -11,7 +11,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 615501dbe4f3fe94fbf4b564abb10237, type: 3}
   m_Name: ModConfig
   m_EditorClassIdentifier: 
-  id: 
-  title: 
+  id: Test module
+  title: Workshop test
+  description: Testing what it takes to kill a workshop item.
   version: 
-  outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
+  outputFolder: build
+  previewImage: {fileID: 0}

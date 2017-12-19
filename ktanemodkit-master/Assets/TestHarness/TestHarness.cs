@@ -1,151 +1,385 @@
-﻿using System;
-using System.Collections;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+
 using System.Reflection;
-using System.Runtime.Remoting.Messaging;
-using System.Xml.Serialization;
-using Microsoft.Win32;
-using UnityEditor;
-using UnityEngine;
+using Newtonsoft.Json;
 
-public class TestHarness : MonoBehaviour
+public class FakeBombInfo : MonoBehaviour
 {
-    public FakeBombInfo FakeInfo;
-
-    public StatusLight StatusLightPrefab;
-    public GameObject HighlightPrefab;
-
-    [Serializable]
-    public class BombSoundEffects
+    public abstract class Widget : Object
     {
-        public List<AudioClip> AlarmClockBeep = new List<AudioClip>();
-        public List<AudioClip> AlarmClockSnooze = new List<AudioClip>();
-        public List<AudioClip> BigButtonPress = new List<AudioClip>();
-        public List<AudioClip> BigButtonRelease = new List<AudioClip>();
-        public List<AudioClip> BinderDrop = new List<AudioClip>();
-        public List<AudioClip> BombDefused = new List<AudioClip>();
-        public List<AudioClip> BombDrop = new List<AudioClip>();
-        public List<AudioClip> BombExplode = new List<AudioClip>();
-        public List<AudioClip> BriefcaseClose = new List<AudioClip>();
-        public List<AudioClip> BriefcaseOpen = new List<AudioClip>();
-        public List<AudioClip> ButtonPress = new List<AudioClip>();
-        public List<AudioClip> ButtonRelease = new List<AudioClip>();
-        public List<AudioClip> CapacitorPop = new List<AudioClip>();
-        public List<AudioClip> CorrectChime = new List<AudioClip>();
-        public List<AudioClip> DossierOptionPressed = new List<AudioClip>();
-        public List<AudioClip> EmergencyAlarm = new List<AudioClip>();
-        public List<AudioClip> FastestTimerBeep = new List<AudioClip>();
-        public List<AudioClip> FastTimerBeep = new List<AudioClip>();
-        public List<AudioClip> FreeplayDeviceDrop = new List<AudioClip>();
-        public List<AudioClip> GameOverFanfare = new List<AudioClip>();
-        public List<AudioClip> LightBuzz = new List<AudioClip>();
-        public List<AudioClip> LightBuzzShort = new List<AudioClip>();
-        public List<AudioClip> MenuButtonPressed = new List<AudioClip>();
-        public List<AudioClip> MenuDrop = new List<AudioClip>();
-        public List<AudioClip> NeedyActivated = new List<AudioClip>();
-        public List<AudioClip> NeedyWarning = new List<AudioClip>();
-        public List<AudioClip> NormalTimerBeep = new List<AudioClip>();
-        public List<AudioClip> PageTurn = new List<AudioClip>();
-        public List<AudioClip> SelectionTick = new List<AudioClip>();
-        public List<AudioClip> Stamp = new List<AudioClip>();
-        public List<AudioClip> Strike = new List<AudioClip>();
-        public List<AudioClip> Switch = new List<AudioClip>();
-        public List<AudioClip> TitleMenuPressed = new List<AudioClip>();
-        public List<AudioClip> TypewriterKey = new List<AudioClip>();
-        public List<AudioClip> WireSequenceMechanism = new List<AudioClip>();
-        public List<AudioClip> WireSnip = new List<AudioClip>();
+        public abstract string GetResult(string key, string data);
+    }
 
-        private readonly Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>> _soundEffects =
-            new Dictionary<KMSoundOverride.SoundEffect, List<AudioClip>>();
+    public class PortWidget : Widget
+    {
+        List<string> ports;
 
-        public BombSoundEffects()
+        public PortWidget()
         {
-            _soundEffects.Add(KMSoundOverride.SoundEffect.ButtonPress, ButtonPress);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.ButtonRelease, ButtonRelease);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.BigButtonPress, BigButtonPress);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.BigButtonRelease, BigButtonRelease);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.WireSnip, WireSnip);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.Strike, Strike);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.AlarmClockBeep, AlarmClockBeep);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.AlarmClockSnooze, AlarmClockSnooze);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.Switch, Switch);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.GameOverFanfare, GameOverFanfare);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.BombDefused, BombDefused);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.BriefcaseOpen, BriefcaseOpen);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.BriefcaseClose, BriefcaseClose);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.CorrectChime, CorrectChime);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.BombExplode, BombExplode);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.NormalTimerBeep, NormalTimerBeep);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.FastTimerBeep, FastTimerBeep);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.FastestTimerBeep, FastestTimerBeep);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.LightBuzz, LightBuzz);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.LightBuzzShort, LightBuzzShort);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.Stamp, Stamp);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.TypewriterKey, TypewriterKey);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.NeedyActivated, NeedyActivated);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.WireSequenceMechanism, WireSequenceMechanism);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.SelectionTick, SelectionTick);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.PageTurn, PageTurn);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.DossierOptionPressed, DossierOptionPressed);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.FreeplayDeviceDrop, FreeplayDeviceDrop);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.BombDrop, BombDrop);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.MenuDrop, MenuDrop);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.BinderDrop, BinderDrop);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.MenuButtonPressed, MenuButtonPressed);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.TitleMenuPressed, TitleMenuPressed);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.CapacitorPop, CapacitorPop);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.EmergencyAlarm, EmergencyAlarm);
-            _soundEffects.Add(KMSoundOverride.SoundEffect.NeedyWarning, NeedyWarning);
-        }
+            ports = new List<string>();
+            string portList = "";
 
-        public AudioClip GetAudioClip(KMSoundOverride.SoundEffect effect)
-        {
-            List<AudioClip> clips;
-            if (!_soundEffects.TryGetValue(effect, out clips))
-                return null;
-            if (clips == null || clips.Count == 0)
-                return null;
-            return clips[UnityEngine.Random.Range(0, clips.Count)];
-        }
-
-        public void OverwriteClips(KMSoundOverride clipsOverride)
-        {
-            List<AudioClip> clips;
-            if (!_soundEffects.TryGetValue(clipsOverride.OverrideEffect, out clips))
+            if (Random.value > 0.5)
             {
-                clips = new List<AudioClip>();
-                _soundEffects.Add(clipsOverride.OverrideEffect, clips);
+                if (Random.value > 0.5)
+                {
+                    ports.Add("Parallel");
+                    portList += "Parallel";
+                }
+                if (Random.value > 0.5)
+                {
+                    ports.Add("Serial");
+                    if (portList.Length > 0) portList += ", ";
+                    portList += "Serial";
+                }
             }
             else
             {
-                clips.Clear();
+                if (Random.value > 0.5)
+                {
+                    ports.Add("DVI");
+                    portList += "DVI";
+                }
+                if (Random.value > 0.5)
+                {
+                    ports.Add("PS2");
+                    if (portList.Length > 0) portList += ", ";
+                    portList += "PS2";
+                }
+                if (Random.value > 0.5)
+                {
+                    ports.Add("RJ45");
+                    if (portList.Length > 0) portList += ", ";
+                    portList += "RJ45";
+                }
+                if (Random.value > 0.5)
+                {
+                    ports.Add("StereoRCA");
+                    if (portList.Length > 0) portList += ", ";
+                    portList += "StereoRCA";
+                }
             }
-            clips.Add(clipsOverride.AudioClip);
-            clips.AddRange(clipsOverride.AdditionalVariants);
-            clips.RemoveAll(t => t == null);
+
+            if (portList.Length == 0) portList = "Empty plate";
+            Debug.Log("Added port widget: " + portList);
+        }
+
+        public override string GetResult(string key, string data)
+        {
+            if (key == KMBombInfo.QUERYKEY_GET_PORTS)
+            {
+                return JsonConvert.SerializeObject((object)new Dictionary<string, List<string>>()
+                {
+                    {
+                        "presentPorts", ports
+                    }
+                });
+            }
+            return null;
         }
     }
 
-    public BombSoundEffects SoundEffects = new BombSoundEffects();
+    public class IndicatorWidget : Widget
+    {
+        static List<string> possibleValues = new List<string>(){
+            "SND","CLR","CAR",
+            "IND","FRQ","SIG",
+            "NSA","MSA","TRN",
+            "BOB","FRK"
+        };
 
-    TestSelectable currentSelectable;
-    TestSelectableArea currentSelectableArea;
+        private string val;
+        private bool on;
 
-    KMBombInfo BombInfo;
+        public IndicatorWidget()
+        {
+            int pos = Random.Range(0, possibleValues.Count);
+            val = possibleValues[pos];
+            possibleValues.RemoveAt(pos);
+            on = Random.value > 0.4f;
 
-    AudioSource audioSource;
-    List<AudioClip> audioClips;
+            Debug.Log("Added indicator widget: " + val + " is " + (on ? "ON" : "OFF"));
+        }
+
+        public override string GetResult(string key, string data)
+        {
+            if (key == KMBombInfo.QUERYKEY_GET_INDICATOR)
+            {
+                return JsonConvert.SerializeObject((object)new Dictionary<string, string>()
+                {
+                    {
+                        "label", val
+                    },
+                    {
+                        "on", on?bool.TrueString:bool.FalseString
+                    }
+                });
+            }
+            else return null;
+        }
+    }
+
+    public class BatteryWidget : Widget
+    {
+        private int batt;
+
+        public BatteryWidget()
+        {
+            batt = Random.Range(1, 3);
+
+            Debug.Log("Added battery widget: " + batt);
+        }
+
+        public override string GetResult(string key, string data)
+        {
+            if (key == KMBombInfo.QUERYKEY_GET_BATTERIES)
+            {
+                return JsonConvert.SerializeObject((object)new Dictionary<string, int>()
+                {
+                    {
+                        "numbatteries", batt
+                    }
+                });
+            }
+            else return null;
+        }
+    }
+    public Widget[] widgets;
 
     void Awake()
     {
-        //FakeInfo = gameObject.AddComponent<FakeBombInfo>();
-        FakeInfo.ActivateLights += delegate ()
+        const int numWidgets = 5;
+        widgets = new Widget[numWidgets];
+        for (int a = 0; a < numWidgets; a++)
+        {
+            int r = Random.Range(0, 3);
+            if (r == 0) widgets[a] = new PortWidget();
+            else if (r == 1) widgets[a] = new IndicatorWidget();
+            else widgets[a] = new BatteryWidget();
+        }
+
+        char[] possibleCharArray = new char[35]
+        {
+            'A','B','C','D','E',
+            'F','G','H','I','J',
+            'K','L','M','N','E',
+            'P','Q','R','S','T',
+            'U','V','W','X','Z',
+            '0','1','2','3','4',
+            '5','6','7','8','9'
+        };
+        string str1 = string.Empty;
+        for (int index = 0; index < 2; ++index) str1 = str1 + possibleCharArray[Random.Range(0, possibleCharArray.Length)];
+        string str2 = str1 + (object) Random.Range(0, 10);
+        for (int index = 3; index < 5; ++index) str2 = str2 + possibleCharArray[Random.Range(0, possibleCharArray.Length - 10)];
+        serial = str2 + Random.Range(0, 10);
+
+        Debug.Log("Serial: " + serial);
+    }
+
+    float startupTime = .5f;
+
+    public delegate void LightsOn();
+    public LightsOn ActivateLights;
+
+    private Widget widgetHandler;
+
+    void FixedUpdate()
+    {
+        if (solved) return;
+        if (startupTime > 0)
+        {
+            startupTime -= Time.fixedDeltaTime;
+            if (startupTime < 0)
+            {
+                ActivateLights();
+                foreach (KeyValuePair<KMBombModule, bool> m in modules)
+                {
+                    if (m.Key.OnActivate != null) m.Key.OnActivate();
+                }
+                foreach (KMNeedyModule m in needyModules)
+                {
+                    if (m.OnActivate != null) m.OnActivate();
+                }
+            }
+        }
+        else
+        {
+            timeLeft -= Time.fixedDeltaTime;
+            if (timeLeft < 0) timeLeft = 0;
+        }
+    }
+
+    public const int numStrikes = 3;
+
+    public bool solved;
+    public float timeLeft = 600f;
+    public int strikes = 0;
+    public string serial;
+
+    public float GetTime()
+    {
+        return timeLeft;
+    }
+
+    public string GetFormattedTime()
+    {
+        string time = "";
+        if (timeLeft < 60)
+        {
+            if (timeLeft < 10) time += "0";
+            time += (int)timeLeft;
+            time += ".";
+            int s = (int)(timeLeft * 100);
+            if (s < 10) time += "0";
+            time += s;
+        }
+        else
+        {
+            if (timeLeft < 600) time += "0";
+            time += (int)timeLeft / 60;
+            time += ":";
+            int s = (int)timeLeft % 60;
+            if (s < 10) time += "0";
+            time += s;
+        }
+        return time;
+    }
+
+    public int GetStrikes()
+    {
+        return strikes;
+    }
+
+    public List<KeyValuePair<KMBombModule, bool>> modules = new List<KeyValuePair<KMBombModule, bool>>();
+    public List<KMNeedyModule> needyModules = new List<KMNeedyModule>();
+
+    public List<string> GetModuleNames()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            moduleList.Add(m.Key.ModuleDisplayName);
+        }
+        foreach (KMNeedyModule m in needyModules)
+        {
+            moduleList.Add(m.ModuleDisplayName);
+        }
+        return moduleList;
+    }
+
+    public List<string> GetSolvableModuleNames()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            moduleList.Add(m.Key.ModuleDisplayName);
+        }
+        return moduleList;
+    }
+
+    public List<string> GetSolvedModuleNames()
+    {
+        List<string> moduleList = new List<string>();
+        foreach (KeyValuePair<KMBombModule, bool> m in modules)
+        {
+            if(m.Value) moduleList.Add(m.Key.ModuleDisplayName);
+        }
+        return moduleList;
+    }
+
+    public List<string> GetWidgetQueryResponses(string queryKey, string queryInfo)
+    {
+        List<string> responses = new List<string>();
+        if (queryKey == KMBombInfo.QUERYKEY_GET_SERIAL_NUMBER)
+        {
+            responses.Add(JsonConvert.SerializeObject((object)new Dictionary<string, string>()
+            {
+                {
+                    "serial", serial
+                }
+            }));
+        }
+        foreach (Widget w in widgets)
+        {
+            string r = w.GetResult(queryKey, queryInfo);
+            if (r != null) responses.Add(r);
+        }
+        if (queryKey == "Unity")
+            responses.Add(JsonConvert.SerializeObject(new Dictionary<string, bool>() { { "Unity", true } }));
+        return responses;
+    }
+
+    public bool IsBombPresent()
+    {
+        return true;
+    }
+
+    public void HandleStrike()
+    {
+        strikes++;
+        Debug.Log(strikes + "/" + numStrikes);
+        if (strikes == numStrikes)
+        {
+            if (Detonate != null) Detonate();
+            Debug.Log("KABOOM!");
+        }
+    }
+
+    public delegate void OnDetonate();
+    public OnDetonate Detonate;
+
+    public void HandleStrike(string reason)
+    {
+        Debug.Log("Strike: " + reason);
+        HandleStrike();
+    }
+
+    public delegate void OnSolved();
+    public OnSolved HandleSolved;
+
+    public void Solved()
+    {
+        solved = true;
+        if (HandleSolved != null) HandleSolved();
+        Debug.Log("Bomb defused!");
+    }
+
+    public delegate void LightState(bool state);
+    public LightState OnLights;
+    public void OnLightsOn()
+    {
+        if (OnLights != null) OnLights(true);
+    }
+
+    public void OnLightsOff()
+    {
+        if (OnLights != null) OnLights(false);
+    }
+}
+
+public class TestHarness : MonoBehaviour
+{
+    private FakeBombInfo fakeInfo;
+
+    public GameObject HighlightPrefab;
+    TestSelectable currentSelectable;
+    TestSelectableArea currentSelectableArea;
+
+    AudioSource audioSource;
+    public List<AudioClip> AudioClips;
+
+    void Awake()
+    {
+        PrepareLights();
+
+        fakeInfo = gameObject.AddComponent<FakeBombInfo>();
+        fakeInfo.ActivateLights += delegate()
         {
             TurnLightsOn();
-            FakeInfo.OnLightsOn();
-            StartCoroutine(TimerTick());
-            StartCoroutine(LastMinuteWarning());
+            fakeInfo.OnLightsOn();
         };
         TurnLightsOff();
 
@@ -164,90 +398,33 @@ public class TestHarness : MonoBehaviour
             {
                 if (f.FieldType.Equals(typeof(KMBombInfo)))
                 {
-                    KMBombInfo component = (KMBombInfo) f.GetValue(s);
-                    component.TimeHandler += new KMBombInfo.GetTimeHandler(FakeInfo.GetTime);
-                    component.FormattedTimeHandler += new KMBombInfo.GetFormattedTimeHandler(FakeInfo.GetFormattedTime);
-                    component.StrikesHandler += new KMBombInfo.GetStrikesHandler(FakeInfo.GetStrikes);
-                    component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(FakeInfo.GetModuleNames);
-                    component.SolvableModuleNamesHandler += new KMBombInfo.GetSolvableModuleNamesHandler(FakeInfo.GetSolvableModuleNames);
-                    component.SolvedModuleNamesHandler += new KMBombInfo.GetSolvedModuleNamesHandler(FakeInfo.GetSolvedModuleNames);
-                    component.WidgetQueryResponsesHandler += new KMBombInfo.GetWidgetQueryResponsesHandler(FakeInfo.GetWidgetQueryResponses);
-                    component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(FakeInfo.IsBombPresent);
+                    KMBombInfo component = (KMBombInfo)f.GetValue(s);
+                    component.TimeHandler += new KMBombInfo.GetTimeHandler(fakeInfo.GetTime);
+                    component.FormattedTimeHandler += new KMBombInfo.GetFormattedTimeHandler(fakeInfo.GetFormattedTime);
+                    component.StrikesHandler += new KMBombInfo.GetStrikesHandler(fakeInfo.GetStrikes);
+                    component.ModuleNamesHandler += new KMBombInfo.GetModuleNamesHandler(fakeInfo.GetModuleNames);
+                    component.SolvableModuleNamesHandler += new KMBombInfo.GetSolvableModuleNamesHandler(fakeInfo.GetSolvableModuleNames);
+                    component.SolvedModuleNamesHandler += new KMBombInfo.GetSolvedModuleNamesHandler(fakeInfo.GetSolvedModuleNames);
+                    component.WidgetQueryResponsesHandler += new KMBombInfo.GetWidgetQueryResponsesHandler(fakeInfo.GetWidgetQueryResponses);
+                    component.IsBombPresentHandler += new KMBombInfo.KMIsBombPresent(fakeInfo.IsBombPresent);
                     continue;
                 }
                 if (f.FieldType.Equals(typeof(KMGameInfo)))
                 {
-                    KMGameInfo component = (KMGameInfo) f.GetValue(s);
-                    component.OnLightsChange += new KMGameInfo.KMLightsChangeDelegate(FakeInfo.OnLights);
+                    KMGameInfo component = (KMGameInfo)f.GetValue(s);
+                    component.OnLightsChange += new KMGameInfo.KMLightsChangeDelegate(fakeInfo.OnLights);
                     //component.OnAlarmClockChange += new KMGameInfo.KMAlarmClockChangeDelegate(fakeInfo.OnAlarm);
                     continue;
                 }
                 if (f.FieldType.Equals(typeof(KMGameCommands)))
                 {
-                    KMGameCommands component = (KMGameCommands) f.GetValue(s);
-                    component.OnCauseStrike += new KMGameCommands.KMCauseStrikeDelegate(FakeInfo.HandleStrike);
+                    KMGameCommands component = (KMGameCommands)f.GetValue(s);
+                    component.OnCauseStrike += new KMGameCommands.KMCauseStrikeDelegate(fakeInfo.HandleStrike);
                     continue;
                 }
             }
         }
     }
-
-    void OnBombExploded()
-    {
-        PlayGameSoundHandler(KMSoundOverride.SoundEffect.BombExplode, transform);
-    }
-
-    void OnBombSolved()
-    {
-        PlayGameSoundHandler(KMSoundOverride.SoundEffect.BombDefused, transform);
-        PlayGameSoundHandler(KMSoundOverride.SoundEffect.GameOverFanfare, transform);
-    }
-
-    private float _previousTimer;
-
-    IEnumerator TimerTick()
-    {
-        _previousTimer = FakeInfo.TimeLeft;
-        while (!FakeInfo.detonated)
-        {
-            yield return new WaitUntil(() => Mathf.FloorToInt(FakeInfo.TimeLeft) != Mathf.FloorToInt(_previousTimer) && !FakeInfo.detonated);
-            if (FakeInfo.detonated) yield break;
-            switch (FakeInfo.strikes)
-            {
-                case 0:
-                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.NormalTimerBeep, transform);
-                    break;
-                case 1:
-                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.FastTimerBeep, transform);
-                    break;
-                default:
-                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
-                    break;
-            }
-            _previousTimer = FakeInfo.TimeLeft;
-        }
-    }
-
-    IEnumerator LastMinuteWarning()
-    {
-        yield return new WaitUntil(() => (FakeInfo.TimeLeft <= 60) && !FakeInfo.detonated);
-        Dictionary<Light, Color> lightColors = FindObjectsOfType<Light>().ToDictionary(l => l, l => l.color);
-        while (!FakeInfo.detonated)
-        {
-            foreach (var l in lightColors.Keys)
-            {
-                l.color = Color.red;
-            }
-            PlayGameSoundHandler(KMSoundOverride.SoundEffect.EmergencyAlarm, transform);
-            yield return new WaitForSeconds(1.25f);
-            foreach (var l in lightColors.Keys)
-            {
-                l.color = lightColors[l];
-            }
-            yield return new WaitForSeconds(1.25f);
-        }
-    }
-
 
     void Start()
     {
@@ -259,71 +436,47 @@ public class TestHarness : MonoBehaviour
             {
                 if (f.FieldType.Equals(typeof(KMBombInfo)))
                 {
-                    KMBombInfo component = (KMBombInfo) f.GetValue(s);
-                    if (component.OnBombExploded != null) FakeInfo.Detonate += new FakeBombInfo.OnDetonate(component.OnBombExploded);
-                    if (component.OnBombSolved != null) FakeInfo.HandleSolved += new FakeBombInfo.OnSolved(component.OnBombSolved);
+                    KMBombInfo component = (KMBombInfo)f.GetValue(s);
+                    if (component.OnBombExploded != null) fakeInfo.Detonate += new FakeBombInfo.OnDetonate(component.OnBombExploded);
+                    if (component.OnBombSolved != null) fakeInfo.HandleSolved += new FakeBombInfo.OnSolved(component.OnBombSolved);
                     continue;
                 }
             }
         }
 
-        FakeInfo.Detonate += OnBombExploded;
-        FakeInfo.HandleSolved += OnBombSolved;
-
         currentSelectable = GetComponent<TestSelectable>();
 
         KMBombModule[] modules = FindObjectsOfType<KMBombModule>();
         KMNeedyModule[] needyModules = FindObjectsOfType<KMNeedyModule>();
-        KMWidget[] widgets = FindObjectsOfType<KMWidget>();
-        KMSoundOverride[] overrides = FindObjectsOfType<KMSoundOverride>();
-        FakeInfo.needyModules = needyModules.ToList();
+        fakeInfo.needyModules = needyModules.ToList();
         currentSelectable.Children = new TestSelectable[modules.Length + needyModules.Length];
-
-        FakeInfo.kmWidgets.AddRange(widgets);
-
-        foreach (KMSoundOverride sound in overrides)
-            SoundEffects.OverwriteClips(sound);
-
         for (int i = 0; i < modules.Length; i++)
         {
             KMBombModule mod = modules[i];
 
-            KMStatusLightParent statuslightparent = modules[i].GetComponentInChildren<KMStatusLightParent>();
-            var statuslight = Instantiate<StatusLight>(StatusLightPrefab);
-            statuslight.transform.parent = statuslightparent.transform;
-            statuslight.transform.localPosition = Vector3.zero;
-            statuslight.transform.localScale = Vector3.one;
-            statuslight.transform.localRotation = Quaternion.identity;
-            statuslight.SetInActive();
-
             currentSelectable.Children[i] = modules[i].GetComponent<TestSelectable>();
             modules[i].GetComponent<TestSelectable>().Parent = currentSelectable;
 
-            FakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(modules[i], false));
-            modules[i].OnPass = delegate ()
-            {
+            fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(modules[i], false));
+            modules[i].OnPass = delegate () {
                 Debug.Log("Module Passed");
-                statuslight.SetPass();
-
-                FakeInfo.modules.Remove(FakeInfo.modules.First(t => t.Key.Equals(mod)));
-                FakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(mod, true));
-                bool allSolved = !FakeInfo.detonated;
-                foreach (KeyValuePair<KMBombModule, bool> m in FakeInfo.modules)
+                fakeInfo.modules.Remove(fakeInfo.modules.First(t => t.Key.Equals(mod)));
+                fakeInfo.modules.Add(new KeyValuePair<KMBombModule, bool>(mod, true));
+                bool allSolved = true;
+                foreach (KeyValuePair<KMBombModule, bool> m in fakeInfo.modules)
                 {
-                    if (!allSolved)
+                    if (!m.Value)
+                    {
+                        allSolved = false;
                         break;
-                    allSolved &= m.Value;
+                    }
                 }
-                if (allSolved) FakeInfo.Solved();
+                if (allSolved) fakeInfo.Solved();
                 return false;
             };
-            modules[i].OnStrike = delegate ()
-            {
+            modules[i].OnStrike = delegate () {
                 Debug.Log("Strike");
-                statuslight.FlashStrike();
-                FakeInfo.HandleStrike();
-                if (!FakeInfo.detonated)
-                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.Strike, transform);
+                fakeInfo.HandleStrike();
                 return false;
             };
         }
@@ -341,97 +494,33 @@ public class TestHarness : MonoBehaviour
             needyModules[i].OnStrike = delegate ()
             {
                 Debug.Log("Strike");
-                FakeInfo.HandleStrike();
-                if (!FakeInfo.detonated)
-                    PlayGameSoundHandler(KMSoundOverride.SoundEffect.Strike, transform);
+                fakeInfo.HandleStrike();
                 return false;
             };
         }
 
         currentSelectable.ActivateChildSelectableAreas();
 
-
-        //Load all the audio clips in the asset database
-        audioClips = new List<AudioClip>();
-        string[] audioClipAssetGUIDs = AssetDatabase.FindAssets("t:AudioClip");
-
-        foreach (var guid in audioClipAssetGUIDs)
-        {
-            AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(AssetDatabase.GUIDToAssetPath(guid));
-
-            if (clip != null)
-            {
-                audioClips.Add(clip);
-            }
-        }
-
-        _alarmAudioSource = gameObject.AddComponent<AudioSource>();
-        _alarmAudioSource.transform.position = transform.position;
-        _alarmAudioSource.loop = true;
         audioSource = gameObject.AddComponent<AudioSource>();
         KMAudio[] kmAudios = FindObjectsOfType<KMAudio>();
         foreach (KMAudio kmAudio in kmAudios)
         {
             kmAudio.HandlePlaySoundAtTransform += PlaySoundHandler;
-            kmAudio.HandlePlayGameSoundAtTransform += PlayGameSoundHandler;
-            kmAudio.HandlePlaySoundAtTransformWithRef += PlaySoundwithRefHandler;
-            kmAudio.HandlePlayGameSoundAtTransformWithRef += PlayGameSoundHandlerWithRef;
         }
-    }
-
-    protected KMAudio.KMAudioRef PlaySoundwithRefHandler(string clipName, Transform t, bool loop)
-    {
-        KMAudio.KMAudioRef kmaudioRef = new KMAudio.KMAudioRef();
-        if (audioSource == null) return kmaudioRef;
-        if (audioClips.Count <= 0) return kmaudioRef;
-        AudioClip clip = audioClips.Where(a => a.name == clipName).First();
-
-        if (clip == null) return kmaudioRef;
-        if(t != null)
-            audioSource.transform.position = t.position;
-        audioSource.loop = loop;
-        audioSource.PlayOneShot(clip);
-        KMAudio.KMAudioRef kmaudioRef2 = kmaudioRef;
-        kmaudioRef2.StopSound = (Action) Delegate.Combine(kmaudioRef2.StopSound, new Action(delegate
-        {
-            if (audioSource.isPlaying)
-                audioSource.Stop();
-        }));
-        return kmaudioRef;
     }
 
     protected void PlaySoundHandler(string clipName, Transform t)
     {
-        PlaySoundwithRefHandler(clipName, t, false);
-    }
+        if (AudioClips != null && AudioClips.Count > 0)
+        {
+            AudioClip clip = AudioClips.Where(a => a.name == clipName).First();
 
-    protected void PlayGameSoundHandler(KMSoundOverride.SoundEffect sound, Transform t)
-    {
-        PlayGameSoundHandlerWithRef(sound, t);
-    }
-
-    protected KMAudio.KMAudioRef PlayGameSoundHandlerWithRef(KMSoundOverride.SoundEffect sound, Transform t)
-    {
-        KMAudio.KMAudioRef kmaudioRef = new KMAudio.KMAudioRef();
-        if (audioSource == null) return kmaudioRef;
-        var clip = SoundEffects.GetAudioClip(sound);
-        if (clip == null) return kmaudioRef;
-        try
-        {
-            audioSource.transform.position = t.position;
+            if (clip != null)
+            {
+                audioSource.transform.position = t.position;
+                audioSource.PlayOneShot(clip);
+            }
         }
-        catch
-        {
-        }
-        audioSource.loop = false;
-        audioSource.PlayOneShot(clip);
-        KMAudio.KMAudioRef kmaudioRef2 = kmaudioRef;
-        kmaudioRef2.StopSound = (Action)Delegate.Combine(kmaudioRef2.StopSound, new Action(delegate
-        {
-            if(audioSource.isPlaying)
-                audioSource.Stop();
-        }));
-        return kmaudioRef;
     }
 
     void Update()
@@ -542,142 +631,26 @@ public class TestHarness : MonoBehaviour
         }
     }
 
-    // TPK Methods
-    protected void DoInteractionStart(KMSelectable interactable)
-    {
-        interactable.OnInteract();
-    }
-
-    protected void DoInteractionEnd(KMSelectable interactable)
-    {
-        if (interactable.OnInteractEnded != null)
-        {
-            interactable.OnInteractEnded();
-        }
-    }
-
-    Dictionary<Component, HashSet<KMSelectable>> ComponentHelds = new Dictionary<Component, HashSet<KMSelectable>> { };
-    IEnumerator SimulateModule(Component component, Transform moduleTransform, MethodInfo method, string command)
-    {
-        // Simple Command
-        if (method.ReturnType == typeof(KMSelectable[]))
-        {
-            KMSelectable[] selectableSequence = null;
-            try
-            {
-                selectableSequence = (KMSelectable[]) method.Invoke(component, new object[] { command });
-                if (selectableSequence == null)
-                {
-                    yield break;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", method.DeclaringType.FullName, method.Name);
-                Debug.LogException(ex);
-                yield break;
-            }
-
-            int initialStrikes = FakeInfo.strikes;
-            int initialSolved = FakeInfo.GetSolvedModuleNames().Count;
-            foreach (KMSelectable selectable in selectableSequence)
-            {
-                DoInteractionStart(selectable);
-                yield return new WaitForSeconds(0.1f);
-                DoInteractionEnd(selectable);
-
-                if (FakeInfo.strikes != initialStrikes || FakeInfo.GetSolvedModuleNames().Count != initialSolved)
-                {
-                    break;
-                }
-            };
-        }
-
-        // Complex Commands
-        if (method.ReturnType == typeof(IEnumerator))
-        {
-            IEnumerator responseCoroutine = null;
-            try
-            {
-                responseCoroutine = (IEnumerator) method.Invoke(component, new object[] { command });
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogErrorFormat("An exception occurred while trying to invoke {0}.{1}; the command invokation will not continue.", method.DeclaringType.FullName, method.Name);
-                Debug.LogException(ex);
-                yield break;
-            }
-
-            if (responseCoroutine == null)
-                yield break;
-
-            if (!ComponentHelds.ContainsKey(component))
-                ComponentHelds[component] = new HashSet<KMSelectable>();
-            HashSet<KMSelectable> heldSelectables = ComponentHelds[component];
-
-            int initialStrikes = FakeInfo.strikes;
-            int initialSolved = FakeInfo.GetSolvedModuleNames().Count;
-
-            while (responseCoroutine.MoveNext())
-            {
-                object currentObject = responseCoroutine.Current;
-                if (currentObject is KMSelectable)
-                {
-                    KMSelectable selectable = (KMSelectable) currentObject;
-                    if (heldSelectables.Contains(selectable))
-                    {
-                        DoInteractionEnd(selectable);
-                        heldSelectables.Remove(selectable);
-                    }
-                    else
-                    {
-                        DoInteractionStart(selectable);
-                        heldSelectables.Add(selectable);
-                    }
-                }
-                else if (currentObject is string)
-                {
-                    Debug.Log("Twitch handler sent: " + currentObject);
-                    yield return currentObject;
-                }
-                else if (currentObject is Quaternion)
-                {
-                    moduleTransform.localRotation = (Quaternion) currentObject;
-                }
-                else
-                    yield return currentObject;
-
-                if (FakeInfo.strikes != initialStrikes || FakeInfo.GetSolvedModuleNames().Count != initialSolved)
-                    yield break;
-            }
-        }
-    }
-
-    string command = "";
     void OnGUI()
     {
-        var needyModules = GameObject.FindObjectsOfType<KMNeedyModule>();
-        if (needyModules.Length > 0)
+        if (GUILayout.Button("Activate Needy Modules"))
         {
-            if (GUILayout.Button("Activate Needy Modules"))
+            foreach (KMNeedyModule needyModule in GameObject.FindObjectsOfType<KMNeedyModule>())
             {
-                foreach (KMNeedyModule needyModule in needyModules)
+                if (needyModule.OnNeedyActivation != null)
                 {
-                    if (needyModule.OnNeedyActivation != null)
-                    {
-                        needyModule.OnNeedyActivation();
-                    }
+                    needyModule.OnNeedyActivation();
                 }
             }
+        }
 
-            if (GUILayout.Button("Deactivate Needy Modules"))
+        if (GUILayout.Button("Deactivate Needy Modules"))
+        {
+            foreach (KMNeedyModule needyModule in GameObject.FindObjectsOfType<KMNeedyModule>())
             {
-                foreach (KMNeedyModule needyModule in needyModules)
+                if (needyModule.OnNeedyDeactivation != null)
                 {
-                    if (needyModule.OnNeedyDeactivation != null)
-                    {
-                        needyModule.OnNeedyDeactivation();
-                    }
+                    needyModule.OnNeedyDeactivation();
                 }
             }
         }
@@ -685,115 +658,49 @@ public class TestHarness : MonoBehaviour
         if (GUILayout.Button("Lights On"))
         {
             TurnLightsOn();
-            FakeInfo.OnLightsOn();
+            fakeInfo.OnLightsOn();
         }
 
         if (GUILayout.Button("Lights Off"))
         {
             TurnLightsOff();
-            FakeInfo.OnLightsOff();
+            fakeInfo.OnLightsOff();
         }
 
-        if (GUILayout.Button("Alarm Snooze"))
-        {
-            if (!_alarmAudioSource.isPlaying)
-                StartCoroutine(AlarmClock());
-            else
-                _alarmAudioSource.Stop();
-        }
-
-        GUILayout.Label("Time remaining: " + FakeInfo.GetFormattedTime());
-
-        GUILayout.Space(10);
-
-        command = GUILayout.TextField(command);
-        if ((GUILayout.Button("Simulate Twitch Command") || Event.current.keyCode == KeyCode.Return) && command != "")
-        {
-            Debug.Log("Twitch Command: " + command);
-
-            //if(currentSelectable != )
-            Component[] allComponents = currentSelectable.gameObject.GetComponentsInChildren<Component>(true);
-            foreach (Component component in allComponents)
-            {
-                System.Type type = component.GetType();
-                MethodInfo method = type.GetMethod("ProcessTwitchCommand", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-                if (method != null)
-                {
-                    StartCoroutine(SimulateModule(component, currentSelectable.transform, method, command));
-                }
-            }
-
-            /*
-            foreach (KMBombModule module in FindObjectsOfType<KMBombModule>())
-            {
-                Component[] allComponents = module.gameObject.GetComponentsInChildren<Component>(true);
-                foreach (Component component in allComponents)
-                {
-                    System.Type type = component.GetType();
-                    MethodInfo method = type.GetMethod("ProcessTwitchCommand", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-                    if (method != null)
-                    {
-                        StartCoroutine(SimulateModule(component, module.transform, method, command));
-                    }
-                }
-            }
-
-            foreach (KMNeedyModule needyModule in needyModules)
-            {
-                Component[] allComponents = needyModule.gameObject.GetComponentsInChildren<Component>(true);
-                foreach (Component component in allComponents)
-                {
-                    System.Type type = component.GetType();
-                    MethodInfo method = type.GetMethod("ProcessTwitchCommand", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-                    if (method != null)
-                    {
-                        StartCoroutine(SimulateModule(component, needyModule.transform, method, command));
-                    }
-                }
-            }*/
-            command = "";
-        }
+        GUILayout.Label("Time remaining: " + fakeInfo.GetFormattedTime());
     }
 
-    private AudioSource _alarmAudioSource;
-    IEnumerator AlarmClock()
+    private Light testLight;
+
+    public void PrepareLights()
     {
-        float time = 0;
-        _alarmAudioSource.clip = SoundEffects.GetAudioClip(KMSoundOverride.SoundEffect.AlarmClockBeep);
-        _alarmAudioSource.Play();
-        while (time < 20 && _alarmAudioSource.isPlaying)
+        foreach (Light l in FindObjectsOfType<Light>())
         {
-            time += Time.deltaTime;
-            yield return null;
+            if (l.transform.parent == null) Destroy(l.gameObject);
         }
-        _alarmAudioSource.Stop();
-        PlayGameSoundHandler(KMSoundOverride.SoundEffect.AlarmClockSnooze, transform);
+
+        GameObject o = new GameObject("Light");
+        o.transform.localPosition = new Vector3(0, 3, 0);
+        o.transform.localRotation = Quaternion.Euler(new Vector3(50, -30, 0));
+        testLight = o.AddComponent<Light>();
+        testLight.type = LightType.Directional;
     }
 
-    private KMSoundOverride.SoundEffect _lightsOnEffect = KMSoundOverride.SoundEffect.Switch;
     public void TurnLightsOn()
     {
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
         RenderSettings.ambientIntensity = 1f;
         DynamicGI.UpdateEnvironment();
 
-        foreach (Light l in FindObjectsOfType<Light>())
-            if (l.transform.parent == null)
-                l.enabled = true;
-        PlayGameSoundHandler(_lightsOnEffect, transform);
-        _lightsOnEffect = KMSoundOverride.SoundEffect.LightBuzzShort;
+        testLight.enabled = true;
     }
 
     public void TurnLightsOff()
     {
-        RenderSettings.ambientIntensity = 0.2f;
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
+        RenderSettings.ambientIntensity = 0.1f;
         DynamicGI.UpdateEnvironment();
 
-        foreach (Light l in FindObjectsOfType<Light>())
-            if (l.transform.parent == null)
-                l.enabled = false;
-        PlayGameSoundHandler(KMSoundOverride.SoundEffect.LightBuzz, transform);
+        testLight.enabled = false;
     }
 }
