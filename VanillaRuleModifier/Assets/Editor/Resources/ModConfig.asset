@@ -27,11 +27,11 @@ MonoBehaviour:
     object>[/i] component. This IDictionary contains keys and values (in this text
     also called properties) that allow for interoperation with the mod. The full set
     of keys is described in the table below.\r\nIf the GameObject does not exist it
-    means that the Multiple Bombs mod is not installed.\r\nPlease note that the IDictionary
-    is delcared with a generic value type of [i]object[/i] to allow each property
-    to have their own types. The type of each property is detailed in the properties
-    table. Make sure to cast the values to the right type and to pass objects of the
-    right type when setting properties.\r\nAvailable properties:\r\n[table]\r\n[tr][th]Key[/th][th]Type[/th][th]Can
+    means that the Vanilla Rule Modifier mod is not installed.\r\nPlease note that
+    the IDictionary is delcared with a generic value type of [i]object[/i] to allow
+    each property to have their own types. The type of each property is detailed in
+    the properties table. Make sure to cast the values to the right type and to pass
+    objects of the right type when setting properties.\r\nAvailable properties:\r\n[table]\r\n[tr][th]Key[/th][th]Type[/th][th]Can
     Set[/th][th]Description[/th][/tr]\r\n[tr][td]RuleSeed[/td][td]int[/td][td]True[/td][td]Gets
     or Sets the rule seed.\r\nNote: This property can only be written to during setup.[/td][/tr]\r\n[tr][td]GetRuleManual[/td][td]string[/td][td]False[/td][td]Genenerates
     the manual for the currently set seed and returns the path to the directory containing

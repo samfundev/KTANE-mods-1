@@ -371,9 +371,11 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             Text = "release when the two seconds digits add up to 7.",
             SolutionMethod = delegate(BombComponent comp, Dictionary<string, object> args)
             {
+
                 var time = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
                 time = (time / 10) + (time % 10);
                 if (time > 10) time -= 10;
+                Debug.Log("seconds sum = " + time);
                 return time == 7 ? 0 : 1;
             }
         };
@@ -386,6 +388,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
                 time = (time / 10) + (time % 10);
                 if (time > 10) time -= 10;
+                Debug.Log("seconds sum = " + time);
                 return time == 3 ? 0 : 1;
             }
         };
@@ -398,16 +401,18 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
                 time = (time / 10) + (time % 10);
                 if (time > 10) time -= 10;
+                Debug.Log("seconds sum = " + time);
                 return time == 5 ? 0 : 1;
             }
         };
 
         protected static Solution ReleaseWhenSecondsIsMultipleOfSeven = new Solution
         {
-            Text = "release when the number of seconds remaining is a multiple of 7.",
+            Text = "release when the total number of seconds remaining is a multiple of 7.",
             SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
                 var time = (int)comp.Bomb.GetTimer().TimeRemaining;
+                Debug.Log("(total time multiple 7), time % 7 = " + (time % 7));
                 return (time % 7) == 0 ? 0 : 1;
             }
         };
@@ -418,6 +423,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
                 var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
+                Debug.Log("(prime or 0), seconds = " + time);
                 var valid = new[] {0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59};
                 return valid.Contains(time) ? 0 : 1;
             }
@@ -429,6 +435,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
                 var time = (int)comp.Bomb.GetTimer().TimeRemaining;
+                Debug.Log("(multiple of 4), one second earlier digits sum = " + (time / 10) + "+" + (time % 10) + "=" + ((time / 10) + (time % 10)));
                 time++;
                 time %= 60;
                 time = (time / 10) + (time % 10);
@@ -445,6 +452,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
                 {
                     var time = (int)comp.Bomb.GetTimer().TimeRemaining % 10;
+                    Debug.Log("(right most seconds is " + seconds + "), time = " + time);
                     return time == seconds ? 0 : 1;
                 }
             };
@@ -466,6 +474,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 if (buttonComponent.IsHolding)
                     return 1;
                 var seconds = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
+                Debug.Log("Displayed seconds: " + seconds);
                 return (seconds % 11) == 0 ? 0 : 1;
             }
         };

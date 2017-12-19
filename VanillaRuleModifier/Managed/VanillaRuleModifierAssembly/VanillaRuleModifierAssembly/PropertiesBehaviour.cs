@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/* 
+ * This file originally came from Multiple Bombs, Written by Lupo511
+ */
+
 namespace VanillaRuleModifierAssembly
 {
     public class PropertiesBehaviour : MonoBehaviour, IDictionary<string, object>
@@ -112,7 +116,7 @@ namespace VanillaRuleModifierAssembly
 
         public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
         {
-            throw new NotImplementedException("The Contains method is not supported in this Dictionary.");
+            throw new NotImplementedException("The CopyTo method is not supported in this Dictionary.");
         }
 
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()

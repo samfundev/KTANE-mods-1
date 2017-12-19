@@ -48,20 +48,18 @@ namespace VanillaRuleModifierAssembly
 
         }
 
-        private object IsSeedVanilla_Get()
+        private static object IsSeedVanilla_Get()
         {
-            return VanillaRuleModifer.IsSeedVanilla();
+            return CommonReflectedTypeInfo.IsVanillaSeed;
         }
 
-        private object IsSeedModded_Get()
+        private static object IsSeedModded_Get()
         {
-            return !VanillaRuleModifer.IsSeedVanilla();
+            return CommonReflectedTypeInfo.IsModdedSeed;
         }
 
         private object RuleManaul_Get()
         {
-            if (VanillaRuleModifer.CurrentState != KMGameInfo.State.Setup && VanillaRuleModifer.CurrentState != KMGameInfo.State.PostGame)
-                throw new Exception("Getting the manual can only be done duing setup or postgame.");
             return VanillaRuleModifer.GenerateManual();
         }
 
