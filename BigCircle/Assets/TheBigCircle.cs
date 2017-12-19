@@ -360,10 +360,24 @@ public class TheBigCircle : MonoBehaviour
     private IEnumerator FadeCircle(Color solvedColor)
     {
         _solved = true;
-        bool faded;
+        const float targetTime = 1.0f / 60f;
+        var totalTime = 0f;
+        var faded = false;
         do
         {
+            totalTime += Time.deltaTime;
+            if (totalTime < targetTime)
+            {
+                yield return null;
+                continue;
+            }
             faded = true;
+            var count = 0;
+            while (totalTime >= targetTime)
+            {
+                totalTime -= targetTime;
+                count++;
+            }
             foreach (var wedge in WedgeRenderers)
             {
                 var r = (int) (wedge.material.color.r * 255);
@@ -373,20 +387,23 @@ public class TheBigCircle : MonoBehaviour
                 var solvedG = (int) (solvedColor.g * 255);
                 var solvedB = (int) (solvedColor.b * 255);
 
-                if (r < solvedR)
-                    r++;
-                else if (r > solvedR)
-                    r--;
+                for (var i = 0; i < count; i++)
+                {
+                    if (r < solvedR)
+                        r++;
+                    else if (r > solvedR)
+                        r--;
 
-                if (g < solvedG)
-                    g++;
-                else if (g > solvedG)
-                    g--;
+                    if (g < solvedG)
+                        g++;
+                    else if (g > solvedG)
+                        g--;
 
-                if (b < solvedB)
-                    b++;
-                else if (b > solvedB)
-                    b--;
+                    if (b < solvedB)
+                        b++;
+                    else if (b > solvedB)
+                        b--;
+                }
 
                 faded &= r == solvedR;
                 faded &= g == solvedG;
