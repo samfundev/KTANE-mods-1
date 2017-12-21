@@ -34,8 +34,8 @@ MonoBehaviour:
     objects of the right type when setting properties.\r\nAvailable properties:\r\n[table]\r\n[tr][th]Key[/th][th]Type[/th][th]Can
     Set[/th][th]Description[/th][/tr]\r\n[tr][td]RuleSeed[/td][td]int[/td][td]True[/td][td]Gets
     or Sets the rule seed.\r\nNote: This property can only be written to during setup.[/td][/tr]\r\n[tr][td]GetRuleManual[/td][td]string[/td][td]False[/td][td]Genenerates
-    the manual for the currently set seed and returns the path to the directory containing
-    that manual.\r\nNote: This property can only be read during setup.[/td][/tr]\r\n[tr][td]IsSeedVanilla[/td][td]bool[/td][td]False[/td][td]This
+    the manual for the currently set seed (If not already done) and returns the path
+    to the directory containing that manual.[/td][/tr]\r\n[tr][td]IsSeedVanilla[/td][td]bool[/td][td]False[/td][td]This
     is used to determine which rule set generator is in use.[/td][/tr]\r\n[tr][td]IsSeedModded[/td][td]bool[/td][td]False[/td][td]Vanilla
     seed numbers are 1, 2, and everything -3 and below.[/td][/tr]\r\n[/table]\r\n\r\nAPI
     usage example:\r\n[code]\r\n//Example method that uses the API to set the rule
