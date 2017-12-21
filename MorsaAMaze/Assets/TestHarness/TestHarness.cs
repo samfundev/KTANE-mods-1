@@ -135,7 +135,9 @@ public class TestHarness : MonoBehaviour
     KMBombInfo BombInfo;
 
     AudioSource audioSource;
+#pragma warning disable 649
     List<AudioClip> audioClips;
+#pragma warning restore 649
 
     void Awake()
     {
@@ -368,6 +370,7 @@ public class TestHarness : MonoBehaviour
     {
         KMAudio.KMAudioRef kmaudioRef = new KMAudio.KMAudioRef();
         if (audioSource == null) return kmaudioRef;
+        if (audioClips == null) return kmaudioRef;
         if (audioClips.Count <= 0) return kmaudioRef;
         AudioClip clip = audioClips.Where(a => a.name == clipName).First();
 

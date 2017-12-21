@@ -3,9 +3,11 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Assets.Scripts.RuleGenerator;
 using Random = UnityEngine.Random;
 
 // ReSharper disable once CheckNamespace
@@ -45,27 +47,7 @@ public class MorseAMaze : MonoBehaviour
 
     private ModSettings _modSettings;
 
-    private readonly string[,,] _mazes =
-    {
-        {{"rd","lr","ld","rd","lr","l"},{"ud","rd","ul","ur","lr","ld"},{"ud","ur","ld","rd","lr","uld"},{"ud","r","ulr","lu","r","uld"},{"urd","lr","ld","rd","l","ud"},{"ur","l","ur","ul","r","ul"}},
-        {{"r","lrd","l","rd","lrd","l"},{"rd","ul","rd","ul","ur","ld"},{"ud","rd","ul","rd","lr","uld"},{"urd","ul","rd","ul","d","ud"},{"ud","d","ud","rd","ul","ud"},{"u","ur","ul","ur","lr","lu"}},
-        {{"dr","lr","ld","d","dr","dl"},{"u","d","ud","ur","lu","ud"},{"dr","uld","ud","rd","ld","ud"},{"ud","ud","ud","ud","ud","ud"},{"ud","ur","ul","ud","ud","ud"},{"ur","lr","lr","ul","ur","ul"}},
-        {{"rd","ld","r","lr","lr","ld"},{"ud","ud","dr","lr","lr","uld"},{"ud","ur","lu","rd","l","ud"},{"ud","r","lr","lru","lr","lud"},{"udr","lr","lr","lr","ld","ud"},{"ur","lr","l","r","ul","u"}},
-        {{"r","lr","lr","lr","lrd","ld"},{"rd","lr","lr","lrd","lu","u"},{"udr","ld","r","ul","rd","ld"},{"ud","ur","lr","ld","u","ud"},{"ud","rd","lr","ulr","l","ud"},{"u","ur","lr","lr","lr","lu"}},
-        {{"d","dr","ld","r","ldr","ld"},{"ud","ud","ud","rd","ul","ud"},{"udr","ul","u","ud","rd","ul"},{"ur","ld","dr","udl","ud","d"},{"rd","ul","u","ud","ur","uld"},{"ur","lr","lr","ul","r","ul"}},
-        {{"dr","lr","lr","ld","dr","ld"},{"ud","rd","l","ur","lu","ud"},{"ur","ul","rd","l","rd","ul"},{"dr","ld","udr","lr","ul","d"},{"ud","u","ur","lr","ld","ud"},{"ur","lr","lr","lr","ulr","ul"}},
-        {{"d","dr","lr","ld","dr","ld"},{"udr","ulr","l","ur","ul","ud"},{"ud","dr","lr","lr","ld","ud"},{"ud","ur","ld","r","ulr","ul"},{"ud","d","ur","lr","lr","l"},{"ur","ulr","lr","lr","lr","l"}},
-        {{"d","dr","lr","lr","ldr","ld"},{"ud","ud","rd","l","ud","ud"},{"udr","ulr","ul","rd","ul","ud"},{"ud","d","dr","ul","r","uld"},{"ud","ud","ud","dr","dl","u"},{"ur","ul","ur","ul","ur","l"}},
-        {{"d","rd","ld","r","ldr","l"},{"ud","u","ur","ld","ur","ld"},{"urd","lr","l","ud","rd","uld"},{"ud","rd","ld","ud","ud","ud"},{"ud","ud","ud","ur","ul","ud"},{"ur","ul","ur","lr","lr","ul"}},
-        {{"rd","lr","ld","d","r","ld"},{"ur","ld","ud","ur","lr","uld"},{"rd","ul","ur","lr","l","ud"},{"ud","rd","ld","rd","lr","ul"},{"urd","ul","ud","ur","ld","d"},{"ur","l","ur","lr","ulr","ul"}},
-        {{"rd","rl","rl","rl","rl","ld"},{"ur","rl","rld","ld","r","uld"},{"rd","ld","u","ur","ld","u"},{"ud","ur","lr","lrd","lu","d"},{"ud","r","lr","lu","rd","lu"},{"ur","lr","lr","lr","ulr","l"}},
-        {{"rd","lr","lr","lrd","lr","ld"},{"ur","lr","ld","ud","d","ud"},{"r","ld","ud","ud","ud","ud"},{"d","ud","u","ud","ud","ud"},{"ud","ud","rd","lu","urd","lu"},{"ur","lur","lu","r","lur","l"}},
-        {{"rd","lr","lr","lr","lr","ld"},{"ur","lr","ld","r","ld","ud"},{"d","rd","lur","lr","ul","ud"},{"ur","ul","rd","lr","lr","uld"},{"rd","ld","ud","rd","lr","ul"},{"u","ur","ul","ur","lr","l"}},
-        {{"rd","lr","ldr","lr","ld","d"},{"ur","ld","ud","r","lur","uld"},{"d","ud","ur","lr","ld","ud"},{"urd","lur","l","rd","ul","ud"},{"ur","ld","rd","ul","rd","ul"},{"r","ul","u","r","lur","l"}},
-        {{"rd","lr","ld","r","lrd","ld"},{"ud","r","lur","lr","lu","ud"},{"urd","lr","ld","rd","lr","ul"},{"ur","ld","ud","u","rd","ld"},{"rd","lu","ud","r","lu","ud"},{"ur","l","ur","lr","lr","lu"}},
-        {{"rd","ld","rd","lrd","ld","d"},{"ud","ur","lu","ud","ud","ud"},{"ur","lr","ld","ud","ur","uld"},{"d","rd","lu","ur","ld","u"},{"ud","ud","rd","ld","ud","d"},{"ur","lur","lu","u","ur","lu"}},
-        {{"rd","lr","lr","ldr","lr","ld"},{"u","rd","lr","lu","rd","lu"},{"d","ur","lr","ld","ud","d"},{"ur","ld","rd","lu","ur","uld"},{"rd","lu","ud","d","rd","lu"},{"ur","lr","lu","ur","lur","l"}}
-    };
+    private static readonly MorseAMazeRuleGenerator MazeRuleSet = new MorseAMazeRuleGenerator();
 
     private enum EdgeworkRules
     {
@@ -119,16 +101,98 @@ public class MorseAMaze : MonoBehaviour
     };
 
 
+    private int GetRuleSeed()
+    {
+        GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
+        if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
+            return 1;
+        IDictionary<string, object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string, object>>();
+        object seed;
+        if (vanillaRuleModifierAPI.TryGetValue("RuleSeed", out seed))
+            return (int)seed;
+        return 1;
+    }
 
+    private string GetRuleManualPath()
+    {
+        GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
+        if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
+            return null;
+        IDictionary<string, object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string, object>>();
+        object manual;
+        if (vanillaRuleModifierAPI.TryGetValue("GetRuleManual", out manual))
+            return (string)manual;
+        return null;
+    }
+
+    private static int _currentSeed;
 
     // Use this for initialization
     // ReSharper disable once UnusedMember.Local
-    private void Start ()
+    private void Start()
     {
         _modSettings = new ModSettings(BombModule);
         _modSettings.ReadSettings();
         _movements = gameObject.AddComponent<CoroutineQueue>();
         BombModule.GenerateLogFriendlyName();
+
+        if (!MazeRuleSet.Initialized || _currentSeed != GetRuleSeed())
+        {
+            _currentSeed = GetRuleSeed();
+            
+            try
+            {
+                MazeRuleSet.InitializeRNG(_currentSeed);
+                MazeRuleSet.CreateRules(_currentSeed);
+                if (_currentSeed != 1)
+                {
+                    try
+                    {
+                        var manualPath = GetRuleManualPath();
+                        if (Application.isEditor)
+                            manualPath = "";
+                        if (manualPath != null)
+                        {
+                            if (!Application.isEditor)
+                                if (!Directory.Exists(manualPath))
+                                    Directory.CreateDirectory(manualPath);
+                            var htmlPath = Path.Combine(manualPath, "Morse-A-Maze.html");
+                            File.WriteAllText(htmlPath, MazeRuleSet.GetHTMLManual(_currentSeed));
+                            for (var i = 0; i < MorseAMazeManual.TextAssetPaths.Length; i++)
+                            {
+                                var imagePath = Path.Combine(manualPath, MorseAMazeManual.ImagePaths[i]);
+                                if (!Directory.Exists(imagePath))
+                                    Directory.CreateDirectory(imagePath);
+                                var imageFile = Path.Combine(manualPath, MorseAMazeManual.TextAssetPaths[i]);
+                                File.WriteAllText(imageFile, MorseAMazeManual.TextAssets[i]);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        BombModule.LogFormat("Failed to Generate manual for Seed {0} due to Exception: {1}, Stack Trace: {2}", _currentSeed, ex.Message, ex.StackTrace);
+                    }
+                }
+            }
+            catch
+            {
+                if (_currentSeed == 1)
+                    StartCoroutine(InstantlySolveModule("Could not Generate ruleset"));
+                else
+                {
+                    try
+                    {
+                        MazeRuleSet.InitializeRNG(1);
+                        MazeRuleSet.CreateRules(1);
+                    }
+                    catch
+                    {
+                        StartCoroutine(InstantlySolveModule("Could not Generate ruleset"));
+                    }
+                }
+            }
+        }
+        
 	    Locations.Shuffle();
         SetMaze(0); //Hide the walls now.
 
@@ -282,8 +346,10 @@ public class MorseAMaze : MonoBehaviour
         {
             for (var y = 0; y < 6; y++)
             {
-                SetWall(x, y, false, !_mazes[maze, y, x].Contains("d"));
-                SetWall(x, y, true, !_mazes[maze, y, x].Contains("r"));
+                /*SetWall(x, y, false, !_mazes[maze, y, x].Contains("d"));
+                SetWall(x, y, true, !_mazes[maze, y, x].Contains("r"));*/
+                SetWall(x, y, false, MazeRuleSet.Mazes[maze].GetCell(x, y).WallDown);
+                SetWall(x, y, true, MazeRuleSet.Mazes[maze].GetCell(x, y).WallRight);
             }
         }
     }
@@ -491,7 +557,7 @@ public class MorseAMaze : MonoBehaviour
                 yield return null;
             }
         }
-        if (_edgeworkRules[_rule] == EdgeworkRules.Strikes)
+        if (_edgeworkRules[_rule] == EdgeworkRules.Strikes && !_unicorn)
         {
             for (var i = color.a; i > 0; i -= 0.01f)
             {
@@ -718,18 +784,18 @@ public class MorseAMaze : MonoBehaviour
         var y = startXY / 10;
 
         if ((x > 5) || (y > 5) || (maze == -1) || (endXY == 66)) return false;
-        var directions = _mazes[maze, y, x];
+        //var directions = _mazes[maze, y, x];
+        var cell = MazeRuleSet.Mazes[maze].GetCell(x, y);
+        var directions = new[] { cell.WallUp, cell.WallDown, cell.WallLeft, cell.WallRight };
         if (startXY == endXY) return true;
         _explored[startXY] = true;
 
-
-        var directionLetter = new[] { "u", "d", "l", "r" };
         var directionInt = new[] { -10, 10, -1, 1 };
         var directionReturn = new[] { "Up", "Down", "Left", "Right" };
 
         for (var i = 0; i < 4; i++)
         {
-            if (!directions.Contains(directionLetter[i])) continue;
+            if (directions[i]) continue;
             if (_explored[startXY + directionInt[i]]) continue;
             if (!GenerateMazeSolution(maze, startXY + directionInt[i])) continue;
             _mazeStack.Push(directionReturn[i]);
@@ -905,10 +971,14 @@ public class MorseAMaze : MonoBehaviour
     }
 
     #region TwitchPlays
+#pragma warning disable 414
+    // ReSharper disable InconsistentNaming
     private static bool TwitchPlaysDetected = false;
     private string TwitchManualCode = "Morse-A-Maze";
     private string TwitchHelpMessage = "!{0} move up down left right, !{0} move udlr [make a series of status light moves]";
     private string[] TwitchValidCommands = {"((UseDefaultColors|UseEasyColors|UseCruelColors|UseRedOnSolve|UseGreenOnSolve|UseOffOnSolve|UseRandomOnSolve)? ?)*(move .*)?"};
+    // ReSharper restore InconsistentNaming
+#pragma warning restore 414
     private IEnumerator ProcessTwitchCommand(string command)
     {
         TwitchPlaysDetected = true;
@@ -1060,6 +1130,11 @@ public class MorseAMaze : MonoBehaviour
     // ReSharper disable once UnusedMember.Local
     private void Update ()
     {
+        if (_movements == null)
+        {
+            StartCoroutine(InstantlySolveModule("Module failed to Initialize"));
+            _movements = new CoroutineQueue();
+        }
         if (_movements.Processing) return;
         if (_solved) return;
         
