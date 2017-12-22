@@ -143,7 +143,7 @@ public class MorseAMaze : MonoBehaviour
             try
             {
                 MazeRuleSet.InitializeRNG(_currentSeed);
-                MazeRuleSet.CreateRules(_currentSeed);
+                MazeRuleSet.CreateRules();
                 if (_currentSeed != 1)
                 {
                     try
@@ -156,8 +156,10 @@ public class MorseAMaze : MonoBehaviour
                             if (!Application.isEditor)
                                 if (!Directory.Exists(manualPath))
                                     Directory.CreateDirectory(manualPath);
-                            var htmlPath = Path.Combine(manualPath, "Morse-A-Maze.html");
-                            File.WriteAllText(htmlPath, MazeRuleSet.GetHTMLManual(_currentSeed));
+                            string htmlFileName;
+                            var htmlData = MazeRuleSet.GetHTMLManual(out htmlFileName);
+                            var htmlPath = Path.Combine(manualPath, htmlFileName);
+                            File.WriteAllText(htmlPath, htmlData);
                             for (var i = 0; i < MorseAMazeManual.TextAssetPaths.Length; i++)
                             {
                                 var imagePath = Path.Combine(manualPath, MorseAMazeManual.ImagePaths[i]);
@@ -183,7 +185,7 @@ public class MorseAMaze : MonoBehaviour
                     try
                     {
                         MazeRuleSet.InitializeRNG(1);
-                        MazeRuleSet.CreateRules(1);
+                        MazeRuleSet.CreateRules();
                     }
                     catch
                     {

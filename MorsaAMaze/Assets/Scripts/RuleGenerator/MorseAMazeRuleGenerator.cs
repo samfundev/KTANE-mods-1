@@ -7,8 +7,9 @@ namespace Assets.Scripts.RuleGenerator
 {
     public class MorseAMazeRuleGenerator : AbstractRuleGenerator
     {
-        public override string GetHTMLManual(int seed)
+        public override string GetHTMLManual(out string filename)
         {
+            filename = "Morse-A-Maze.html";
             if (!Initialized)
                 throw new Exception("You must Initialize the Random number generator first.");
             if (!RulesGenerated)
@@ -23,7 +24,7 @@ namespace Assets.Scripts.RuleGenerator
                 "BRICKMAZE","KITTYMAZE","HALLSMAZE",
                 "STEAKMAZE","BREAKMAZE","BEATSMAZE"
             };
-            var manual = new MorseAMazeManual().Manual.Replace("VANILLARULEGENERATORSEED", seed.ToString());
+            var manual = new MorseAMazeManual().Manual.Replace("VANILLARULEGENERATORSEED", Seed.ToString());
             for (var i = 0; i < 18; i++)
             {
                 manual = manual.Replace(mazenames[i], Mazes[i].ToSVG());
@@ -38,49 +39,39 @@ namespace Assets.Scripts.RuleGenerator
             return MorseAMazeManual.TextAssets;
         }
 
-        public override void CreateRules(int seed)
+        public override void CreateRules()
         {
-            if(!Initialized)
-                
+            if (!Initialized)
+                throw new Exception("You must initialize the Random number generator first");
 
             Mazes.Clear();
-            switch (seed)
+            switch (Seed)
             {
                 case 1:
-                    var mazes = MazeSerializer.DeSerialize(SeedOneRules.Rules);
-                    if (mazes != null)
+                    for (var i = 0; i < 9; i++)
                     {
-                        Mazes.AddRange(mazes);
+                        var maze = new Maze();
+                        Mazes.Add(maze);
+                        maze.BuildMaze(NextMinMax);
                     }
-                    else
+                    InitializeRNG(2);
+                    Seed = 1;
+                    var list = new List<Maze>();
+                    for (var i = 0; i < 9; i++)
                     {
-                        if(!Initialized)
-                            
-                        for (var i = 0; i < 9; i++)
-                        {
-                            var maze = new Maze();
-                            Mazes.Add(maze);
-                            maze.BuildMaze(NextMinMax);
-                        }
-                        var rand = new Random(2);
-                        var list = new List<Maze>();
-                        for (var i = 0; i < 9; i++)
-                        {
-                            var maze = new Maze();
-                            list.Add(maze);
-                            maze.BuildMaze((min, max) => rand.Next(min, max));
-                        }
-                        Mazes.Add(list[2]);
-                        Mazes.Add(list[3]);
-                        Mazes.Add(list[8]);
-                        Mazes.Add(list[6]);
-                        Mazes.Add(list[1]);
-                        Mazes.Add(list[0]);
-                        Mazes.Add(list[4]);
-                        Mazes.Add(list[5]);
-                        Mazes.Add(list[7]);
-                        File.WriteAllText("SeedOneMorseAMazeRules.json", MazeSerializer.Serialize(Mazes));
+                        var maze = new Maze();
+                        list.Add(maze);
+                        maze.BuildMaze(NextMinMax);
                     }
+                    Mazes.Add(list[2]);
+                    Mazes.Add(list[3]);
+                    Mazes.Add(list[8]);
+                    Mazes.Add(list[6]);
+                    Mazes.Add(list[1]);
+                    Mazes.Add(list[0]);
+                    Mazes.Add(list[4]);
+                    Mazes.Add(list[5]);
+                    Mazes.Add(list[7]);
                     break;
                 case 2:
                     for (var i = 0; i < 9; i++)

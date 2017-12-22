@@ -20,7 +20,8 @@ MonoBehaviour:
     when you load up the next bomb.  The manauls will appear in the following directory,
     with a directory named for the seed you specified.\r\n[table]\r\n[tr][td]Platform[/td][td]Path[/td][/tr]\r\n[tr][td]Windows[/td][td]%APPDATA%\\..\\LocalLow\\Steel
     Crate Games\\Keep Talking and Nobody Explodes\\ModifiedVanillaManuals[/td][/tr]\r\n[tr][td]Mac[/td][td]~/Library/Application
-    Support/com.steelcrategames.keeptalkingandnobodyexplodes/ModifiedVanillaManuals[/td][/tr]\r\n[/table]\r\n\r\n\r\n[h1]For
+    Support/com.steelcrategames.keeptalkingandnobodyexplodes/ModifiedVanillaManuals[/td][/tr]\r\n[tr][td]Linux[/td][td]~/.config/unity3d/Steel
+    Crate Games/Keep Talking and Nobody Explodes/ModifiedVanillaManuals/[/td][/tr]\r\n[/table]\r\n\r\n\r\n[h1]For
     mod developers[/h1]\r\n[u]Mod API[/u]\r\nThe mod exposes a public API that can
     be used by other mods to interoperate with it.\r\nThe API is exposed through a
     GameObject named [i]VanillaRuleModifierProperties[/i] that has an [i]IDicionary<string,
