@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts;
 using UnityEngine;
-using Random = UnityEngine.Random;
+using Random = System.Random;
 
 // ReSharper disable once CheckNamespace
 public class BombCreator : MonoBehaviour
@@ -22,8 +22,10 @@ public class BombCreator : MonoBehaviour
     public KMSelectable StrikesPlusButton;
 
     public TextMesh WidgetsText;
-    public KMSelectable WidgetsMinusButton;
-    public KMSelectable WidgetsPlusButton;
+    public KMSelectable WidgetsMinimumMinusButton;
+    public KMSelectable WidgetsMinimumPlusButton;
+    public KMSelectable WidgetsMaximumMinusButton;
+    public KMSelectable WidgetsMaximumPlusButton;
 
     public TextMesh ModuleDisableText;
     public KMSelectable ModuleDisableMinusButton;
@@ -40,7 +42,8 @@ public class BombCreator : MonoBehaviour
     public KMSelectable NeedyPlusButton;
 
     public TextMesh PlayModeText;
-    public KMSelectable PlayModeButton;
+    public KMSelectable PlayModeMinusButton;
+    public KMSelectable PlayModePlusButton;
 
     public TextMesh PacingEventsText;
     public KMSelectable PacingEventsButton;
@@ -68,6 +71,8 @@ public class BombCreator : MonoBehaviour
 
     private readonly ModSettings _modSettings = new ModSettings("BombCreator");
     private ModuleSettings Settings { get { return _modSettings.Settings; } }
+
+    private Random _random;
 
     public static void DebugLog(string message, params object[] args)
     {
@@ -115,8 +120,10 @@ public class BombCreator : MonoBehaviour
         ModulesMinusButton.OnInteract += delegate { StartCoroutine(AddModules(-1)); return false; };
         ModulesPlusButton.OnInteract += delegate { StartCoroutine(AddModules(1)); return false; };
 
-        WidgetsMinusButton.OnInteract += delegate {  StartCoroutine(AddWidgets(-1)); return false; };
-        WidgetsPlusButton.OnInteract += delegate {  StartCoroutine(AddWidgets(1)); return false; };
+        WidgetsMinimumMinusButton.OnInteract += delegate {  StartCoroutine(AddWidgetsMinimum(-1)); return false; };
+        WidgetsMinimumPlusButton.OnInteract += delegate {  StartCoroutine(AddWidgetsMinimum(1)); return false; };
+        WidgetsMaximumMinusButton.OnInteract += delegate { StartCoroutine(AddWidgetsMaximum(-1)); return false; };
+        WidgetsMaximumPlusButton.OnInteract += delegate { StartCoroutine(AddWidgetsMaximum(1)); return false; };
 
         StrikesMinusButton.OnInteract += delegate {  StartCoroutine(AddStrikes(-1)); return false; };
         StrikesPlusButton.OnInteract += delegate { StartCoroutine(AddStrikes(1)); return false; };
@@ -131,7 +138,9 @@ public class BombCreator : MonoBehaviour
 
         NeedyMinusButton.OnInteract += delegate { StartCoroutine(AddNeedyModules(-1)); return false; };
         NeedyPlusButton.OnInteract += delegate { StartCoroutine(AddNeedyModules(1)); return false; };
-        PlayModeButton.OnInteract += ChangePlayMode;
+        PlayModeMinusButton.OnInteract += delegate { StartCoroutine(AddVanillaModules(1)); return false; };
+        PlayModePlusButton.OnInteract += delegate { StartCoroutine(AddVanillaModules(-1)); return false; };
+
 
         PacingEventsButton.OnInteract += ChangePacingEvent;
         FrontFaceButton.OnInteract += ChangeFrontFace;
@@ -152,8 +161,10 @@ public class BombCreator : MonoBehaviour
         ModulesMinusButton.OnInteractEnded += () => EndInteract();
         ModulesPlusButton.OnInteractEnded += () => EndInteract();
 
-        WidgetsMinusButton.OnInteractEnded += () => EndInteract();
-        WidgetsPlusButton.OnInteractEnded += () => EndInteract();
+        WidgetsMinimumMinusButton.OnInteractEnded += () => EndInteract();
+        WidgetsMinimumPlusButton.OnInteractEnded += () => EndInteract();
+        WidgetsMaximumMinusButton.OnInteractEnded += () => EndInteract();
+        WidgetsMaximumPlusButton.OnInteractEnded += () => EndInteract();
 
         StrikesMinusButton.OnInteractEnded += () => EndInteract();
         StrikesPlusButton.OnInteractEnded += () => EndInteract();
@@ -168,7 +179,8 @@ public class BombCreator : MonoBehaviour
 
         NeedyMinusButton.OnInteractEnded += () => EndInteract();
         NeedyPlusButton.OnInteractEnded += () => EndInteract();
-        PlayModeButton.OnInteractEnded += () => EndInteract(false);
+        PlayModeMinusButton.OnInteractEnded += () => EndInteract();
+        PlayModePlusButton.OnInteractEnded += () => EndInteract();
 
         PacingEventsButton.OnInteractEnded += () => EndInteract(false);
         FrontFaceButton.OnInteractEnded += () => EndInteract(false);
@@ -296,14 +308,29 @@ public class BombCreator : MonoBehaviour
         // ReSharper disable once IteratorNeverReturns
     }
 
-    private IEnumerator AddWidgets(int count)
+    private IEnumerator AddWidgetsMinimum(int count)
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
         var delay = StartDelay;
         while (true)
         {
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
-            Settings.Widgets += count;
+            Settings.WidgetsMinimum += count;
+            UpdateDisplay();
+            yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
+            delay -= Acceleration;
+        }
+        // ReSharper disable once IteratorNeverReturns
+    }
+
+    private IEnumerator AddWidgetsMaximum(int count)
+    {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        var delay = StartDelay;
+        while (true)
+        {
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
+            Settings.WidgetsMaximum += count;
             UpdateDisplay();
             yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
             delay -= Acceleration;
@@ -393,15 +420,11 @@ public class BombCreator : MonoBehaviour
         Settings.Modules = Mathf.Clamp(Settings.Modules, 1, GetMaxModules());
         Settings.Strikes = Mathf.Max(1, Settings.Strikes);
         Settings.Bombs = Mathf.Clamp(Settings.Bombs, 1, MultipleBombs.GetMaximumBombCount());
-        Settings.Widgets = Mathf.Clamp(Settings.Widgets, 0, 50);
+        Settings.WidgetsMinimum = Mathf.Clamp(Settings.WidgetsMinimum, 0, Settings.WidgetsMaximum);
+        Settings.WidgetsMaximum = Mathf.Clamp(Settings.WidgetsMaximum, Settings.WidgetsMinimum, 50);
         Settings.NeedyModules = Mathf.Clamp(Settings.NeedyModules, 0, Settings.Modules - 1);
 
-        if (Settings.Playmode > PlayMode.ModsOnly)
-            Settings.Playmode = PlayMode.AllModules;
-        if (Settings.Playmode != PlayMode.ModsOnly) return;
-
-        if (GameInfo.GetAvailableModuleInfo().All(x => !x.IsMod))
-            Settings.Playmode = PlayMode.AllModules;
+        Settings.VanillaModules = Mathf.Clamp(Settings.VanillaModules, 0, 100);
     }
 
     private void UpdateDisplay()
@@ -423,22 +446,22 @@ public class BombCreator : MonoBehaviour
             TimeText.text = TimeText.text.Remove(0, 1);
         }
         ModulesText.text = "" + Settings.Modules;
-        WidgetsText.text = "" + Settings.Widgets;
+        WidgetsText.text = string.Format("{0} to {1}", Settings.WidgetsMinimum, Settings.WidgetsMaximum);
         BombsText.text = !MultipleBombs.Installed() ? "" : "Bombs: " + Settings.Bombs;
         StrikesText.text = "" + Settings.Strikes;
-        NeediesText.text = Settings.NeedyModules > 0 ? String.Format("Needies: {0}",Settings.NeedyModules) : "Needy Off";
+        NeediesText.text = Settings.NeedyModules > 0 ? string.Format("Needies: {0}",Settings.NeedyModules) : "Needy Off";
         DuplicateText.text = Settings.DuplicatesAllowed ? "Duplicates" : "No Duplicates";
         // ReSharper disable once SwitchStatementMissingSomeCases
-        switch (Settings.Playmode)
+        switch (Settings.VanillaModules)
         {
-            case PlayMode.AllModules:
-                PlayModeText.text = "All Modules";
+            case 0:
+                PlayModeText.text = "Mods Only";
                 break;
-            case PlayMode.VanillaOnly:
+            case 100:
                 PlayModeText.text = "Vanilla Only";
                 break;
             default:
-                PlayModeText.text = "Mods Only";
+                PlayModeText.text = string.Format("Vanilla {0}% - Mods {1}%", Settings.VanillaModules, 100 - Settings.VanillaModules);
                 break;
         }
 
@@ -522,13 +545,21 @@ public class BombCreator : MonoBehaviour
         // ReSharper disable once IteratorNeverReturns
     }
 
-    private bool ChangePlayMode()
+    private IEnumerator AddVanillaModules(int count)
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        Settings.Playmode++;
-        UpdateDisplay();
-        return false;
+        var delay = StartDelay;
+        while (true)
+        {
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
+            Settings.VanillaModules += count;
+            UpdateDisplay();
+            yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
+            delay -= Acceleration;
+        }
+        // ReSharper disable once IteratorNeverReturns
     }
+
 
     private bool ChangePacingEvent()
     {
@@ -554,7 +585,7 @@ public class BombCreator : MonoBehaviour
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
             return false;
         }
-
+        _random = new Random(((int)Time.time));
         var generatorSettings = new KMGeneratorSetting
         {
             NumStrikes = Settings.Strikes,
@@ -578,7 +609,7 @@ public class BombCreator : MonoBehaviour
             });
         }
 
-        generatorSettings.OptionalWidgetCount = Settings.Widgets;
+        generatorSettings.OptionalWidgetCount = _random.Next(Settings.WidgetsMinimum, Settings.WidgetsMaximum);
 
         var mission = ScriptableObject.CreateInstance<KMMission>();
         mission.DisplayName = "Custom Freeplay";
@@ -605,34 +636,19 @@ public class BombCreator : MonoBehaviour
         return pool;
     }
 
-    private KMGameInfo.KMModuleInfo PopModule(ICollection<KMGameInfo.KMModuleInfo> vanillaModules, ICollection<KMGameInfo.KMModuleInfo> moddedModules, ref List<KMGameInfo.KMModuleInfo> output)
+    private KMGameInfo.KMModuleInfo PopModule(ICollection<KMGameInfo.KMModuleInfo> modules, ref List<KMGameInfo.KMModuleInfo> output, string moduleType)
     {
-        if(vanillaModules == null || moddedModules == null || output == null)
+        if(modules == null || output == null)
             throw new NullReferenceException();
 
         if (output.Count == 0)
         {
-            switch (Settings.Playmode)
-            {
-                case PlayMode.AllModules:
-                    if (vanillaModules.Count > 0)
-                        output.AddRange(vanillaModules);
-                    if (moddedModules.Count > 0)
-                        output.AddRange(moddedModules);
-                    break;
-                case PlayMode.VanillaOnly:
-                    if (vanillaModules.Count > 0)
-                        output.AddRange(vanillaModules);
-                    break;
-                case PlayMode.ModsOnly:
-                    if (moddedModules.Count > 0)
-                        output.AddRange(moddedModules);
-                    break;
-            }
+            output.AddRange(modules);
+            output = output.OrderBy(x => _random.NextDouble()).ToList();
             if (output.Count == 0)
-                throw new Exception("No Modules to return");
-            output = output.OrderBy(x => Random.value).ToList();
+                throw new NullModuleException(string.Format("No Modules of type {0} to return", moduleType));
         }
+        
         var module = output[0];
         output.RemoveAt(0);
         return module;
@@ -642,30 +658,82 @@ public class BombCreator : MonoBehaviour
     {
         var pools = new List<KMComponentPool>();
 
+        var vanillaModulesChance = Settings.VanillaModules / 100.0f;
+        var moddedModulesChance = 1.0f - vanillaModulesChance;
+
+        var vanillaNeedySize = Mathf.FloorToInt(Settings.NeedyModules * vanillaModulesChance);
+        var moddedNeedySize = Mathf.FloorToInt(Settings.NeedyModules * moddedModulesChance);
+        var mixedNeedySize = Settings.NeedyModules - vanillaNeedySize - moddedNeedySize;
+        DebugLog("Initial: VanillaNeedySize = {0}, ModdedNeedySize = {1}, mixedNeedySize = {2}", vanillaNeedySize, moddedNeedySize, mixedNeedySize);
+
+        for (var i = 0; i < mixedNeedySize; i++)
+        {
+            if (_random.NextDouble() < vanillaModulesChance)
+                vanillaNeedySize++;
+            else
+                moddedNeedySize++;
+        }
+        DebugLog("Final: VanillaNeedySize = {0}, ModdedNeedySize = {1}", vanillaNeedySize, moddedNeedySize);
+
+
+        var vanillaSolvableSize = Mathf.FloorToInt((Settings.Modules - Settings.NeedyModules) * vanillaModulesChance);
+        var moddedSolvableSize = Mathf.FloorToInt((Settings.Modules - Settings.NeedyModules) * moddedModulesChance);
+        var mixedSolvableSize = (Settings.Modules - Settings.NeedyModules) - vanillaSolvableSize - moddedSolvableSize;
+        DebugLog("Initial: vanillaSolvableSize = {0}, moddedSolvableSize = {1}, mixedSolvableSize = {2}", vanillaSolvableSize, moddedSolvableSize, mixedSolvableSize);
+        
+        for (var i = 0; i < mixedSolvableSize; i++)
+        {
+            if (_random.NextDouble() < vanillaModulesChance)
+                vanillaSolvableSize++;
+            else
+                moddedSolvableSize++;
+        }
+        DebugLog("Final: vanillaSolvableSize = {0}, moddedSolvableSize = {1}", vanillaSolvableSize, moddedSolvableSize);
+        
         var moddedSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && !x.IsNeedy).ToList();
         var moddedNeedyModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && x.IsNeedy).ToList();
 
         var vanillaSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && !x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
         var vanillaNeedyModules = GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
 
-        var solvableModules = new List<KMGameInfo.KMModuleInfo>();
-        var needyModules = new List<KMGameInfo.KMModuleInfo>();
+        var modules = new List<KMGameInfo.KMModuleInfo>();
 
         try
         {
-            for (var i = 0; i < Settings.NeedyModules; i++)
+            for (var i = 0; i < vanillaSolvableSize; i++)
             {
-                pools.Add(AddComponent(PopModule(vanillaNeedyModules, moddedNeedyModules, ref needyModules)));
+                pools.Add(AddComponent(PopModule(vanillaSolvableModules, ref modules, "Vanilla Solvable")));
             }
+            modules.Clear();
 
-            for (var i = Settings.NeedyModules; i < Settings.Modules; i++)
+            for (var i = 0; i < moddedSolvableSize; i++)
             {
-                pools.Add(AddComponent(PopModule(vanillaSolvableModules, moddedSolvableModules, ref solvableModules)));
+                pools.Add(AddComponent(PopModule(moddedSolvableModules, ref modules, "Modded Solvable")));
             }
+            modules.Clear();
 
+            for (var i = 0; i < vanillaNeedySize; i++)
+            {
+                pools.Add(AddComponent(PopModule(vanillaNeedyModules, ref modules, "Vanilla Needy")));
+            }
+            modules.Clear();
+
+            for (var i = 0; i < moddedNeedySize; i++)
+            {
+                pools.Add(AddComponent(PopModule(moddedNeedyModules, ref modules, "Modded Needy")));
+            }
         }
-        catch
+        catch (NullModuleException ex)
         {
+            DebugLog("Failure in No Duplicates for the following reason");
+            DebugLog(ex.Message);
+            pools.Clear();
+            return pools;
+        }
+        catch (Exception ex)
+        {
+            DebugLog("Failure in No Duplicates due to an exception.");
+            DebugLog("Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
             pools.Clear();
             return pools;
         }
@@ -677,79 +745,119 @@ public class BombCreator : MonoBehaviour
     {
         var pools = new List<KMComponentPool>();
 
-        var solvablePool = new KMComponentPool
-        {
-            ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
-            ModTypes = new List<string>()
-        };
+        var vanillaModules = Settings.VanillaModules / 100.0f;
+        var moddedModules = 1.0f - vanillaModules;
 
-        var needyPool = new KMComponentPool
-        {
-            ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
-            ModTypes = new List<string>()
-        };
+        var vanillaNeedySize = Mathf.FloorToInt(Settings.NeedyModules * vanillaModules);
+        var moddedNeedySize = Mathf.FloorToInt(Settings.NeedyModules * moddedModules);
+        var mixedNeedySize = Settings.NeedyModules - vanillaNeedySize - moddedNeedySize;
 
-        foreach (var moduleInfo in GameInfo.GetAvailableModuleInfo())
+        for (var i = 0; i < mixedNeedySize; i++)
         {
-            if (Settings.DisabledModuleIds.Contains(moduleInfo.ModuleId)) continue;
-            KMComponentPool pool;
-
-            if (moduleInfo.IsNeedy)
-            {
-                if (Settings.NeedyModules < 1)
-                    continue;
-                pool = needyPool;
-            }
+            if (_random.NextDouble() < vanillaModules)
+                vanillaNeedySize++;
             else
-            {
-                pool = solvablePool;
-            }
+                moddedNeedySize++;
+        }
 
-            if(moduleInfo.IsMod)
-            {
-                if (Settings.Playmode == PlayMode.VanillaOnly)
-                    continue;
-                pool.ModTypes.Add(moduleInfo.ModuleId);
-            }
+
+        var vanillaSolvableSize = Mathf.FloorToInt((Settings.Modules - Settings.NeedyModules) * vanillaModules);
+        var moddedSolvableSize = Mathf.FloorToInt((Settings.Modules - Settings.NeedyModules) * moddedModules);
+        var mixedSolvableSize = (Settings.Modules - Settings.NeedyModules) - vanillaSolvableSize - moddedSolvableSize;
+
+        for (var i = 0; i < mixedSolvableSize; i++)
+        {
+            if (_random.NextDouble() < vanillaModules)
+                vanillaSolvableSize++;
             else
+                moddedSolvableSize++;
+        }
+
+        var moddedSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && !x.IsNeedy).ToList();
+        var moddedNeedyModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && x.IsNeedy).ToList();
+
+        var vanillaSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && !x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
+        var vanillaNeedyModules = GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
+
+        if ((vanillaNeedyModules.Count == 0 && vanillaNeedySize > 0) ||
+            (vanillaSolvableModules.Count == 0 && vanillaSolvableSize > 0) ||
+            (moddedNeedyModules.Count == 0 && moddedNeedySize > 0) ||
+            (moddedSolvableModules.Count == 0 && moddedSolvableSize > 0))
+        {
+            DebugLog("Duplicates Allowed Failure");
+
+            if (vanillaNeedyModules.Count == 0 && vanillaNeedySize > 0) DebugLog("VanillaNeedyModules.Count = {0}, VanillaNeedySize = {1}", vanillaNeedyModules.Count, vanillaNeedySize);
+            if (vanillaSolvableModules.Count == 0 && vanillaSolvableSize > 0) DebugLog("vanillaSolvableModules.Count = {0}, vanillaSolvableSize = {1}", vanillaSolvableModules.Count, vanillaSolvableSize);
+            if (moddedNeedyModules.Count == 0 && moddedNeedySize > 0) DebugLog("moddedNeedyModules.Count = {0}, moddedNeedySize = {1}", moddedNeedyModules.Count, moddedNeedySize);
+            if (moddedSolvableModules.Count == 0 && moddedSolvableSize > 0) DebugLog("moddedSolvableModules.Count = {0}, moddedSolvableSize = {1}", moddedSolvableModules.Count, moddedSolvableSize);
+
+            return pools;
+        }
+
+        if (vanillaNeedySize > 0)
+        {
+            var pool = new KMComponentPool
             {
-                if (Settings.Playmode == PlayMode.ModsOnly)
-                    continue;
-                pool.ComponentTypes.Add(moduleInfo.ModuleType);
-            }
+                ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+                ModTypes = new List<string>()
+            };
+            pool.ComponentTypes.AddRange(vanillaNeedyModules.Select(x => x.ModuleType));
+            pool.Count = vanillaNeedySize;
+            pools.Add(pool);
+        }
+
+        if (moddedNeedySize > 0)
+        {
+            var pool = new KMComponentPool
+            {
+                ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+                ModTypes = new List<string>()
+            };
+            pool.ModTypes.AddRange(moddedNeedyModules.Select(x => x.ModuleId));
+            pool.Count = moddedNeedySize;
+            pools.Add(pool);
+        }
+
+        if (vanillaSolvableSize > 0)
+        {
+            var pool = new KMComponentPool
+            {
+                ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+                ModTypes = new List<string>()
+            };
+            pool.ComponentTypes.AddRange(vanillaSolvableModules.Select(x => x.ModuleType));
+            pool.Count = vanillaSolvableSize;
+            pools.Add(pool);
+        }
+
+        if (moddedSolvableSize > 0)
+        {
+            var pool = new KMComponentPool
+            {
+                ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+                ModTypes = new List<string>()
+            };
+            pool.ModTypes.AddRange(moddedSolvableModules.Select(x => x.ModuleId));
+            pool.Count = moddedSolvableSize;
+            pools.Add(pool);
         }
         
-
-        solvablePool.Count = ((needyPool.ComponentTypes.Count + needyPool.ModTypes.Count) > 0) 
-            ? Settings.Modules - Settings.NeedyModules 
-            : Settings.Modules;
-
-        needyPool.Count = ((needyPool.ComponentTypes.Count + needyPool.ModTypes.Count) > 0) 
-            ? Settings.NeedyModules 
-            : 0;
-
-        if ((solvablePool.ComponentTypes.Count + solvablePool.ModTypes.Count) > 0)
-            pools.Add(solvablePool);
-        else
-            return pools;
-
-        if((needyPool.ComponentTypes.Count + needyPool.ModTypes.Count) > 0)
-        {
-            pools.Add(needyPool);
-        }
-        else if (Settings.NeedyModules > 0)
-        {
-            pools.Clear();
-            return pools;
-        }
 
         return pools;
     }
 }
 
-public enum PlayMode
+public class NullModuleException : Exception
 {
-    AllModules,
-    VanillaOnly,
-    ModsOnly
+    public NullModuleException()
+    {
+    }
+
+    public NullModuleException(string message) : base(message)
+    {
+    }
+
+    public NullModuleException(string message, Exception inner) : base(message, inner)
+    {
+    }
 }

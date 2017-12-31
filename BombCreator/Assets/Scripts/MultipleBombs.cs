@@ -21,7 +21,7 @@ namespace Assets.Scripts
         //Call this in KMGameState.Setup
         public static IEnumerator Refresh()
         {
-            for (var i = 0; i < 120 && _gameObject == null; i++)
+            for (var i = 0; i < 4 && _gameObject == null; i++)
             {
                 _gameObject = GameObject.Find("MultipleBombs_Info");
                 yield return null;

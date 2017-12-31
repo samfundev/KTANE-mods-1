@@ -21,7 +21,7 @@ namespace Assets.Scripts
         public static IEnumerator Refresh()
         {
             _gameObject = GameObject.Find("VanillaRuleModifierProperties");
-            for (var i = 0; i < 120 && _gameObject == null; i++)
+            for (var i = 0; i < 4 && _gameObject == null; i++)
             {
                 yield return null;
                 _gameObject = GameObject.Find("VanillaRuleModifierProperties");

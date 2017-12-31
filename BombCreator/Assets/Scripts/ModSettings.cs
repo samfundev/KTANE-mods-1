@@ -21,10 +21,11 @@ public class ModuleSettings
     public int Modules = 3;
     public int Bombs = 1;
     public int Strikes = 3;
-    public int Widgets = 5;
+    public int WidgetsMinimum = 5;
+    public int WidgetsMaximum = 8;
     public int ModuleDisableIndex = 0;
     public int NeedyModules = 0;
-    public PlayMode Playmode = PlayMode.AllModules;
+    public int VanillaModules = 50;
     public List<string> DisabledModuleIds = new List<string>();
     public bool PacingEvents = true;
     public bool FrontFaceOnly = false;
