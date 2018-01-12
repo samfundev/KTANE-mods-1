@@ -626,14 +626,32 @@ public class BombCreator : MonoBehaviour
         var pool = new KMComponentPool
         {
             ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
-            ModTypes = new List<string>()
+            ModTypes = new List<string>(),
+            Count = 1
         };
         if (module.IsMod)
             pool.ModTypes.Add(module.ModuleId);
         else
             pool.ComponentTypes.Add(module.ModuleType);
-        pool.Count = 1;
+        
         return pool;
+    }
+
+    private void AddComponent(KMGameInfo.KMModuleInfo module, ref KMComponentPool pool)
+    {
+        if (pool == null)
+        {
+            pool = new KMComponentPool
+            {
+                ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+                ModTypes = new List<string>(),
+                Count = 1
+            };
+        }
+        if (module.IsMod)
+            pool.ModTypes.Add(module.ModuleId);
+        else
+            pool.ComponentTypes.Add(module.ModuleType);
     }
 
     private KMGameInfo.KMModuleInfo PopModule(ICollection<KMGameInfo.KMModuleInfo> modules, ref List<KMGameInfo.KMModuleInfo> output, string moduleType)
@@ -698,29 +716,54 @@ public class BombCreator : MonoBehaviour
 
         var modules = new List<KMGameInfo.KMModuleInfo>();
 
+        var maxVanillaSolvablePerPool = Mathf.Max(vanillaNeedyModules.Count / Math.Max(vanillaSolvableSize,1), 1);
+        var maxVanillaNeedyPerPool = Mathf.Max(vanillaNeedyModules.Count / Math.Max(vanillaNeedySize, 1), 1);
+        var maxModSolvablePerPool = Mathf.Max(moddedSolvableModules.Count / Math.Max(moddedSolvableSize, 1), 1);
+        var maxModNeedyPerPool = Mathf.Max(moddedNeedyModules.Count / Math.Max(moddedNeedySize, 1), 1);
+
         try
         {
-            for (var i = 0; i < vanillaSolvableSize; i++)
+            for(var i = 0; i < vanillaSolvableSize; i++)
             {
-                pools.Add(AddComponent(PopModule(vanillaSolvableModules, ref modules, "Vanilla Solvable")));
+                var pool = AddComponent(PopModule(vanillaSolvableModules, ref modules, "Vanilla Solvable"));
+                for (var j = 1; j < maxVanillaSolvablePerPool; j++)
+                {
+                    AddComponent(PopModule(vanillaSolvableModules, ref modules, "Vanilla Solvable"), ref pool);
+                }
+                pools.Add(pool);
             }
             modules.Clear();
 
             for (var i = 0; i < moddedSolvableSize; i++)
             {
-                pools.Add(AddComponent(PopModule(moddedSolvableModules, ref modules, "Modded Solvable")));
+                var pool = AddComponent(PopModule(moddedSolvableModules, ref modules, "Modded Solvable"));
+                for (var j = 1; j < maxModSolvablePerPool; j++)
+                {
+                    AddComponent(PopModule(moddedSolvableModules, ref modules, "Modded Solvable"), ref pool);
+                }
+                pools.Add(pool);
             }
             modules.Clear();
 
             for (var i = 0; i < vanillaNeedySize; i++)
             {
-                pools.Add(AddComponent(PopModule(vanillaNeedyModules, ref modules, "Vanilla Needy")));
+                var pool = AddComponent(PopModule(vanillaNeedyModules, ref modules, "Vanilla Needy"));
+                for (var j = 1; j < maxVanillaNeedyPerPool; j++)
+                {
+                    AddComponent(PopModule(vanillaNeedyModules, ref modules, "Vanilla Needy"), ref pool);
+                }
+                pools.Add(pool);
             }
             modules.Clear();
 
             for (var i = 0; i < moddedNeedySize; i++)
             {
-                pools.Add(AddComponent(PopModule(moddedNeedyModules, ref modules, "Modded Needy")));
+                var pool = AddComponent(PopModule(moddedNeedyModules, ref modules, "Modded Needy"));
+                for (var j = 1; j < maxModNeedyPerPool; j++)
+                {
+                    AddComponent(PopModule(moddedNeedyModules, ref modules, "Modded Needy"), ref pool);
+                }
+                pools.Add(pool);
             }
         }
         catch (NullModuleException ex)
