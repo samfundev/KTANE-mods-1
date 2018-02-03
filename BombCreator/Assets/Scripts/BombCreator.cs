@@ -130,6 +130,8 @@ public class BombCreator : MonoBehaviour
         yield return null;
         yield return null;
         UpdateDisplay();
+        if (TwitchPlays.Installed())
+            transform.Find("TPQuad").gameObject.SetActive(true);
     }
 
     private IEnumerator HideMultipleBombsButtons()
@@ -1131,7 +1133,7 @@ public class BombCreator : MonoBehaviour
 		yield return "sendtochaterror " + errorIfNotAllowed;
 	}
 
-    private string TwitchHelpMessage = "Set time with !{0} time 45:00. Set the Moulde cound with !{0} modules 23. Start the bomb with !{0} start.";
+    private string TwitchHelpMessage = "Set time with !{0} time 45:00. Set the Moulde cound with !{0} modules 23. Set strikes with !{0} strikes 3. Start the bomb with !{0} start. Go to https://github.com/CaitSith2/KTANE-mods/wiki/BombCreator for more details.";
     private bool TwitchShouldCancelCommand;
 
     private IEnumerator ProcessTwitchCommand(string command)
@@ -1370,6 +1372,7 @@ public class BombCreator : MonoBehaviour
                 case "bombs":
                     int bombsCount;
                     if (!MultipleBombs.Installed()) yield break;
+                    if (FactoryRoom.Installed() && FactoryModeText.text.Contains(InfiniteSign)) yield break;
                     if (!int.TryParse(split[1], out bombsCount)) yield break;
                     if (bombsCount < 1 || bombsCount > MultipleBombs.GetMaximumBombCount()) yield break;
                     while (Settings.Bombs != bombsCount && !TwitchShouldCancelCommand)
