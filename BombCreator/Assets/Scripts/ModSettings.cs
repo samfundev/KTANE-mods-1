@@ -27,6 +27,7 @@ public class ModuleSettings
     public int NeedyModules = 0;
     public int VanillaModules = 50;
     public List<string> DisabledModuleIds = new List<string>();
+    public int FactoryMode = 0;
     public bool PacingEvents = true;
     public bool FrontFaceOnly = false;
     public bool DuplicatesAllowed = true;

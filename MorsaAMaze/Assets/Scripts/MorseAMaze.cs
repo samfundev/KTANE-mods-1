@@ -40,6 +40,7 @@ public class MorseAMaze : MonoBehaviour
 
     private CoroutineQueue _movements;
     private bool _solved;
+    private bool _strikePending;
 
     private string _souvenirQuestionStartingLocation;
     private string _souvenirQuestionEndingLocation;
@@ -428,6 +429,7 @@ public class MorseAMaze : MonoBehaviour
         }
         
         yield return new WaitForSeconds(0.5f);
+        _strikePending = false;
     }
 
     private IEnumerator InstantlySolveModule(string reason, params object[] args)
@@ -605,6 +607,7 @@ public class MorseAMaze : MonoBehaviour
         if (wall != null)
         {
             _movements.AddToQueue(GiveStrike(wall, _currentLocation, newLocation));
+            _strikePending = true;
             return false;
         }
 
@@ -618,7 +621,7 @@ public class MorseAMaze : MonoBehaviour
     private bool MoveLeft()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
-        if (_solved) return true;
+        if (_solved || _strikePending) return true;
         const string x = "ABCDEF";
         var location = _currentLocation;
         if (location.parent.name == "A")
@@ -633,7 +636,7 @@ public class MorseAMaze : MonoBehaviour
     private bool MoveRight()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
-        if (_solved) return true;
+        if (_solved || _strikePending) return true;
         const string x = "ABCDEF";
         var location = _currentLocation;
         if (location.parent.name == "F")
@@ -649,7 +652,7 @@ public class MorseAMaze : MonoBehaviour
     private bool MoveUp()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
-        if (_solved)
+        if (_solved || _strikePending)
             return true;
         var location = _currentLocation;
         if (location.name == "1")
@@ -664,7 +667,7 @@ public class MorseAMaze : MonoBehaviour
     private bool MoveDown()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
-        if (_solved) return true;
+        if (_solved || _strikePending) return true;
         var location = _currentLocation;
         if (location.name == "6")
             return true;
@@ -685,6 +688,7 @@ public class MorseAMaze : MonoBehaviour
         Left.OnInteract += delegate { MoveLeft(); return false; };
         Right.OnInteract += delegate { MoveRight(); return false; };
  
+        
         _rule = Random.Range(0, _morseCodeWords.Length);
         //if (BombModule.GetIDNumber() == 1)
         //    _rule = _edgeworkRules.ToList().IndexOf(EdgeworkRules.Strikes);
@@ -1062,23 +1066,21 @@ public class MorseAMaze : MonoBehaviour
             yield break;
         }
 
+        command = command.Substring(5);
+        MatchCollection matches = Regex.Matches(command, @"[udlr]", RegexOptions.IgnoreCase);
+        if (matches.Count == 0)
+            yield break;
 
         yield return null;
-        command = command.Substring(5);
-
-        if (_movements.Processing)
+        if (matches.Count > 35 || _movements.Processing)
+        {
             yield return "elevator music";
+        }
 
         while (_movements.Processing)
         {
             yield return "trycancel";
             yield return new WaitForSeconds(0.1f);
-        }
-
-        MatchCollection matches = Regex.Matches(command, @"[udlr]", RegexOptions.IgnoreCase);
-        if (matches.Count > 35)
-        {
-            yield return "elevator music";
         }
 
         var moved = false;
