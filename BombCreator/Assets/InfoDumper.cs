@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -74,12 +75,35 @@ public class InfoDumper : MonoBehaviour
     bool OnInteract()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, transform);
-        StartCoroutine(DumpInfo());
+        //StartCoroutine(DumpInfo());
         return false;
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    private string TwitchHelpMessage = "Realized it was a bad idea to not check for strikes on custom holdables.";
+    private IEnumerator ProcessTwitchCommand(string command)
+    {
+        int strikeCount;
+        if (!int.TryParse(command, out strikeCount) || strikeCount < 0)
+        {
+            DebugLog(command);
+            foreach (string str in command.Split(new [] {":"}, StringSplitOptions.RemoveEmptyEntries))
+            {
+                DebugLog(str);
+                if (str.ToLowerInvariant().Equals("strike"))
+                    GetComponent<KMGameCommands>().CauseStrike(string.Format("Strike {0}", strikeCount));
+                else
+                    yield return str.Trim();
+            }
+        }
+        else
+        {
+            yield return ProcessTwitchCommand((strikeCount - 1).ToString());
+            GetComponent<KMGameCommands>().CauseStrike(string.Format("Strike {0}", strikeCount));
+        }
+    }
+
+    // Update is called once per frame
+    void Update () {
 		
 	}
 }

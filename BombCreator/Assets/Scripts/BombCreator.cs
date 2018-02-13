@@ -1114,24 +1114,49 @@ public class BombCreator : MonoBehaviour
 		Denied
 	}
 
-	private IEnumerator AllowPowerUsers(string power, string errorIfNotAllowed)
+	private IEnumerator AllowPowerUsers(Permissions permission, string power, string errorIfNotAllowed)
 	{
 		ActionAllowed allowed = ActionAllowed.Unfinished;
 		yield return null;
 		yield return new object[]
 		{
-			power,
+			permission.ToString(),
 			new Action(() => allowed = ActionAllowed.Allowed),
 			new Action(() => allowed = ActionAllowed.Denied)
 		};
-		while (allowed == ActionAllowed.Unfinished)
-		{
-			yield return null;
-		}
+
+	    if (allowed == ActionAllowed.Allowed) yield break;
+	    allowed = ActionAllowed.Unfinished;
+	    yield return new object[]
+	    {
+	        power,
+	        new Action(() => allowed = ActionAllowed.Allowed),
+	        new Action(() => allowed = ActionAllowed.Denied)
+	    };
 		if (allowed == ActionAllowed.Allowed) yield break;
 		Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
 		yield return "sendtochaterror " + errorIfNotAllowed;
 	}
+
+    private enum Permissions
+    {
+        BombCreatorEnabled,
+        BombCreatorAllowedMoreThanFiveNeedyModules,
+        BombCreatorAllowedToChangeVanillaSeed
+    }
+
+    private static Dictionary<string, bool> _permissions = new Dictionary<string, bool>
+    {
+        { Permissions.BombCreatorEnabled.ToString(), true },
+        { Permissions.BombCreatorAllowedMoreThanFiveNeedyModules.ToString(), false },
+        { Permissions.BombCreatorAllowedToChangeVanillaSeed.ToString(), false }
+    };
+
+    private IEnumerator AllowBombCreator()
+    {
+        yield return _permissions;
+        yield return AllowPowerUsers(Permissions.BombCreatorEnabled, "mods", "Only mods or higher are allowed to use Bomb Creator");
+    }
 
     private string TwitchHelpMessage = "Set time with !{0} time 45:00. Set the Moulde cound with !{0} modules 23. Set strikes with !{0} strikes 3. Start the bomb with !{0} start. Go to https://github.com/CaitSith2/KTANE-mods/wiki/BombCreator for more details.";
     private bool TwitchShouldCancelCommand;
@@ -1146,14 +1171,14 @@ public class BombCreator : MonoBehaviour
         if (command.Equals("duplicates") || command.Equals("no duplicates"))
         {
             if (Settings.DuplicatesAllowed == command.Equals("duplicates")) yield break;
-            yield return null;
+            yield return AllowBombCreator();
             yield return new KMSelectable[] {DuplicateButton};
             yield break;
         }
         else if (command.StartsWith("front face") || command.Equals("all faces"))
         {
             if (FrontFaceText.text.ToLowerInvariant().Contains(command)) yield break;
-            yield return null;
+            yield return AllowBombCreator();
             yield return FrontFaceButton;
             yield return new WaitForSeconds(0.1f);
             yield return FrontFaceButton;
@@ -1175,8 +1200,8 @@ public class BombCreator : MonoBehaviour
             {
                 veto = _vanillaModules.First(x => x.DisplayName.ToLowerInvariant().Contains(veto)).DisplayName;
             }
-            
 
+            yield return AllowBombCreator();
             while (!ModuleDisableText.text.ToLowerInvariant().Equals(veto.ToLowerInvariant()))
             {
 
@@ -1209,7 +1234,7 @@ public class BombCreator : MonoBehaviour
                 else if (command.Contains("time") && command.Contains("strikes"))
                     factoryMode += 3;
             }
-            yield return null;
+            yield return AllowBombCreator();
             while (Settings.FactoryMode < factoryMode)
             {
                 FactoryModePlusButton.OnInteract();
@@ -1230,13 +1255,13 @@ public class BombCreator : MonoBehaviour
             switch (split[0])
             {
                 case "start":
-                    yield return null;
+                    yield return AllowBombCreator();
                     StartButton.OnInteract();
                     StartButton.OnInteractEnded();
                     yield return new WaitForSeconds(0.1f);
                     yield break;
                 case "reset":
-                    yield return null;
+                    yield return AllowBombCreator();
                     yield return "elevator music";
                     yield return ResetSettings(() => TwitchShouldCancelCommand);
                     if (TwitchShouldCancelCommand && _resetting)
@@ -1246,7 +1271,7 @@ public class BombCreator : MonoBehaviour
                     }
                     yield break;
                 case "save":
-                    yield return null;
+                    yield return AllowBombCreator();
                     SaveButton.OnInteract();
                     SaveButton.OnInteractEnded();
                     yield return new WaitForSeconds(0.1f);
@@ -1290,7 +1315,8 @@ public class BombCreator : MonoBehaviour
                     seconds += 29;
                     seconds /= 30;
                     seconds *= 30;
-                    if(Mathf.Abs(Settings.Time - seconds) > 4*3600) yield return "elevator music";
+                    yield return AllowBombCreator();
+                    if (Mathf.Abs(Settings.Time - seconds) > 4*3600) yield return "elevator music";
                     while (Settings.Time != seconds && !TwitchShouldCancelCommand)
                     {
                         yield return AddTimer(30, () => Settings.Time >= seconds || TwitchShouldCancelCommand);
@@ -1302,7 +1328,8 @@ public class BombCreator : MonoBehaviour
                     int moduleCount;
                     if (!int.TryParse(split[1], out moduleCount)) yield break;
                     if (moduleCount < 1 || moduleCount > GetMaxModules()) yield break;
-                    if(Mathf.Abs(Settings.Modules - moduleCount) > 200) yield return "elevator music";
+                    yield return AllowBombCreator();
+                    if (Mathf.Abs(Settings.Modules - moduleCount) > 200) yield return "elevator music";
                     while (Settings.Modules != moduleCount && !TwitchShouldCancelCommand)
                     {
                         yield return AddModules(1, () => Settings.Modules >= moduleCount || TwitchShouldCancelCommand);
@@ -1314,6 +1341,7 @@ public class BombCreator : MonoBehaviour
                     int strikeCount;
                     if (!int.TryParse(split[1], out strikeCount)) yield break;
                     if (strikeCount < 1) yield break;
+                    yield return AllowBombCreator();
                     if (Mathf.Abs(Settings.Strikes - strikeCount) > 100) yield return "elevator music";
                     while (Settings.Strikes != strikeCount && !TwitchShouldCancelCommand)
                     {
@@ -1326,9 +1354,10 @@ public class BombCreator : MonoBehaviour
                     int needyCount;
                     if (!int.TryParse(split[1], out needyCount)) yield break;
                     if (needyCount < 0 || needyCount >= GetMaxModules()) yield break;
-	                if (needyCount > 5)
+                    yield return AllowBombCreator();
+                    if (needyCount > 5)
 	                {
-		                yield return AllowPowerUsers("mod", "Only moderators or higher can set the needy count above 5");
+		                yield return AllowPowerUsers(Permissions.BombCreatorAllowedMoreThanFiveNeedyModules, "mod", "Only moderators or higher can set the needy count above 5");
 	                }
                     if (Mathf.Abs(Settings.NeedyModules - needyCount) > 200) yield return "elevator music";
                     while (Settings.NeedyModules != needyCount && !TwitchShouldCancelCommand)
@@ -1348,6 +1377,7 @@ public class BombCreator : MonoBehaviour
                     int vanillaCount;
                     if (!int.TryParse(split[1], out vanillaCount)) yield break;
                     if (vanillaCount < 0 || vanillaCount > 100) yield break;
+                    yield return AllowBombCreator();
                     while (Settings.VanillaModules != vanillaCount && !TwitchShouldCancelCommand)
                     {
                         yield return AddVanillaModules(1, () => Settings.VanillaModules >= vanillaCount || TwitchShouldCancelCommand);
@@ -1375,6 +1405,7 @@ public class BombCreator : MonoBehaviour
                     if (FactoryRoom.Installed() && FactoryModeText.text.Contains(InfiniteSign)) yield break;
                     if (!int.TryParse(split[1], out bombsCount)) yield break;
                     if (bombsCount < 1 || bombsCount > MultipleBombs.GetMaximumBombCount()) yield break;
+                    yield return AllowBombCreator();
                     while (Settings.Bombs != bombsCount && !TwitchShouldCancelCommand)
                     {
                         yield return AddBombs(1, () => Settings.Bombs >= bombsCount || TwitchShouldCancelCommand);
@@ -1386,7 +1417,8 @@ public class BombCreator : MonoBehaviour
                     int vanillaSeed;
                     if (!VanillaRuleModifier.Installed()) yield break;
                     if (!int.TryParse(split[1], out vanillaSeed)) yield break;
-	                yield return AllowPowerUsers("admin", "Only those with admin access or higher may set the vanilla seed.");
+                    yield return AllowBombCreator();
+                    yield return AllowPowerUsers(Permissions.BombCreatorAllowedToChangeVanillaSeed, "admin", "Only those with admin access or higher may set the vanilla seed.");
 
                     if (Mathf.Abs(VanillaRuleModifier.GetRuleSeed() - vanillaSeed) > 300) yield return "elevator music";
                     while (VanillaRuleModifier.GetRuleSeed() != vanillaSeed && !TwitchShouldCancelCommand)
@@ -1403,6 +1435,7 @@ public class BombCreator : MonoBehaviour
                     int minWidgets;
                     if (!int.TryParse(split[1], out minWidgets)) yield break;
                     if (minWidgets < 0 || minWidgets > Settings.WidgetsMaximum) yield break;
+                    yield return AllowBombCreator();
                     while (Settings.WidgetsMinimum != minWidgets && !TwitchShouldCancelCommand)
                     {
                         yield return AddWidgetsMinimum(1, () => Settings.WidgetsMinimum >= minWidgets || TwitchShouldCancelCommand);
@@ -1417,6 +1450,7 @@ public class BombCreator : MonoBehaviour
                     int maxWidgets;
                     if (!int.TryParse(split[1], out maxWidgets)) yield break;
                     if (maxWidgets < Settings.WidgetsMinimum || maxWidgets > 50) yield break;
+                    yield return AllowBombCreator();
                     while (Settings.WidgetsMaximum != maxWidgets && !TwitchShouldCancelCommand)
                     {
                         yield return AddWidgetsMaximum(1, () => Settings.WidgetsMaximum >= maxWidgets || TwitchShouldCancelCommand);
