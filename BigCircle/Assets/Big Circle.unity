@@ -431,20 +431,6 @@ Light:
   m_Lightmapping: 4
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
-  m_FalloffTable:
-    m_Table[0]: 0
-    m_Table[1]: 0
-    m_Table[2]: 0
-    m_Table[3]: 0
-    m_Table[4]: 0
-    m_Table[5]: 0
-    m_Table[6]: 0
-    m_Table[7]: 0
-    m_Table[8]: 0
-    m_Table[9]: 0
-    m_Table[10]: 0
-    m_Table[11]: 0
-    m_Table[12]: 0
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
   m_ShadowRadius: 0
@@ -525,6 +511,8 @@ GameObject:
   - component: {fileID: 1868171092}
   - component: {fileID: 1868171091}
   - component: {fileID: 1868171090}
+  - component: {fileID: 1868171105}
+  - component: {fileID: 1868171104}
   m_Layer: 0
   m_Name: Custom Edgework
   m_TagString: Untagged
@@ -543,7 +531,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52b0a0d5b46362943b626e5243135fe5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Batteries: 0
+  Batteries: 2
 --- !u!114 &1868171091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -697,7 +685,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b58c1bcff803d3840bea713a5cf5ecef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Label: CAR
+  Label: BOB
   Lit: 1
 --- !u!4 &1868171103
 Transform:
@@ -712,3 +700,27 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1868171104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1868171089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52b0a0d5b46362943b626e5243135fe5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Batteries: 1
+--- !u!114 &1868171105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1868171089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52b0a0d5b46362943b626e5243135fe5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Batteries: 2
