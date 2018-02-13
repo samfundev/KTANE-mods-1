@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Assets.Scripts;
 using Assets.Scripts.RuleGenerator;
 using Random = UnityEngine.Random;
 
@@ -132,6 +133,8 @@ public class MorseAMaze : MonoBehaviour
     // ReSharper disable once UnusedMember.Local
     private void Start()
     {
+        StartCoroutine(TwitchPlays.Refresh());
+
         _modSettings = new ModSettings(BombModule);
         _modSettings.ReadSettings();
         _movements = gameObject.AddComponent<CoroutineQueue>();
@@ -419,6 +422,7 @@ public class MorseAMaze : MonoBehaviour
         else
         {
             FakeStatusLight.FlashStrike();
+            TwitchPlays.CauseFakeStrike(BombModule);
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
         }
         Audio.HandlePlaySoundAtTransform(GlassBreak.name, transform);
@@ -1050,6 +1054,15 @@ public class MorseAMaze : MonoBehaviour
             commandUsed = true;
         }
 
+        /*
+        if (command.Contains("ForceUnicorn"))
+        {
+            yield return null;
+            commandUsed = true;
+            _unicorn = true;
+
+        }*/
+
 
         if (!command.StartsWith("move ", StringComparison.InvariantCultureIgnoreCase))
         {
@@ -1108,14 +1121,14 @@ public class MorseAMaze : MonoBehaviour
             }
             if (!safe)
             {
-                if (!_unicorn)
-                {
-                    yield return "strike";
-                }
-                else
+                if (!TwitchPlays.Installed() && _unicorn)
                 {
                     yield return "multiple strikes";
                     yield return "award strikes 0";
+                }
+                else
+                {
+                    yield return "strike";
                 }
                 yield break;
             }
