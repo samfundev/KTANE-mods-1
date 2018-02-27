@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Assets.Scripts;
 using UnityEngine;
@@ -85,7 +86,19 @@ public class BombCreator : MonoBehaviour
 
     private Random _random;
     public delegate bool boolDelegate();
-    
+
+    private static Type _gameplayStateType;
+    private static FieldInfo _gameplayroomPrefabOverrideField;
+
+    private static Type _elevatorRoomType;
+
+    static BombCreator()
+    {
+        _elevatorRoomType = ReflectionHelper.FindType("ElevatorRoom");
+        _gameplayStateType = ReflectionHelper.FindType("GameplayState");
+        if (_gameplayStateType != null)
+            _gameplayroomPrefabOverrideField = _gameplayStateType.GetField("GameplayRoomPrefabOverride", BindingFlags.Public | BindingFlags.Static);
+    }
 
     public static void DebugLog(string message, params object[] args)
     {
@@ -306,6 +319,19 @@ public class BombCreator : MonoBehaviour
 
     private int GetMaxModules()
     {
+        try
+        {
+            GameObject roomPrefab = (GameObject) _gameplayroomPrefabOverrideField.GetValue(null);
+            if (roomPrefab != null)
+            {
+                if (roomPrefab.GetComponentInChildren(_elevatorRoomType, true) != null) return 54;
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugLog("Could not check for elevator bomb due to an exception: {0}\nStack Trace: {1}", ex.Message, ex.StackTrace);
+        }
+
         _maxModules = GameInfo.GetMaximumBombModules();
         _maxFrontFace = GameInfo.GetMaximumModulesFrontFace();
         return Settings.FrontFaceOnly ? _maxFrontFace : _maxModules;
