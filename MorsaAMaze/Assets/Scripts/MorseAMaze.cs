@@ -50,6 +50,7 @@ public class MorseAMaze : MonoBehaviour
     private ModSettings _modSettings;
 
     private static readonly MorseAMazeRuleGenerator MazeRuleSet = new MorseAMazeRuleGenerator();
+    private static bool UsesVanillaRuleModifierAPI = false;
 
     private enum EdgeworkRules
     {
@@ -105,6 +106,7 @@ public class MorseAMaze : MonoBehaviour
 
     private int GetRuleSeed()
     {
+        if (!UsesVanillaRuleModifierAPI) return 1;
         GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
         if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
             return 1;
@@ -117,6 +119,7 @@ public class MorseAMaze : MonoBehaviour
 
     private string GetRuleManualPath()
     {
+        if (!UsesVanillaRuleModifierAPI) return null;
         GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
         if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
             return null;
@@ -129,14 +132,19 @@ public class MorseAMaze : MonoBehaviour
 
     private static int _currentSeed;
 
+    // ReSharper disable once UnusedMember.Local
+    private void Awake()
+    {
+        _modSettings = new ModSettings(BombModule);
+        _modSettings.ReadSettings();
+        UsesVanillaRuleModifierAPI = _modSettings.Settings.UseVanillaRuleModifierSeed;
+    }
+
     // Use this for initialization
     // ReSharper disable once UnusedMember.Local
     private void Start()
     {
         StartCoroutine(TwitchPlays.Refresh());
-
-        _modSettings = new ModSettings(BombModule);
-        _modSettings.ReadSettings();
         _movements = gameObject.AddComponent<CoroutineQueue>();
         BombModule.GenerateLogFriendlyName();
 
@@ -621,7 +629,7 @@ public class MorseAMaze : MonoBehaviour
         return true;
     }
 
-    #region buttons
+#region buttons
     private bool MoveLeft()
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, BombModule.transform);
@@ -681,9 +689,9 @@ public class MorseAMaze : MonoBehaviour
 
         return ProcessMove(CheckHorizontalWall(location.parent.name, wall), loc);
     }
-    #endregion
+#endregion
 
-    #region Activate()
+#region Activate()
     private void Activate()
     {
         BombModule.LogFormat("Bomb Serial Number = {0}", BombInfo.GetSerialNumber());
@@ -768,9 +776,9 @@ public class MorseAMaze : MonoBehaviour
                 break;
         }
     }
-    #endregion
+#endregion
 
-    #region Solution Generator
+#region Solution Generator
     private static int GetXYfromLocation(Transform location)
     {
         var ones = "ABCDEF".IndexOf(location.parent.name, StringComparison.Ordinal);
@@ -932,7 +940,7 @@ public class MorseAMaze : MonoBehaviour
         }
         return _edgeworkRules[_rule].ToString();
     }
-    #endregion
+#endregion
 
     private int _lastStrikes = -1;
     private int _lastSolved = -1;
@@ -980,7 +988,7 @@ public class MorseAMaze : MonoBehaviour
 
     }
 
-    #region TwitchPlays
+#region TwitchPlays
 #pragma warning disable 414
     // ReSharper disable InconsistentNaming
     private static bool TwitchPlaysDetected = false;
@@ -1142,7 +1150,7 @@ public class MorseAMaze : MonoBehaviour
         }
         if(moved) yield return "solve";
     }
-    #endregion
+#endregion
 
     // ReSharper disable once UnusedMember.Local
     private void Update ()
