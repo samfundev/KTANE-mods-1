@@ -24,10 +24,8 @@ MonoBehaviour:
     Green)\r\nMorseXmitState - The on state of the status light while morse code is
     being transmitted. (default: Red)\n\nThe Colors are defined as follows: To change
     the color, change the configuration option to the matching number.\n0 - Off\n1
-    - Green\n2 - Red\n3 - Random\n\nUseVanillaRuleModifierSeed - Set to true if you
-    wish to have the mazes be dependant on Vanilla rule modifier seed.  (Requires
-    Vanilla Rule Modifier to be installed)\n\nFinally, if you wish to reset everything
-    back to default, you can simply change ResetToDefault from false to true.\n\r\n[url=https://ktane.timwi.de/HTML/Morse-A-Maze.html]HTML
+    - Green\n2 - Red\n3 - Random\n\nFinally, if you wish to reset everything back
+    to default, you can simply change ResetToDefault from false to true.\n\r\n[url=https://ktane.timwi.de/HTML/Morse-A-Maze.html]HTML
     Manual[/url]\r\n[url=https://ktane.timwi.de/PDF/Morse-A-Maze.pdf]PDF Manual[/url]"
   version: v1.0.8
   outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods

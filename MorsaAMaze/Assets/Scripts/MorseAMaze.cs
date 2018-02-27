@@ -50,7 +50,9 @@ public class MorseAMaze : MonoBehaviour
     private ModSettings _modSettings;
 
     private static readonly MorseAMazeRuleGenerator MazeRuleSet = new MorseAMazeRuleGenerator();
-    private static bool UsesVanillaRuleModifierAPI = false;
+#pragma warning disable 169
+    private bool UsesVanillaRuleModifierAPI = true;
+#pragma warning restore 169
 
     private enum EdgeworkRules
     {
@@ -106,7 +108,6 @@ public class MorseAMaze : MonoBehaviour
 
     private int GetRuleSeed()
     {
-        if (!UsesVanillaRuleModifierAPI) return 1;
         GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
         if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
             return 1;
@@ -119,7 +120,6 @@ public class MorseAMaze : MonoBehaviour
 
     private string GetRuleManualPath()
     {
-        if (!UsesVanillaRuleModifierAPI) return null;
         GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
         if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
             return null;
@@ -131,20 +131,13 @@ public class MorseAMaze : MonoBehaviour
     }
 
     private static int _currentSeed;
-
-    // ReSharper disable once UnusedMember.Local
-    private void Awake()
-    {
-        _modSettings = new ModSettings(BombModule);
-        _modSettings.ReadSettings();
-        UsesVanillaRuleModifierAPI = _modSettings.Settings.UseVanillaRuleModifierSeed;
-    }
-
     // Use this for initialization
     // ReSharper disable once UnusedMember.Local
     private void Start()
     {
         StartCoroutine(TwitchPlays.Refresh());
+        _modSettings = new ModSettings(BombModule);
+        _modSettings.ReadSettings();
         _movements = gameObject.AddComponent<CoroutineQueue>();
         BombModule.GenerateLogFriendlyName();
 
@@ -196,6 +189,7 @@ public class MorseAMaze : MonoBehaviour
                 {
                     try
                     {
+                        UsesVanillaRuleModifierAPI = false;
                         MazeRuleSet.InitializeRNG(1);
                         MazeRuleSet.CreateRules();
                     }
