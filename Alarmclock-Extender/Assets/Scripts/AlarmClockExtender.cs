@@ -33,9 +33,7 @@ public class AlarmClockExtender : MonoBehaviour
 
     public static void DebugLog(string message, params object[] args)
     {
-        
-        var debugstring = string.Format("[Alarm Clock Extender] {0}", message);
-        Debug.LogFormat(debugstring, args);
+        ModSettings.DebugLog(message, args);
     }
 
     // Use this for initialization

@@ -14,6 +14,9 @@ public class ModuleSettings
     public bool ResetToDefault = false;
     public string HowToReset = "Changing this setting to true will reset ALL your setting back to default.";
 
+    public bool DebugOutput = false;
+    public string HowToDebug = "This controls whether things will be dumped into the output log at all.";
+
     //Add your own settings here.  If you wish to have explanations, define them as strings similar to as shown above.
     //Make sure those strings are JSON compliant.
     public float AlarmClockBuzzerTime = 60f;
@@ -30,8 +33,6 @@ public class ModuleSettings
     public string HowToUse4_1 = "Set this between 0 and 100. This determines how likely you will get the annoying beep instead of music.";
     public string HowToUse4_2 = "Note: If there are no tracks loaded, you will ALWAYS get the beep instead.";
     public string HowToUse4_3 = "Also, if anything has replaced the normal beep, those are what will play when the normal beep is played.";
-
-
 }
 
 public class ModSettings
@@ -39,7 +40,8 @@ public class ModSettings
     public readonly int ModSettingsVersion = 4;
     public ModuleSettings Settings = new ModuleSettings();
 
-    public string ModuleName { get; private set; }
+    public static string ModuleName { get; private set; }
+    public static bool DebugOutput { get; private set; }
     //Update this line each time you make changes to the Settings version.
 
     public bool InitializeSettings()
@@ -48,14 +50,14 @@ public class ModSettings
 
         if (Settings.ResetToDefault)
         {
-            DebugLog("Factory Reset requested.");
+            DebugLogInternal("Factory Reset requested.");
             Settings = new ModuleSettings();
             RewriteFile = true;
         }
 
         if (Settings.SettingsVersion != ModSettingsVersion)
         {
-            DebugLog("New settings added since previous version.  Previous = {0}, Current = {1}", Settings.SettingsVersion, ModSettingsVersion);
+            DebugLogInternal("New settings added since previous version.  Previous = {0}, Current = {1}", Settings.SettingsVersion, ModSettingsVersion);
             Settings.SettingsVersion = ModSettingsVersion;
             RewriteFile = true;
         }
@@ -65,20 +67,20 @@ public class ModSettings
         if (string.IsNullOrEmpty(Settings.SoundFileDirectory))
         {
             Settings.SoundFileDirectory = Path.Combine(Application.persistentDataPath, "AlarmClockExtender");
-            DebugLog("SoundFileDiretory is Null or Empty. Resetting to {0}", Settings.SoundFileDirectory);
+            DebugLogInternal("SoundFileDiretory is Null or Empty. Resetting to {0}", Settings.SoundFileDirectory);
             RewriteFile = true;
         }
 
         //This is also a good place to enforce limits
         if (Settings.ChanceOfNormalBeep < 0)
         {
-            DebugLog("ChanceOfNormalBeep < 0%.");
+            DebugLogInternal("ChanceOfNormalBeep < 0%.");
             Settings.ChanceOfNormalBeep = 0;
             RewriteFile = true;
         }
         if (Settings.ChanceOfNormalBeep > 100)
         {
-            DebugLog("ChanceOfNormalBeep > 100%.");
+            DebugLogInternal("ChanceOfNormalBeep > 100%.");
             Settings.ChanceOfNormalBeep = 100;
             RewriteFile = true;
         }
@@ -86,10 +88,16 @@ public class ModSettings
         return RewriteFile;
     }
 
-    public void DebugLog(string message, params object[] args)
+    private static void DebugLogInternal(string message, params object[] args)
     {
-        var debugstring = string.Format("[{0}] {1}", ModuleName,  message);
+        var debugstring = string.Format("[{0}] {1}", ModuleName, message);
         Debug.LogFormat(debugstring, args);
+    }
+
+    public static void DebugLog(string message, params object[] args)
+    {
+        if (!DebugOutput) return;
+        DebugLogInternal(message, args);
     }
 
 
@@ -117,7 +125,7 @@ public class ModSettings
     public bool WriteSettings()
     {
         InitializeSettings();
-        DebugLog("Writing Settings File: {0}", GetModSettingsPath(false));
+        DebugLogInternal("Writing Settings File: {0}", GetModSettingsPath(false));
         try
         {
             if (!Directory.Exists(GetModSettingsPath(true)))
@@ -127,12 +135,13 @@ public class ModSettings
 
             string settings = JsonConvert.SerializeObject(Settings, Formatting.Indented, new StringEnumConverter());
             File.WriteAllText(GetModSettingsPath(false), settings);
+            if (!DebugOutput) DebugLogInternal("New settings written successfully.");
             DebugLog("New settings = {0}", settings);
             return true;
         }
         catch (Exception ex)
         {
-            DebugLog("Failed to Create settings file due to Exception:\n{0}\nStack Trace:\n{1}", ex.Message,
+            DebugLogInternal("Failed to Create settings file due to Exception:\n{0}\nStack Trace:\n{1}", ex.Message,
                 ex.StackTrace);
             return false;
         }
@@ -140,7 +149,7 @@ public class ModSettings
 
     public bool ReadSettings()
     {
-        DebugLog("Attempting to read Settings file");
+        DebugLogInternal("Attempting to read Settings file");
         string ModSettings = GetModSettingsPath(false);
         try
         {
@@ -148,20 +157,24 @@ public class ModSettings
             {
                 string settings = File.ReadAllText(ModSettings);
                 Settings = JsonConvert.DeserializeObject<ModuleSettings>(settings, new StringEnumConverter());
+                DebugOutput = Settings.DebugOutput;
+                if(!DebugOutput) DebugLogInternal("Settings loaded.");
                 DebugLog("Settings loaded. Settings = {0}", settings);
-
                 return !InitializeSettings() || WriteSettings();
             }
             Settings = new ModuleSettings();
+            DebugOutput = Settings.DebugOutput;
             return WriteSettings();
         }
         catch (Exception ex)
         {
-            DebugLog(
+            DebugLogInternal(
                 "Settings not loaded due to Exception:\n{0}\nStack Trace:\n{1}\nLoading default settings instead.",
                 ex.Message, ex.StackTrace);
             Settings = new ModuleSettings();
+            DebugOutput = Settings.DebugOutput;
             return WriteSettings();
         }
+        
     }
 }
