@@ -21,88 +21,9 @@ MonoBehaviour:
     with a directory named for the seed you specified.\r\n[table]\r\n[tr][td]Platform[/td][td]Path[/td][/tr]\r\n[tr][td]Windows[/td][td]%APPDATA%\\..\\LocalLow\\Steel
     Crate Games\\Keep Talking and Nobody Explodes\\ModifiedVanillaManuals[/td][/tr]\r\n[tr][td]Mac[/td][td]~/Library/Application
     Support/com.steelcrategames.keeptalkingandnobodyexplodes/ModifiedVanillaManuals[/td][/tr]\r\n[tr][td]Linux[/td][td]~/.config/unity3d/Steel
-    Crate Games/Keep Talking and Nobody Explodes/ModifiedVanillaManuals/[/td][/tr]\r\n[/table]\r\n\r\n\r\n[h1]For
-    mod developers[/h1]\r\n[u]Mod API[/u]\r\nThe mod exposes a public API that can
-    be used by other mods to interoperate with it.\r\nThe API is exposed through a
-    GameObject named [i]VanillaRuleModifierProperties[/i] that has an [i]IDicionary<string,
-    object>[/i] component. This IDictionary contains keys and values (in this text
-    also called properties) that allow for interoperation with the mod. The full set
-    of keys is described in the table below.\r\nIf the GameObject does not exist it
-    means that the Vanilla Rule Modifier mod is not installed.\r\nPlease note that
-    the IDictionary is delcared with a generic value type of [i]object[/i] to allow
-    each property to have their own types. The type of each property is detailed in
-    the properties table. Make sure to cast the values to the right type and to pass
-    objects of the right type when setting properties.\r\nAvailable properties:\r\n[table]\r\n[tr][th]Key[/th][th]Type[/th][th]Can
-    Set[/th][th]Description[/th][/tr]\r\n[tr][td]RuleSeed[/td][td]int[/td][td]True[/td][td]Gets
-    or Sets the rule seed.\r\nNote: This property can only be written to during setup.[/td][/tr]\r\n[tr][td]GetRuleManual[/td][td]string[/td][td]False[/td][td]Genenerates
-    the manual for the currently set seed (If not already done) and returns the path
-    to the directory containing that manual.[/td][/tr]\r\n[tr][td]IsSeedVanilla[/td][td]bool[/td][td]False[/td][td]This
-    is used to determine which rule set generator is in use.[/td][/tr]\r\n[tr][td]IsSeedModded[/td][td]bool[/td][td]False[/td][td]Vanilla
-    seed numbers are 1, 2, and everything -3 and below.[/td][/tr]\r\n[/table]\r\n\r\nAPI
-    usage example:\r\n[code]\r\n//Example method that uses the API to set the rule
-    seed.\r\npublic void SetRuleSeed(int seed, bool applyNextBomb)\r\n{\r\n\tGameObject
-    vanillaRuleModifierAPIGameObject = GameObject.Find(\"VanillaRuleModifierProperties\");\r\n\tif(vanillaRuleModifierAPIGameObject
-    == null) //If the Vanilla Rule Modifer is not installed, return.\r\n\t\treturn;\r\n\tIDictionary<string,
-    object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string,
-    object>>();\r\n\tif(applyNextBomb)\r\n\t\tvanillaRuleModifierAPI[\"RuleSeed\"]
-    = new object[] {seed, true};\r\n\telse\r\n\t\tvanillaRuleModifierAPI[\"RuleSeed\"]
-    = seed;\r\n}\r\n[/code]\r\n\r\nA modded module that wishes to implement the rule
-    generation should use the following abstracted class, and derive a class from
-    it.  The mandatory functions to implement are void CreateRules() and string GetHTMLManual(out
-    string filename).  The module then has to use the above API to get the seed, call
-    InitializeRNG(seed), then CreateRules(). Generating the HTML manual, and writing
-    it to the path is not required within the module itself, but should ideally be
-    done as a courtesy.  Any other text based files and binary based files can be
-    implemented within GetTextFiles and GetBinaryFiles. These are files that the HTML
-    might refer to, like svg, javascript, images, css, fonts, etc...\r\n[code]\r\nusing
-    System;\r\nusing System.Linq;\r\nusing System.Reflection;\r\nusing Random = System.Random;\r\n\r\nnamespace
-    Assets.Scripts.RuleGenerator\r\n{\r\n\tpublic abstract class AbstractRuleGenerator\r\n\t{\r\n\t\tpublic
-    bool Initialized { get; private set; }\r\n\t\tpublic bool RulesGenerated { get;
-    protected set; }\r\n\t\tpublic int Seed { get; protected set; }\r\n\t\tpublic
-    delegate int RandomNext(int min=0, int max=int.MaxValue);\r\n\t\tpublic delegate
-    double RandomNextDouble();\r\n\t\tpublic delegate void RandomNextBytes(byte[]
-    buf);\r\n\r\n\t\tpublic RandomNext Next { get; private set; }\r\n\t\tpublic RandomNext
-    NextMax { get; private set; }\r\n\t\tpublic RandomNext NextMinMax { get; private
-    set; }\r\n\t\tpublic RandomNextDouble NextDouble { get; private set; }\r\n\t\tpublic
-    RandomNextBytes NextBytes { get; private set; }\r\n\r\n\t\tprivate object _random;\r\n\t\tprivate
-    Type _rngType = typeof(Random);\r\n\t\tpublic void InitializeRNG(int seed, Type
-    rngType=null)\r\n\t\t{\r\n\t\t\tSeed = seed;\r\n\t\t\tif (rngType != null)\r\n\t\t\t\t_rngType
-    = rngType;\r\n\r\n\t\t\tvar nextMethod = _rngType.GetMethods(BindingFlags.Public
-    | BindingFlags.Instance).FirstOrDefault(m => m.Name.Equals(\"Next\") && m.GetParameters().Length
-    == 0 && m.ReturnType == typeof(int));\r\n\t\t\tif (nextMethod == null) throw NotImplemented(\"int
-    Next()\");\r\n\r\n\t\t\tvar nextmaxMethod = _rngType.GetMethods(BindingFlags.Public
-    | BindingFlags.Instance).FirstOrDefault(m => m.Name.Equals(\"Next\") && m.GetParameters().Length
-    == 1 && m.GetParameters()[0].ParameterType == typeof(int) && m.ReturnType == typeof(int));\r\n\t\t\tif
-    (nextmaxMethod == null) throw NotImplemented(\"int Next(int max)\");\r\n\r\n\t\t\tvar
-    nextminmaxMethod = _rngType.GetMethods(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(m
-    => m.Name.Equals(\"Next\") && m.GetParameters().Length == 2 && m.GetParameters().All(x
-    => x.ParameterType == typeof(int)) && m.ReturnType == typeof(int));\r\n\t\t\tif
-    (nextminmaxMethod == null) throw NotImplemented(\"int Next(int min, int max)\");\r\n\r\n\t\t\tvar
-    nextdoubleMethod = _rngType.GetMethods(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(m
-    => m.Name.Equals(\"NextDouble\") && m.GetParameters().Length == 0 && m.ReturnType
-    == typeof(double));\r\n\t\t\tif (nextdoubleMethod == null) throw NotImplemented(\"double
-    NextDouble()\");\r\n\r\n\t\t\tvar nextbytesMethod = _rngType.GetMethods(BindingFlags.Public
-    | BindingFlags.Instance).FirstOrDefault(m => m.Name.Equals(\"NextBytes\") && m.GetParameters().Length
-    == 1 && m.GetParameters()[0].ParameterType == typeof(byte[]) && m.ReturnType ==
-    typeof(void));\r\n\t\t\tif (nextbytesMethod == null) throw NotImplemented(\"void
-    NextBytes(byte[] buf)\");\r\n\r\n\t\t\tobject[] args = {seed};\r\n\t\t\t_random
-    = Activator.CreateInstance(_rngType, args);\r\n\r\n\t\t\tNext = (min, max) =>
-    (int)nextMethod.Invoke(_random, new object[] { });\r\n\t\t\tNextMax = (min, max)
-    => (int)nextmaxMethod.Invoke(_random, new object[] { min });\r\n\t\t\tNextMinMax
-    = (min, max) => (int)nextminmaxMethod.Invoke(_random, new object[] { min, max
-    });\r\n\t\t\tNextDouble = () => (double)nextdoubleMethod.Invoke(_random, new object[]
-    {});\r\n\t\t\tNextBytes = bytes => nextdoubleMethod.Invoke(_random, new object[]
-    { bytes });\r\n\t\t\tInitialized = true;\r\n\t\t}\r\n\r\n\t\tprivate NotImplementedException
-    NotImplemented(string typeNotImplemented)\r\n\t\t{\r\n\t\t\t_rngType = typeof(Random);\r\n\t\t\treturn
-    new NotImplementedException(typeNotImplemented + \" not implemented\");\r\n\t\t}\r\n\r\n\t\tpublic
-    abstract string GetHTMLManual(out string filename);\r\n\t\tpublic abstract void
-    CreateRules();\r\n\r\n\t\tpublic virtual string[] GetTextFiles(out string[] textFilePaths)\r\n\t\t{\r\n\t\t\ttextFilePaths
-    = new string[0];\r\n\t\t\treturn new string[0];\r\n\t\t}\r\n\r\n\t\tpublic virtual
-    byte[][] GetBinaryFiles(out string[] binaryFilePaths)\r\n\t\t{\r\n\t\t\tbinaryFilePaths
-    = new string[0];\r\n\t\t\treturn new byte[0][];\r\n\t\t}\r\n\t}\r\n}\r\n[/code]\r\n\r\nFinally,
-    if you wish for Twitch plays to link to the correct manual when vanilla rule modifier
-    is in effect, then somewhere in the main module class, Declare [code]bool UsesVanillaRuleModifierAPI
-    = true;[/code]"
+    Crate Games/Keep Talking and Nobody Explodes/ModifiedVanillaManuals/[/td][/tr]\r\n[/table]\r\n\r\n\rMod
+    developers can refer to https://github.com/CaitSith2/KTANE-mods/wiki/RuleSeedModifier
+    for the API."
   version: 1.1
   outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
   previewImage: {fileID: 2800000, guid: b73cdd829aaf4854a9f499830a8ef7f1, type: 3}
