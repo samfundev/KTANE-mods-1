@@ -13,15 +13,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: VanillaRuleModifier
   title: Vanilla Rule Modifier
-  description: "Ever wish you could change the rules you play the vanilla modules
-    under?  This mod was inspired by LtHummus's original Unofficial KTaNE manual hack.\r\n\r\nThe
+  description: "Ever wish you could change the rules you play the modules under?  This
+    mod was inspired by LtHummus's original Unofficial KTaNE manual hack.\r\n\r\nThe
     Default seed for this mod is Seed #6502. (Manual included)\r\n\r\nYou can change
     this seed in the settings json.  In doing so, the game will generate the manual
     when you load up the next bomb.  The manauls will appear in the following directory,
     with a directory named for the seed you specified.\r\n[table]\r\n[tr][td]Platform[/td][td]Path[/td][/tr]\r\n[tr][td]Windows[/td][td]%APPDATA%\\..\\LocalLow\\Steel
-    Crate Games\\Keep Talking and Nobody Explodes\\ModifiedVanillaManuals[/td][/tr]\r\n[tr][td]Mac[/td][td]~/Library/Application
-    Support/com.steelcrategames.keeptalkingandnobodyexplodes/ModifiedVanillaManuals[/td][/tr]\r\n[tr][td]Linux[/td][td]~/.config/unity3d/Steel
-    Crate Games/Keep Talking and Nobody Explodes/ModifiedVanillaManuals/[/td][/tr]\r\n[/table]\r\n\r\n\rMod
+    Crate Games\\Keep Talking and Nobody Explodes\\ModifiedManuals[/td][/tr]\r\n[tr][td]Mac[/td][td]~/Library/Application
+    Support/com.steelcrategames.keeptalkingandnobodyexplodes/ModifiedManuals[/td][/tr]\r\n[tr][td]Linux[/td][td]~/.config/unity3d/Steel
+    Crate Games/Keep Talking and Nobody Explodes/ModifiedManuals/[/td][/tr]\r\n[/table]\r\n\r\n\rMod
     developers can refer to https://github.com/CaitSith2/KTANE-mods/wiki/RuleSeedModifier
     for the API."
   version: 1.1
