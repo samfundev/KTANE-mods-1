@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Random = System.Random;
 
 namespace Assets.Scripts.RuleGenerator
 {
@@ -10,7 +10,7 @@ namespace Assets.Scripts.RuleGenerator
         public bool Initialized { get; private set; }
         public bool RulesGenerated { get; protected set; }
         public int Seed { get; protected set; }
-        public delegate int RandomNext(int min=0, int max=int.MaxValue);
+        public delegate int RandomNext(int min = 0, int max = int.MaxValue);
         public delegate double RandomNextDouble();
         public delegate void RandomNextBytes(byte[] buf);
 
@@ -22,7 +22,28 @@ namespace Assets.Scripts.RuleGenerator
 
         private object _random;
         private Type _rngType = typeof(Random);
-        public void InitializeRNG(int seed, Type rngType=null)
+        private static readonly Dictionary<Type, AbstractRuleGenerator> InstanceDictionary = new Dictionary<Type, AbstractRuleGenerator>();
+
+        public static AbstractRuleGenerator GetInstance<T>() { return GetInstance(typeof(T)); }
+        public static AbstractRuleGenerator GetInstance(Type T)
+        {
+            if (InstanceDictionary.ContainsKey(T))
+                return InstanceDictionary[T];
+
+            AbstractRuleGenerator instance = Activator.CreateInstance(T) as AbstractRuleGenerator;
+            if (instance == null) throw new NotSupportedException("Type not derived from AbstractRuleGenerator");
+            instance.InitializeRNG(1);
+            instance.CreateRules();
+            instance.Seed = 1;
+            return instance;
+        }
+
+        protected AbstractRuleGenerator()
+        {
+            InstanceDictionary[GetType()] = this;
+        }
+
+        public void InitializeRNG(int seed, Type rngType = null)
         {
             Seed = seed;
             if (rngType != null)
@@ -43,13 +64,13 @@ namespace Assets.Scripts.RuleGenerator
             var nextbytesMethod = _rngType.GetMethods(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(m => m.Name.Equals("NextBytes") && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(byte[]) && m.ReturnType == typeof(void));
             if (nextbytesMethod == null) throw NotImplemented("void NextBytes(byte[] buf)");
 
-            object[] args = {seed};
+            object[] args = { seed };
             _random = Activator.CreateInstance(_rngType, args);
 
             Next = (min, max) => (int)nextMethod.Invoke(_random, new object[] { });
             NextMax = (min, max) => (int)nextmaxMethod.Invoke(_random, new object[] { min });
             NextMinMax = (min, max) => (int)nextminmaxMethod.Invoke(_random, new object[] { min, max });
-            NextDouble = () => (double)nextdoubleMethod.Invoke(_random, new object[] {});
+            NextDouble = () => (double)nextdoubleMethod.Invoke(_random, new object[] { });
             NextBytes = bytes => nextdoubleMethod.Invoke(_random, new object[] { bytes });
             Initialized = true;
         }
@@ -60,6 +81,7 @@ namespace Assets.Scripts.RuleGenerator
             return new NotImplementedException(typeNotImplemented + " not implemented");
         }
 
+        public abstract string GetModuleType();
         public abstract string GetHTMLManual(out string filename);
         public abstract void CreateRules();
 

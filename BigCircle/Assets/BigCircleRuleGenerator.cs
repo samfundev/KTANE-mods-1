@@ -6,6 +6,16 @@ namespace Assets.Scripts.RuleGenerator
 {
     public partial class BigCircleRuleGenerator : AbstractRuleGenerator
     {
+        public static BigCircleRuleGenerator Instance
+        {
+            get { return (BigCircleRuleGenerator) GetInstance<BigCircleRuleGenerator>(); }
+        }
+
+        public override string GetModuleType()
+        {
+            return "BigCircle";
+        }
+
         public override void CreateRules()
         {
             List<WedgeColors> colors = new List<WedgeColors>((WedgeColors[])Enum.GetValues(typeof(WedgeColors)));

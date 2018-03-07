@@ -5,6 +5,13 @@ namespace Assets.Scripts.RuleGenerator
 {
     public class MorseAMazeRuleGenerator : AbstractRuleGenerator
     {
+        public static MorseAMazeRuleGenerator Instance { get { return (MorseAMazeRuleGenerator) GetInstance<MorseAMazeRuleGenerator>(); } }
+
+        public override string GetModuleType()
+        {
+            return "MorseAMaze";
+        }
+
         public override string GetHTMLManual(out string filename)
         {
             filename = "Morse-A-Maze.html";

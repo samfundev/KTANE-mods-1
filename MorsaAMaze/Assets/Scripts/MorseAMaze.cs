@@ -49,10 +49,10 @@ public class MorseAMaze : MonoBehaviour
 
     private ModSettings _modSettings;
 
-    private static readonly MorseAMazeRuleGenerator MazeRuleSet = new MorseAMazeRuleGenerator();
-#pragma warning disable 169
-    private bool UsesVanillaRuleModifierAPI = true;
-#pragma warning restore 169
+    private static MorseAMazeRuleGenerator MazeRuleSet
+    {
+        get { return MorseAMazeRuleGenerator.Instance; }
+    }
 
     private enum EdgeworkRules
     {
@@ -105,32 +105,6 @@ public class MorseAMaze : MonoBehaviour
         EdgeworkRules.DayOfWeek, EdgeworkRules.EmptyPortPlates, EdgeworkRules.SerialNumberLetter
     };
 
-
-    private int GetRuleSeed()
-    {
-        GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
-        if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
-            return 1;
-        IDictionary<string, object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string, object>>();
-        object seed;
-        if (vanillaRuleModifierAPI.TryGetValue("RuleSeed", out seed))
-            return (int)seed;
-        return 1;
-    }
-
-    private string GetRuleManualPath()
-    {
-        GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
-        if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
-            return null;
-        IDictionary<string, object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string, object>>();
-        object manual;
-        if (vanillaRuleModifierAPI.TryGetValue("GetRuleManual", out manual))
-            return (string)manual;
-        return null;
-    }
-
-    private static int _currentSeed;
     // Use this for initialization
     // ReSharper disable once UnusedMember.Local
     private void Start()
@@ -140,66 +114,6 @@ public class MorseAMaze : MonoBehaviour
         _modSettings.ReadSettings();
         _movements = gameObject.AddComponent<CoroutineQueue>();
         BombModule.GenerateLogFriendlyName();
-
-        if (!MazeRuleSet.Initialized || _currentSeed != GetRuleSeed())
-        {
-            _currentSeed = GetRuleSeed();
-            
-            try
-            {
-                MazeRuleSet.InitializeRNG(_currentSeed);
-                MazeRuleSet.CreateRules();
-                if (_currentSeed != 1)
-                {
-                    try
-                    {
-                        var manualPath = GetRuleManualPath();
-                        if (Application.isEditor)
-                            manualPath = "";
-                        if (manualPath != null)
-                        {
-                            if (!Application.isEditor)
-                                if (!Directory.Exists(manualPath))
-                                    Directory.CreateDirectory(manualPath);
-                            string htmlFileName;
-                            var htmlData = MazeRuleSet.GetHTMLManual(out htmlFileName);
-                            var htmlPath = Path.Combine(manualPath, htmlFileName);
-                            File.WriteAllText(htmlPath, htmlData);
-                            for (var i = 0; i < MorseAMazeManual.TextAssetPaths.Length; i++)
-                            {
-                                var imagePath = Path.Combine(manualPath, MorseAMazeManual.ImagePaths[i]);
-                                if (!Directory.Exists(imagePath))
-                                    Directory.CreateDirectory(imagePath);
-                                var imageFile = Path.Combine(manualPath, MorseAMazeManual.TextAssetPaths[i]);
-                                File.WriteAllText(imageFile, MorseAMazeManual.TextAssets[i]);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        BombModule.LogFormat("Failed to Generate manual for Seed {0} due to Exception: {1}, Stack Trace: {2}", _currentSeed, ex.Message, ex.StackTrace);
-                    }
-                }
-            }
-            catch
-            {
-                if (_currentSeed == 1)
-                    StartCoroutine(InstantlySolveModule("Could not Generate ruleset"));
-                else
-                {
-                    try
-                    {
-                        UsesVanillaRuleModifierAPI = false;
-                        MazeRuleSet.InitializeRNG(1);
-                        MazeRuleSet.CreateRules();
-                    }
-                    catch
-                    {
-                        StartCoroutine(InstantlySolveModule("Could not Generate ruleset"));
-                    }
-                }
-            }
-        }
         
 	    Locations.Shuffle();
         SetMaze(0); //Hide the walls now.

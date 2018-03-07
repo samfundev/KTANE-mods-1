@@ -18,8 +18,6 @@ public class TheBigCircle : MonoBehaviour
     public KMBombModule BombModule;
     public KMAudio Audio;
     public KMBombInfo BombInfo;
-
-    public int DebugSeed = 666776;
     #endregion
 
     #region Prviate Variables
@@ -46,108 +44,14 @@ public class TheBigCircle : MonoBehaviour
     private WedgeColors[] _colors = (WedgeColors[]) Enum.GetValues(typeof(WedgeColors));
     #endregion
 
-    private static readonly BigCircleRuleGenerator BigCircleRuleSet = new BigCircleRuleGenerator();
-#pragma warning disable 169
-    private bool UsesVanillaRuleModifierAPI = true;
-#pragma warning restore 169
-
-    private int GetRuleSeed()
+    private static BigCircleRuleGenerator BigCircleRuleSet
     {
-        if (Application.isEditor) return DebugSeed;
-        GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
-        if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
-            return 1;
-        IDictionary<string, object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string, object>>();
-        object seed;
-        if (vanillaRuleModifierAPI.TryGetValue("RuleSeed", out seed))
-            return (int)seed;
-        return 1;
+        get { return BigCircleRuleGenerator.Instance; }
     }
-
-    private string GetRuleManualPath()
-    {
-        GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
-        if (vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
-            return null;
-        IDictionary<string, object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string, object>>();
-        object manual;
-        if (vanillaRuleModifierAPI.TryGetValue("GetRuleManual", out manual))
-            return (string)manual;
-        return null;
-    }
-
-    private static int _currentSeed;
 
     // Use this for initialization
     void Start ()
     {
-        if (!BigCircleRuleSet.Initialized || _currentSeed != GetRuleSeed())
-        {
-            _currentSeed = GetRuleSeed();
-            try
-            {
-                BigCircleRuleSet.InitializeRNG(_currentSeed);
-                BigCircleRuleSet.CreateRules();
-                if (_currentSeed != 1)
-                {
-                    try
-                    {
-                        var manualPath = GetRuleManualPath();
-                        if (Application.isEditor)
-                            manualPath = "";
-                        if (manualPath != null)
-                        {
-                            if (!Application.isEditor)
-                                if (!Directory.Exists(manualPath))
-                                    Directory.CreateDirectory(manualPath);
-                            string htmlFileName;
-                            var htmlData = BigCircleRuleSet.GetHTMLManual(out htmlFileName);
-                            var htmlPath = Path.Combine(manualPath, htmlFileName);
-                            File.WriteAllText(htmlPath, htmlData);
-                            string[] TextAssetPaths;
-                            string[] TextAssets = BigCircleRuleSet.GetTextFiles(out TextAssetPaths);
-
-                            for (var i = 0; i < TextAssetPaths.Length; i++)
-                            {
-                                var imagePath = Path.Combine(manualPath, BigCircleRuleSet.ImagePaths[i]);
-                                if (!Directory.Exists(imagePath))
-                                    Directory.CreateDirectory(imagePath);
-                                var imageFile = Path.Combine(manualPath, TextAssetPaths[i]);
-                                File.WriteAllText(imageFile, TextAssets[i]);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        BombModule.LogFormat("Failed to Generate manual for Seed {0} due to Exception: {1}, Stack Trace: {2}", _currentSeed, ex.Message, ex.StackTrace);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                if (_currentSeed == 1)
-                {
-                    BombModule.LogFormat("Exception caused by {0}\n{1}", ex.Message, ex.StackTrace);
-                    BombModule.Log("Module passed by exception");
-                    StartCoroutine(FadeCircle(_wedgeColors[(int)WedgeColors.Red]));
-                }
-                else
-                {
-                    try
-                    {
-                        UsesVanillaRuleModifierAPI = false;
-                        BigCircleRuleSet.InitializeRNG(1);
-                        BigCircleRuleSet.CreateRules();
-                    }
-                    catch (Exception ex2)
-                    {
-                        BombModule.LogFormat("Exception caused by {0} while retrying with rule seed 1\n{1}", ex2.Message, ex2.StackTrace);
-                        BombModule.Log("Module passed by exception");
-                        StartCoroutine(FadeCircle(_wedgeColors[(int)WedgeColors.Red]));
-                    }
-                }
-            }
-        }
         colorLookup = BigCircleRuleSet.Rules;
         BombModule.GenerateLogFriendlyName();
 	    _rotateCounterClockwise = Rnd.value < 0.5;
