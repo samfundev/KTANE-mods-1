@@ -589,7 +589,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             PreviousSeeds.Add(seed);
             _ruleManager = RuleManager.Instance;
 
-            var path = Path.Combine(Application.persistentDataPath, Path.Combine("ModifiedVanillaManuals", seed.ToString()));
+            var path = Path.Combine(Application.persistentDataPath, Path.Combine("ModifiedManuals", seed.ToString()));
             //if (Directory.Exists(path))
             //    return;
 
@@ -612,6 +612,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             {
                 WriteHTML(path, manual, ref replacements);
             }
+	        ModRuleSetGenerator.Instance.WriteManuals(path);
         }
     }
 }

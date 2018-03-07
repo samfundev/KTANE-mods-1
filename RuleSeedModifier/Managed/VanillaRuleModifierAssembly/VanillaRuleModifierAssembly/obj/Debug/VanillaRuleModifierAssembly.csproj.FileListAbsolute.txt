@@ -5,3 +5,11 @@ H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRul
 H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.pdb
 H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.Properties.Resources.resources
 H:\KTANE-Mods\VanillaRuleModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.csproj.GenerateResource.Cache
+H:\KTANE-Mods\RuleSeedModifier\Assets\Plugins\Managed\VanillaRuleModifierAssembly.dll
+H:\KTANE-Mods\RuleSeedModifier\Assets\Plugins\Managed\VanillaRuleModifierAssembly.pdb
+H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.csprojResolveAssemblyReference.cache
+H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.Properties.Resources.resources
+H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.csproj.GenerateResource.Cache
+H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.csproj.CoreCompileInputs.cache
+H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.dll
+H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.pdb

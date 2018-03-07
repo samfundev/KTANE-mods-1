@@ -70,8 +70,10 @@ namespace VanillaRuleModifierAssembly
                 RhythmHeavenRuleSet = (RhythmHeavenRuleSet) RhythmHeavenRuleSetGenerator.GenerateRuleSet(seed),
                 MazeRuleSet = (MazeRuleSet) MazeRuleSetGenerator.GenerateRuleSet(seed),
                 SimonRuleSet = SimonRuleSetGenerator.GenerateSimonRuleSet(seed)
-            };
-            bombRules.PrintRules();
+			};
+	        ModRuleSetGenerator.Instance.CreateRules(seed);
+
+			bombRules.PrintRules();
             bombRules.CacheStringValues();
 
             DebugLog("Done Generating Rules for seed {0}", seed);
@@ -155,7 +157,7 @@ namespace VanillaRuleModifierAssembly
         private static readonly MazeRuleSetGenerator MazeRuleSetGenerator;
         private static readonly SimonRuleGenerator SimonRuleSetGenerator;
 
-        #endregion
+	    #endregion
 
     }
 }

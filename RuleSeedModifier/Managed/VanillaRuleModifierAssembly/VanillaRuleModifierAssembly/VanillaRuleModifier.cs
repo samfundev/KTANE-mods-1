@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using System.IO;
 using VanillaRuleModifierAssembly;
 using VanillaRuleModifierAssembly.RuleSetGenerators;
@@ -22,7 +23,16 @@ public class VanillaRuleModifier : MonoBehaviour
         _fixesApplied = true;
     }
 
-    private VanillaRuleModifierProperties _publicProperties;
+	internal static RuleSeedModifierProperties[] PublicProperties = new RuleSeedModifierProperties[2];
+	internal static HashSet<string> ModsThatSupportRuleSeedModifier = new HashSet<string>
+	{
+		"WireSetComponentSolver","ButtonComponentSolver",
+		"WireSequenceComponentSolver","WhosOnFirstComponentSolver",
+		"VennWireComponentSolver","SimonComponentSolver",
+		"PasswordComponentSolver","NeedyKnobComponentSolver",
+		"MorseCodeComponentSolver","MemoryComponentSolver",
+		"KeypadComponentSolver","InvisibleWallsComponentSolver"
+	};
     private bool _started = false;
     private void Start ()
     {
@@ -45,16 +55,24 @@ public class VanillaRuleModifier : MonoBehaviour
 
         GameObject infoObject = new GameObject("VanillaRuleModifierProperties");
         infoObject.transform.parent = gameObject.transform;
-        _publicProperties = infoObject.AddComponent<VanillaRuleModifierProperties>();
-        _publicProperties.VanillaRuleModifer = this;
+        PublicProperties[0] = infoObject.AddComponent<RuleSeedModifierProperties>();
+        PublicProperties[0].VanillaRuleModifer = this;
 
-	    _gameInfo = GetComponent<KMGameInfo>();
+	    GameObject infoObject2 = new GameObject("RuleSeedModifierProperties");
+	    infoObject2.transform.parent = gameObject.transform;
+	    PublicProperties[1] = infoObject2.AddComponent<RuleSeedModifierProperties>();
+	    PublicProperties[1].VanillaRuleModifer = this;
+
+	    foreach (string mod in ModsThatSupportRuleSeedModifier)
+	    {
+		    RuleSeedModifierProperties.AddSupportedModule(mod);
+	    }
+
+		_gameInfo = GetComponent<KMGameInfo>();
         LoadMod();
         
 	    DebugLog("Service started");
     }
-
-    
 
     public void SetRuleSeed(int seed, bool writeSettings)
     {
@@ -106,6 +124,7 @@ public class VanillaRuleModifier : MonoBehaviour
         UnloadRuleManager();
         _gameInfo.OnStateChange -= OnStateChange;
         _enabled = false;
+
         StopAllCoroutines();
     }
 
