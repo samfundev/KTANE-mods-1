@@ -85,7 +85,7 @@ public class VanillaRuleModifier : MonoBehaviour
         if(CurrentState == KMGameInfo.State.Setup || CurrentState == KMGameInfo.State.PostGame)
             GenerateRules(_modSettings.Settings.RuleSeed);
         ManualGenerator.Instance.WriteManual(_modSettings.Settings.RuleSeed);
-        return Path.Combine(Application.persistentDataPath, Path.Combine("ModifiedVanillaManuals", _modSettings.Settings.RuleSeed.ToString()));
+        return Path.Combine(Application.persistentDataPath, Path.Combine("ModifiedManuals", _modSettings.Settings.RuleSeed.ToString()));
     }
 
     private bool _enabled;

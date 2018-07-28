@@ -22,7 +22,13 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 				{
 					try
 					{
-						_modRuleGenerators.Add(ModRuleGenerator.GetRuleGenerator(type.Assembly));
+						List<Type> seenTypes = new List<Type>();
+						ModRuleGenerator generator;
+						do
+						{
+							generator = ModRuleGenerator.GetRuleGenerator(type.Assembly, seenTypes);
+							if (generator != null) _modRuleGenerators.Add(generator);
+						} while (generator != null);
 					}
 					catch (Exception ex)
 					{

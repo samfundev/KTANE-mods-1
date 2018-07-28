@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -42,7 +43,7 @@ namespace VanillaRuleGenerator
 
 		public string GetHTML(int seed)
 		{
-			return GetHTML(seed, out string notUsed);
+			return GetHTML(seed, out string _);
 		}
 
 		public string GetHTML(int seed, out string filename)
@@ -124,11 +125,13 @@ namespace VanillaRuleGenerator
 			return _getModuleType.Invoke(_ruleGenerator, null) as string;
 		}
 
-		public static ModRuleGenerator GetRuleGenerator(Assembly assembly)
+		public static ModRuleGenerator GetRuleGenerator(Assembly assembly, List<Type> seenTypes)
 		{
 			var ruleGeneratorType = assembly.GetSafeTypes().FirstOrDefault(t => t.FullName != null && t.FullName.EndsWith("AbstractRuleGenerator"));
 			if (ruleGeneratorType == null) throw new Exception($"Could not find AbstractRuleGenerator class in assembly {assembly}");
-			var implementsType = assembly.GetSafeTypes().Where(p => ruleGeneratorType.IsAssignableFrom(p)).FirstOrDefault(t => t != ruleGeneratorType) ?? ruleGeneratorType;
+			var implementsType = assembly.GetSafeTypes().Where(p => ruleGeneratorType.IsAssignableFrom(p)).FirstOrDefault(t => t != ruleGeneratorType && !seenTypes.Contains(t)) ?? (seenTypes.Count == 0 ? ruleGeneratorType : null);
+			if (implementsType == null) return null;
+			seenTypes.Add(implementsType);
 
 			var initRNGMethod = ruleGeneratorType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
 				.FirstOrDefault(m => m.Name.Equals("InitializeRNG") &&
