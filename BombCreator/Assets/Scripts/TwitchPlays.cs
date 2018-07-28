@@ -41,11 +41,37 @@ namespace Assets.Scripts
             return Properties != null && Properties.ContainsKey("TimeMode") && ((bool) Properties["TimeMode"]);
         }
 
-        public static int TimeModeTimeLimit(int time=300)
+        public static void SetTimeMode(bool on)
         {
+            if (Properties == null || !Properties.ContainsKey("TimeMode")) return;
+            Properties["TimeMode"] = on;
+        }
+
+        public static bool ZenMode()
+        {
+            return Properties != null && Properties.ContainsKey("ZenMode") && ((bool)Properties["ZenMode"]);
+        }
+
+        public static void SetZenMode(bool on)
+        {
+            if (Properties == null || !Properties.ContainsKey("ZenMode")) return;
+            Properties["ZenMode"] = on;
+        }
+
+        public static int TimeModeTimeLimit(int time = 300, bool force = false)
+        {
+            if (force && Properties.ContainsKey("TimeModeTimeLimit"))
+                return ((int) Properties["TimeModeTimeLimit"]) * 60;
+
             return TimeMode() && Properties.ContainsKey("TimeModeTimeLimit")
                 ? ((int) Properties["TimeModeTimeLimit"]) * 60
                 : time;
+        }
+
+        public static void SetTimeModeTimeLimit(int time)
+        {
+            if (!TimeMode() || !Properties.ContainsKey("TimeModeTimeLimit")) return;
+            Properties["TimeModeTimeLimit"] = (int)Math.Ceiling(time / 60f);
         }
 
         public static void SetReward(int reward)

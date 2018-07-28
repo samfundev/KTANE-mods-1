@@ -18,6 +18,7 @@ public class ModuleSettings
     //Add your own settings here.  If you wish to have explanations, define them as strings similar to as shown above.
     //Make sure those strings are JSON compliant.
     public int Time = 300;
+    public int TwitchPlaysTimeModeTime = 300;
     public int Modules = 3;
     public int Bombs = 1;
     public int Strikes = 3;

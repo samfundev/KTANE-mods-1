@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Assets.Scripts;
+using Newtonsoft.Json;
 using UnityEngine;
 using Random = System.Random;
 
@@ -12,6 +13,9 @@ using Random = System.Random;
 public class BombCreator : MonoBehaviour
 {
     public Transform BackingTransform;
+
+    public TextMesh TwitchModeLabel;
+    public KMSelectable TwitchModeButton;
 
     public TextMesh TimeText;
     public KMSelectable TimeMinusButton;
@@ -42,6 +46,7 @@ public class BombCreator : MonoBehaviour
 
     public TextMesh SeedText;
     public KMSelectable SeedMinusButton;
+    public KMSelectable SeedDigitSelectbutton;
     public KMSelectable SeedManualButton;
     public KMSelectable SeedPlusButton;
 
@@ -73,18 +78,24 @@ public class BombCreator : MonoBehaviour
 
     public List<Transform> SettingRows;
 
+	public Transform ArtworkBase;
+    public List<Transform> Artwork;
+
     public KMAudio Audio;
     public KMGameInfo GameInfo;
 
     private int _maxModules = 11;
     private int _maxFrontFace = 5;
 
+    private int _currentSeedDigit = 0;
+    private float _seedDigitSelectHoldTime = 0;
+
     private const string InfiniteSign = "∞";
 
     private readonly ModSettings _modSettings = new ModSettings("BombCreator");
     private ModuleSettings Settings { get { return _modSettings.Settings; } }
 
-    private Random _random;
+    private static readonly Random Random = new Random();
     public delegate bool boolDelegate();
 
     private static Type _gameplayStateType;
@@ -123,6 +134,8 @@ public class BombCreator : MonoBehaviour
 
         Vector3 size = BackingTransform.localScale;
         BackingTransform.localScale = new Vector3(size.x, size.y, size.z - 0.1f);
+	    size = ArtworkBase.localScale;
+	    ArtworkBase.localScale = new Vector3(size.x - 0.075f, size.y, size.z - 0.075f);
 
         for (var i = 0; i < SettingRows.Count; i++)
             MoveTransform(SettingRows[i], i > rowIndex);
@@ -143,8 +156,8 @@ public class BombCreator : MonoBehaviour
         yield return null;
         yield return null;
         UpdateDisplay();
-        if (TwitchPlays.Installed())
-            transform.Find("TPQuad").gameObject.SetActive(true);
+        UpdateArtwork();
+        Settings.TwitchPlaysTimeModeTime = TwitchPlays.TimeModeTimeLimit(300, true);
     }
 
     private IEnumerator HideMultipleBombsButtons()
@@ -181,6 +194,18 @@ public class BombCreator : MonoBehaviour
         ResizeBacking(FactoryModeMinusButton.transform.parent);
     }
 
+	private IEnumerator HideTwitchModeButton()
+	{
+		var installed = TwitchPlays.Refresh();
+		while (installed.MoveNext())
+		{
+			yield return installed.Current;
+		}
+
+		if (TwitchPlays.Installed()) yield break;
+		TwitchModeButton.gameObject.SetActive(false);
+	}
+
     private void Start()
     {
         _modSettings.ReadSettings();
@@ -188,14 +213,25 @@ public class BombCreator : MonoBehaviour
         StartCoroutine(HideVanillaSeed());
         StartCoroutine(HideFactoryMode());
         StartCoroutine(DelayUpdateDisplay());
-        StartCoroutine(TwitchPlays.Refresh());
+        StartCoroutine(HideTwitchModeButton());
 
         _vanillaModules = GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod).ToList();
  
         ChangeModuleDisableIndex(0);
 
-        TimeMinusButton.OnInteract += delegate { StartCoroutine(AddTimer(-30)); return false; };
-        TimePlusButton.OnInteract += delegate { StartCoroutine(AddTimer(30)); return false; };
+        TwitchModeButton.OnInteract += delegate
+        {
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+            if (!TwitchPlays.TimeMode() && !TwitchPlays.ZenMode())
+                TwitchPlays.SetTimeMode(true);
+            else
+                TwitchPlays.SetZenMode(!TwitchPlays.ZenMode());
+            UpdateDisplay();
+            return false;
+        };
+
+        TimeMinusButton.OnInteract += delegate { StartCoroutine(AddTimer(TwitchPlays.TimeMode() ? -60 : -30)); return false; };
+        TimePlusButton.OnInteract += delegate { StartCoroutine(AddTimer(TwitchPlays.TimeMode() ? 60 : 30)); return false; };
 
         ModulesMinusButton.OnInteract += delegate { StartCoroutine(AddModules(-1)); return false; };
         ModulesPlusButton.OnInteract += delegate { StartCoroutine(AddModules(1)); return false; };
@@ -213,6 +249,7 @@ public class BombCreator : MonoBehaviour
         ModuleDisableButton.OnInteract += ModuleDisableButtonPressed;
 
         SeedMinusButton.OnInteract += delegate { StartCoroutine(AddSeed(-1)); return false; };
+        SeedDigitSelectbutton.OnInteract += delegate { Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform); _seedDigitSelectHoldTime = Time.time; return false; };
         SeedManualButton.OnInteract += OpenManualDirectory;
         SeedPlusButton.OnInteract += delegate { StartCoroutine(AddSeed(1)); return false; };
 
@@ -237,9 +274,9 @@ public class BombCreator : MonoBehaviour
         ResetButton.OnInteract += delegate { StartCoroutine(ResetSettings()); return false; };
 
 
-
-        TimeMinusButton.OnInteractEnded += () => EndInteract();
-        TimePlusButton.OnInteractEnded += () => EndInteract();
+        TwitchModeButton.OnInteractEnded += () => EndInteract(false);
+        TimeMinusButton.OnInteractEnded += () => { EndInteract(); TwitchPlays.SetTimeModeTimeLimit(BombTime); };
+        TimePlusButton.OnInteractEnded += () => { EndInteract(); TwitchPlays.SetTimeModeTimeLimit(BombTime); };
 
         ModulesMinusButton.OnInteractEnded += () => EndInteract();
         ModulesPlusButton.OnInteractEnded += () => EndInteract();
@@ -257,6 +294,7 @@ public class BombCreator : MonoBehaviour
         ModuleDisableButton.OnInteractEnded += () => EndInteract(false);
 
         SeedMinusButton.OnInteractEnded += () => EndInteract();
+        SeedDigitSelectbutton.OnInteractEnded += EndSeedDigitInteract;
         SeedManualButton.OnInteractEnded += () => EndInteract(false);
         SeedPlusButton.OnInteractEnded += () => EndInteract();
 
@@ -279,6 +317,38 @@ public class BombCreator : MonoBehaviour
         StartButton.OnInteractEnded += () => EndInteract(false);
         SaveButton.OnInteractEnded += () => EndInteract(false);
 
+    }
+
+    private void Update()
+    {
+        if (!TwitchPlays.Installed()) return;
+        if (!TwitchPlays.TimeMode() && !TwitchPlays.ZenMode())
+        {
+	        if (TwitchModeLabel.text == "Normal Mode") return;
+	        TwitchModeLabel.text = "Normal Mode";
+	        UpdateDisplay();
+        }
+        else if (TwitchPlays.TimeMode())
+        {
+	        if (TwitchModeLabel.text == "Time Mode") return;
+            TwitchModeLabel.text = "Time Mode";
+	        UpdateDisplay();
+        }
+        else
+        {
+	        if (TwitchModeLabel.text == "Zen Mode") return;
+            TwitchModeLabel.text = "Zen Mode";
+	        UpdateDisplay();
+        }
+    }
+
+    private void EndSeedDigitInteract()
+    {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
+        float time = Time.time - _seedDigitSelectHoldTime;
+        _currentSeedDigit += time < 0.25f ? 1 : 9;
+        _currentSeedDigit %= 10;
+        UpdateDisplay();
     }
 
     private bool OpenManualDirectory()
@@ -317,6 +387,21 @@ public class BombCreator : MonoBehaviour
         UpdateModuleDisableDisplay();
     }
 
+    private void UpdateArtwork()
+    {
+        foreach (Transform t in Artwork)
+        {
+            t.gameObject.SetActive(false);
+        }
+
+	    var artwork = Artwork[0];
+
+		while(Artwork[0] == artwork)
+			Artwork = Artwork.OrderBy(x => Random.NextDouble()).ToList();
+
+        Artwork[0].gameObject.SetActive(true);
+    }
+
     private int GetMaxModules()
     {
         try
@@ -342,22 +427,32 @@ public class BombCreator : MonoBehaviour
     private const float MinDelay = 0.01f;
 	private bool _twitchPlays = false;
 
+    private int BombTime
+    {
+        get { return TwitchPlays.TimeMode() ? Settings.TwitchPlaysTimeModeTime : Settings.Time; }
+        set
+        {
+            if (TwitchPlays.TimeMode()) Settings.TwitchPlaysTimeModeTime = value;
+            else Settings.Time = value;
+        }
+    }
+
     private IEnumerator AddTimer(int timer, boolDelegate endWhen = null)
     {
         if (endWhen != null && endWhen.Invoke()) yield break;
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
         int target = 7200;
         int add = 3600;
-        int startingTimer = Settings.Time;
+        int startingTimer = BombTime;
         var delay = endWhen == null ? StartDelay : MinDelay;
         while (endWhen == null || !endWhen.Invoke())
         {
-            Settings.Time += timer;
+            BombTime += timer;
             UpdateDisplay();
             yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
             delay -= Acceleration;
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
-            if (Mathf.Abs(Settings.Time - startingTimer) != target) continue;
+            if (Mathf.Abs(BombTime - startingTimer) != target) continue;
             if (timer > 0)
                 timer = add;
             else
@@ -375,6 +470,7 @@ public class BombCreator : MonoBehaviour
 			}
 	        if (endWhen == null) {yield return new WaitForSeconds(0.5f);delay = StartDelay;}
         }
+        TwitchPlays.SetTimeModeTimeLimit(BombTime);
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
     }
 
@@ -481,33 +577,39 @@ public class BombCreator : MonoBehaviour
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
     }
 
-    private IEnumerator AddSeed(int count, boolDelegate endWhen = null)
+    private IEnumerator AddSeed(long count, boolDelegate endWhen = null)
     {
+        int[] multipliers = new[] {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
+        count *= multipliers[_currentSeedDigit];
+
         if (endWhen != null && endWhen.Invoke()) yield break;
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
         if (!VanillaRuleModifier.Installed())
             yield break;
         var delay = endWhen == null ? StartDelay : MinDelay;
-        var _currentSeed = VanillaRuleModifier.GetRuleSeed();
-        var startingSeed = _currentSeed;
-        int target = 500;
-        int add = 100;
+        long currentSeed = VanillaRuleModifier.GetRuleSeed();
+        long startingSeed = currentSeed;
+        long target = 10;
+        long add = 10;
         while (endWhen == null || !endWhen.Invoke())
         {
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
-            //seedAPI.SetRuleSeed(seedAPI.GetRuleSeed() + (int)countFloat);
-            _currentSeed += count;
-            VanillaRuleModifier.SetRuleSeed(_currentSeed);
+
+            currentSeed += count;
+            if (currentSeed > int.MaxValue) currentSeed = int.MaxValue;
+            if (currentSeed < int.MinValue) currentSeed = int.MinValue;
+            VanillaRuleModifier.SetRuleSeed((int)currentSeed);
             UpdateDisplay();
+
             yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
             delay -= Acceleration;
-            if (Mathf.Abs(_currentSeed - startingSeed) != target) continue;
+            if (Math.Abs(currentSeed - startingSeed) != target) continue;
             if (count > 0)
                 count = add;
             else
                 count = -add;
-            target *= 100;
-            add *= 100;
+            target *= 10;
+            add *= 10;
 	        if (endWhen == null) { yield return new WaitForSeconds(0.5f); delay = StartDelay; }
 		}
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
@@ -554,6 +656,7 @@ public class BombCreator : MonoBehaviour
             EndInteract();
 
         _resetting = false;
+        UpdateArtwork();
     }
     
     private bool SaveSettings(bool sound = true)
@@ -568,6 +671,7 @@ public class BombCreator : MonoBehaviour
     private void ClampSettings()
     {
         Settings.Time = Mathf.Max(30, Settings.Time);
+        Settings.TwitchPlaysTimeModeTime = Mathf.Max(60, Settings.TwitchPlaysTimeModeTime);
         Settings.Modules = Mathf.Clamp(Settings.Modules, 1, GetMaxModules());
         Settings.Strikes = Mathf.Max(1, Settings.Strikes);
         Settings.Bombs = Mathf.Clamp(Settings.Bombs, 1, MultipleBombs.GetMaximumBombCount());
@@ -583,7 +687,7 @@ public class BombCreator : MonoBehaviour
     {
         ClampSettings();
 
-        var t = TimeSpan.FromSeconds(Settings.Time);
+        var t = TimeSpan.FromSeconds(BombTime);
         TimeText.text = t.ToString();
         if (TimeText.text.StartsWith("00:0"))
         {
@@ -620,7 +724,14 @@ public class BombCreator : MonoBehaviour
         PacingEventsText.text = Settings.PacingEvents ? "Pacing Events On" : "Pacing Events Off";
         FrontFaceText.text = Settings.FrontFaceOnly ? "Front Face Only" : "All Faces";
 
-        SeedText.text = VanillaRuleModifier.GetRuleSeed().ToString();
+        SeedText.text = VanillaRuleModifier.GetRuleSeed() < 0 ? "-" : "";
+        var seedDigits = VanillaRuleModifier.GetRuleSeed().ToString("D" + (_currentSeedDigit + 1)).Replace("-","").Select(x => x.ToString()).ToArray();
+        for (int i = 0; i < seedDigits.Length; i++)
+        {
+            SeedText.text += i == ((seedDigits.Length - 1) - _currentSeedDigit) 
+                ? "<color=\"red\">" + seedDigits[i] + "</color>" 
+                : seedDigits[i];
+        }
 
         if(FactoryRoom.Installed())
             FactoryModeText.text = FactoryRoom.GetFactoryModes()[Settings.FactoryMode];
@@ -746,73 +857,104 @@ public class BombCreator : MonoBehaviour
         return string.Format("{0}{1:D2}:{2:D2}", (days > 0 ? string.Format("{0}:{1:D2}:",days,hours) : (hours > 0 ? string.Format("{0:D2}:", hours) : "")) , mins, secs);
     }
 
-    private bool StartMission()
+    private KMMission CreateMission()
     {
         StringBuilder sb = new StringBuilder();
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+		
         if (Settings.Modules > GetMaxModules())
         {
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
-            return false;
+            return null;
         }
-        _random = new Random(((int)Time.time));
-        var generatorSettings = new KMGeneratorSetting
+
+	    bool infiniteMode = (FactoryRoom.Installed() && FactoryRoom.GetFactoryModes()[Settings.FactoryMode].Contains("∞"));
+
+		var generatorSettings = new KMGeneratorSetting
         {
             NumStrikes = Settings.Strikes,
-            TimeLimit = TwitchPlays.TimeModeTimeLimit(Settings.Time),
+            TimeLimit = TwitchPlays.TimeModeTimeLimit(BombTime),
             FrontFaceOnly = Settings.FrontFaceOnly,
-            ComponentPools = Settings.DuplicatesAllowed ? BuildComponentPools() : BuildNoDuplicatesPool()
-        };
+            ComponentPools = Settings.DuplicatesAllowed ? BuildComponentPools(true) : BuildNoDuplicatesPool(true),
+	        OptionalWidgetCount = Random.Next(Settings.WidgetsMinimum, Settings.WidgetsMaximum)
+		};
 
         if (generatorSettings.ComponentPools.Count == 0)
         {
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
-            return false;
+            return null;
         }
 
-        sb.Append("Bomb Creator custom Mission details\n");
+		sb.Append("Bomb Creator custom Mission details\n");
+	    sb.Append(string.Format("Number of Bombs = {0}\n", infiniteMode ? "∞" : Settings.Bombs.ToString()));
         sb.Append(string.Format("Number of Modules = {0}\n", Settings.Modules));
         sb.Append(string.Format("Number of Needy Modules = {0}\n", Settings.NeedyModules));
         sb.Append(string.Format("Vanilla Modules = {0}%\n", Settings.VanillaModules));
         sb.Append(string.Format("Mod Modules = {0}%\n", 100 - Settings.VanillaModules));
         sb.Append(string.Format("Number of Strikes = {0}\n", generatorSettings.NumStrikes));
-        sb.Append(string.Format("Time Limit = {0}\n",FormatTime(Settings.Time)));
+        sb.Append(string.Format("Time Limit = {0}\n", FormatTime(BombTime)));
         sb.Append(string.Format("Faces = {0}\n", generatorSettings.FrontFaceOnly ? "Front Face Only" : "All Faces"));
         sb.Append(string.Format("Duplicates Allowed = {0}\n", Settings.DuplicatesAllowed ? "Yes" : "No"));
         sb.Append(string.Format("Pacing Events Enabled = {0}\n", Settings.PacingEvents ? "Yes" : "No"));
         sb.Append(string.Format("Widgets = {0}-{1}\n\n", Settings.WidgetsMinimum, Settings.WidgetsMaximum));
-        
 
-        int poolCount = generatorSettings.ComponentPools.Count;
+
+		int poolCount = generatorSettings.ComponentPools.Count;
 
         if (VanillaRuleModifier.Installed())
         {
             sb.Append(string.Format("Vanilla Rule Generator Seed = {0}\n", VanillaRuleModifier.GetRuleSeed()));
         }
 
-        bool infiniteMode = (FactoryRoom.Installed() && FactoryRoom.GetFactoryModes()[Settings.FactoryMode].Contains("∞"));
+		if (FactoryRoom.Installed() && Settings.FactoryMode > 0)
+	    {
+		    generatorSettings.ComponentPools.Add(new KMComponentPool
+		    {
+			    ModTypes = new List<string> { "Factory Mode" },
+			    Count = Settings.FactoryMode
+		    });
+		    sb.Append(string.Format("Factory mode = {0}\n", FactoryRoom.GetFactoryModes()[Settings.FactoryMode]));
+	    }
+		
+	    var generatorList = new List<KMGeneratorSetting> {generatorSettings};
         if (Settings.Bombs > 1 && !infiniteMode)
         {
-            generatorSettings.ComponentPools.Add(new KMComponentPool
+			generatorSettings.ComponentPools.Add(new KMComponentPool
             {
                 ModTypes = new List<string> { "Multiple Bombs" },
                 Count = Settings.Bombs - 1
             });
             sb.Append(string.Format("Bombs = {0}\n", Settings.Bombs));
+
+			//Generate additional pools for Multiple bombs
+	        for (int i = 1; i < Settings.Bombs; i++)
+	        {
+		        var multipleBombsGeneratorSettings = new KMGeneratorSetting
+		        {
+			        NumStrikes = Settings.Strikes,
+			        TimeLimit = TwitchPlays.TimeModeTimeLimit(BombTime),
+			        FrontFaceOnly = Settings.FrontFaceOnly,
+			        ComponentPools = Settings.DuplicatesAllowed ? BuildComponentPools(false) : BuildNoDuplicatesPool(false),
+			        OptionalWidgetCount = Random.Next(Settings.WidgetsMinimum, Settings.WidgetsMaximum)
+		        };
+				generatorList.Add(multipleBombsGeneratorSettings);
+
+		        if (multipleBombsGeneratorSettings.ComponentPools.Count == 0)
+		        {
+			        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
+			        return null;
+		        }
+
+				generatorSettings.ComponentPools.Add(new KMComponentPool
+				{
+					ModTypes = new List<string> { string.Format("Multiple Bombs:{0}:{1}", i, JsonConvert.SerializeObject(multipleBombsGeneratorSettings)) },
+					Count = 1
+				});
+			}
         }
 
-        if (FactoryRoom.Installed() && Settings.FactoryMode > 0)
-        {
-            generatorSettings.ComponentPools.Add(new KMComponentPool
-            {
-                ModTypes = new List<string> { "Factory Mode" },
-                Count = Settings.FactoryMode
-            });
-            sb.Append(string.Format("Factory mode = {0}\n", FactoryRoom.GetFactoryModes()[Settings.FactoryMode]));
-        }
+        
         sb.Append("\n");
-
-        generatorSettings.OptionalWidgetCount = _random.Next(Settings.WidgetsMinimum, Settings.WidgetsMaximum);
 
         if (Settings.VanillaModules > 0)
         {
@@ -834,61 +976,92 @@ public class BombCreator : MonoBehaviour
             }
         }
 
-        sb.Append(string.Format("Number of Widgets chosen from range = {0}\n", generatorSettings.OptionalWidgetCount));
-        sb.Append(string.Format("Total Component pools Generated = {0}\n", poolCount));
-        foreach (var pool in generatorSettings.ComponentPools)
-        {
-            if (pool.ModTypes.Contains("Multiple Bombs") || pool.ModTypes.Contains("Factory Mode")) continue;
-            sb.Append(string.Format("Number of Components to Select = {0}\n", pool.Count));
-            sb.Append(string.Format("\tVanilla Components = {0}, Modded Components = {1}\n", pool.ComponentTypes.Count, pool.ModTypes.Count));
-            sb.Append(string.Format("\tVanilla Compoents in Pool = {0}\n", string.Join(", ", pool.ComponentTypes.SelectMany(x => GameInfo.GetAvailableModuleInfo().Where(y => y.ModuleType == x).Select(y => y.DisplayName)).ToArray()).Wrap(80)));
-            sb.Append(string.Format("\tModded Components in Pool = {0}\n\n", string.Join(", ", pool.ModTypes.SelectMany(x => GameInfo.GetAvailableModuleInfo().Where(y => y.ModuleId == x).Select(y => y.DisplayName)).ToArray()).Wrap(80)));
-        }
+		List<int> rewardPointList = new List<int>();
+	    List<int> maxTimeAllowedList = new List<int>();
+	    
+        for(var i=0; i < generatorList.Count; i++)
+		{
+			int vanillaSolvableSize = 0;
+			var generator = generatorList[i];
+			sb.Append(string.Format("Bomb #{0}:\n", i+1));
+			sb.Append(string.Format("\tNumber of Widgets Chosen from range = {0}\n", generator.OptionalWidgetCount));
+			sb.Append(string.Format("\tTotal Component pools Generated = {0}\n", i == 0 ? poolCount : generator.ComponentPools.Count));
+			foreach (var pool in generator.ComponentPools)
+	        {
+	            if (pool.ModTypes.Contains("Multiple Bombs") || pool.ModTypes.Contains("Factory Mode") || pool.ComponentTypes == null) continue;
+	            sb.Append(string.Format("\tNumber of Components to Select = {0}\n", pool.Count));
+	            sb.Append(string.Format("\t\tVanilla Components = {0}, Modded Components = {1}\n", pool.ComponentTypes.Count, pool.ModTypes.Count));
+				if(pool.ComponentTypes.Count > 0) sb.Append(string.Format("\t\tVanilla Compoents in Pool = {0}\n", string.Join(", ", pool.ComponentTypes.SelectMany(x => GameInfo.GetAvailableModuleInfo().Where(y => y.ModuleType == x).Select(y => y.DisplayName)).ToArray()).Wrap(80)));
+	            if(pool.ModTypes.Count > 0) sb.Append(string.Format("\t\tModded Components in Pool = {0}\n", string.Join(", ", pool.ModTypes.SelectMany(x => GameInfo.GetAvailableModuleInfo().Where(y => y.ModuleId == x).Select(y => y.DisplayName)).ToArray()).Wrap(80)));
+		        sb.Append("\n");
 
-        var mission = ScriptableObject.CreateInstance<KMMission>();
+		        if (pool.ComponentTypes.Count > 0 && pool.ModTypes.Count == 0)
+			        vanillaSolvableSize += pool.Count;
+			}
+			rewardPointList.Add(Convert.ToInt32((5 * Settings.Modules) - (3 * vanillaSolvableSize)));
+			maxTimeAllowedList.Add((120 * Settings.Modules) - (60 * vanillaSolvableSize));
+		}
+
+	    bool staticMode = (!FactoryRoom.Installed() || Settings.FactoryMode == 0);
+		int rewardPoints = staticMode ? rewardPointList.Sum() : rewardPointList.Max();
+	    int maxTimeAllowed = staticMode ? maxTimeAllowedList.Sum() : maxTimeAllowedList.Max();
+	    int maxStrikesAllowed = Mathf.Max(3, Settings.Modules / 12);
+	    if (TwitchPlays.TimeMode())
+		    maxTimeAllowed = 300;
+
+	    double multiplier = 1;
+	    multiplier += Settings.NeedyModules * (staticMode ? Settings.Bombs : 1);
+
+	    multiplier *= 1 / ((double) Settings.Time / maxTimeAllowed);
+	    multiplier *= 1 / ((double) Settings.Strikes / maxStrikesAllowed);
+
+		TwitchPlays.SetReward((int)(rewardPoints * multiplier));
+	    TwitchPlays.SendMessage(string.Format("Reward for completing bomb: {0}, Base reward = {1}, Multiplier = {2}, TimeMultipler = {3}, maxTimeAllowed = {4}, StrikesMultipler = {5}, maxStrikesAllowed = {6}", 
+		    (int)(rewardPoints * multiplier), rewardPoints, multiplier,
+			1 / ((double)Settings.Time / maxTimeAllowed), maxTimeAllowed,
+			1 / ((double)Settings.Strikes / maxStrikesAllowed), maxStrikesAllowed) );
+
+		var mission = ScriptableObject.CreateInstance<KMMission>();
         mission.DisplayName = "Custom Freeplay";
         mission.GeneratorSetting = generatorSettings;
         mission.PacingEventsEnabled = Settings.PacingEvents;
 
         SaveSettings();
         DebugLog(sb.ToString());
-        
-        GetComponent<KMGameCommands>().StartMission(mission, "" + -1);
+
+		return mission;
+    }
+
+    private bool StartMission()
+    {
+        var mission = CreateMission();
+
+        if(mission != null)
+            GetComponent<KMGameCommands>().StartMission(mission, "" + -1);
         return false;
     }
 
-    private KMComponentPool AddComponent(KMGameInfo.KMModuleInfo module)
-    {
-        var pool = new KMComponentPool
-        {
-            ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
-            ModTypes = new List<string>(),
-            Count = 1
-        };
-        if (module.IsMod)
-            pool.ModTypes.Add(module.ModuleId);
-        else
-            pool.ComponentTypes.Add(module.ModuleType);
-        
-        return pool;
-    }
 
-    private void AddComponent(KMGameInfo.KMModuleInfo module, ref KMComponentPool pool)
-    {
-        if (pool == null)
-        {
-            pool = new KMComponentPool
-            {
-                ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
-                ModTypes = new List<string>(),
-                Count = 1
-            };
-        }
-        if (module.IsMod)
-            pool.ModTypes.Add(module.ModuleId);
-        else
-            pool.ComponentTypes.Add(module.ModuleType);
-    }
+	private KMComponentPool AddComponent(Func<KMGameInfo.KMModuleInfo> module, int count)
+	{
+		var pool = new KMComponentPool
+		{
+			ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>(),
+			ModTypes = new List<string>(),
+			Count = 1
+		};
+
+		for (var i = 0; i < count; i++)
+		{
+			var mod = module.Invoke();
+			if (mod.IsMod)
+				pool.ModTypes.Add(mod.ModuleId);
+			else
+				pool.ComponentTypes.Add(mod.ModuleType);
+		}
+
+		return pool;
+	}
 
     private KMGameInfo.KMModuleInfo PopModule(ICollection<KMGameInfo.KMModuleInfo> modules, ref List<KMGameInfo.KMModuleInfo> output, string moduleType)
     {
@@ -898,7 +1071,7 @@ public class BombCreator : MonoBehaviour
         if (output.Count == 0)
         {
             output.AddRange(modules);
-            output = output.OrderBy(x => _random.NextDouble()).ToList();
+            output = output.OrderBy(x => Random.NextDouble()).ToList();
             if (output.Count == 0)
                 throw new NullModuleException(string.Format("No Modules of type {0} to return", moduleType));
         }
@@ -908,7 +1081,17 @@ public class BombCreator : MonoBehaviour
         return module;
     }
 
-    private List<KMComponentPool> BuildNoDuplicatesPool()
+	private readonly List<KMGameInfo.KMModuleInfo>[] _vanillaSolvableModules = {new List<KMGameInfo.KMModuleInfo>(), new List<KMGameInfo.KMModuleInfo>()};
+	private readonly List<KMGameInfo.KMModuleInfo>[] _vanillaNeedyModules = { new List<KMGameInfo.KMModuleInfo>(), new List<KMGameInfo.KMModuleInfo>() };
+	private readonly List<KMGameInfo.KMModuleInfo>[] _moddedSolvableModules = { new List<KMGameInfo.KMModuleInfo>(), new List<KMGameInfo.KMModuleInfo>() };
+	private readonly List<KMGameInfo.KMModuleInfo>[] _moddedNeedyModules = { new List<KMGameInfo.KMModuleInfo>(), new List<KMGameInfo.KMModuleInfo>() };
+
+	private KMGameInfo.KMModuleInfo PopVanillaSolvableModule() { return PopModule(_vanillaSolvableModules[0], ref _vanillaSolvableModules[1], "Vanilla Solvable"); }
+	private KMGameInfo.KMModuleInfo PopVanillaNeedyModule() { return PopModule(_vanillaNeedyModules[0], ref _vanillaNeedyModules[1], "Vanilla Needy"); }
+	private KMGameInfo.KMModuleInfo PopModdedSolvableModule() { return PopModule(_moddedSolvableModules[0], ref _moddedSolvableModules[1], "Modded Solvable"); }
+	private KMGameInfo.KMModuleInfo PopModdedNeedyModule() { return PopModule(_moddedNeedyModules[0], ref _moddedNeedyModules[1], "Modded Needy"); }
+
+	private List<KMComponentPool> BuildNoDuplicatesPool(bool clear)
     {
         var pools = new List<KMComponentPool>();
 
@@ -918,93 +1101,106 @@ public class BombCreator : MonoBehaviour
         var vanillaNeedySize = Mathf.FloorToInt(Settings.NeedyModules * vanillaModulesChance);
         var moddedNeedySize = Mathf.FloorToInt(Settings.NeedyModules * moddedModulesChance);
         var mixedNeedySize = Settings.NeedyModules - vanillaNeedySize - moddedNeedySize;
-        DebugLog("Initial: VanillaNeedySize = {0}, ModdedNeedySize = {1}, mixedNeedySize = {2}", vanillaNeedySize, moddedNeedySize, mixedNeedySize);
 
-        for (var i = 0; i < mixedNeedySize; i++)
-        {
-            if (_random.NextDouble() < vanillaModulesChance)
-                vanillaNeedySize++;
-            else
-                moddedNeedySize++;
-        }
-        DebugLog("Final: VanillaNeedySize = {0}, ModdedNeedySize = {1}", vanillaNeedySize, moddedNeedySize);
+	    if (mixedNeedySize > 0)
+	    {
+		    DebugLog("Initial: VanillaNeedySize = {0}, ModdedNeedySize = {1}, mixedNeedySize = {2}", vanillaNeedySize, moddedNeedySize, mixedNeedySize);
 
+		    for (var i = 0; i < mixedNeedySize; i++)
+		    {
+			    if (Random.NextDouble() < vanillaModulesChance)
+				    vanillaNeedySize++;
+			    else
+				    moddedNeedySize++;
+		    }
+	    }
+	    DebugLog("Final: VanillaNeedySize = {0}, ModdedNeedySize = {1}", vanillaNeedySize, moddedNeedySize);
 
         var vanillaSolvableSize = Mathf.FloorToInt((Settings.Modules - Settings.NeedyModules) * vanillaModulesChance);
         var moddedSolvableSize = Mathf.FloorToInt((Settings.Modules - Settings.NeedyModules) * moddedModulesChance);
         var mixedSolvableSize = (Settings.Modules - Settings.NeedyModules) - vanillaSolvableSize - moddedSolvableSize;
-        DebugLog("Initial: vanillaSolvableSize = {0}, moddedSolvableSize = {1}, mixedSolvableSize = {2}", vanillaSolvableSize, moddedSolvableSize, mixedSolvableSize);
-        
-        for (var i = 0; i < mixedSolvableSize; i++)
-        {
-            if (_random.NextDouble() < vanillaModulesChance)
-                vanillaSolvableSize++;
-            else
-                moddedSolvableSize++;
-        }
-        DebugLog("Final: vanillaSolvableSize = {0}, moddedSolvableSize = {1}", vanillaSolvableSize, moddedSolvableSize);
 
-        int rewardPoints = Convert.ToInt32((5 * Settings.Modules) - (3 * vanillaSolvableSize)) * ((!FactoryRoom.Installed() || Settings.FactoryMode == 0) ? Settings.Bombs : 1);
-        TwitchPlays.SetReward(rewardPoints);
-        TwitchPlays.SendMessage("Reward for completing bomb: " + rewardPoints);
+	    if (mixedSolvableSize > 0)
+	    {
+		    DebugLog("Initial: vanillaSolvableSize = {0}, moddedSolvableSize = {1}, mixedSolvableSize = {2}", vanillaSolvableSize, moddedSolvableSize, mixedSolvableSize);
 
-        var moddedSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && !x.IsNeedy).ToList();
-        var moddedNeedyModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && x.IsNeedy).ToList();
+		    for (var i = 0; i < mixedSolvableSize; i++)
+		    {
+			    if (Random.NextDouble() < vanillaModulesChance)
+				    vanillaSolvableSize++;
+			    else
+				    moddedSolvableSize++;
+		    }
+	    }
+	    DebugLog("Final: vanillaSolvableSize = {0}, moddedSolvableSize = {1}", vanillaSolvableSize, moddedSolvableSize);
 
-        var vanillaSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && !x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
-        var vanillaNeedyModules = GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
+	    int bombs = ((!FactoryRoom.Installed() || Settings.FactoryMode == 0) ? Settings.Bombs : 1);
+		
+	    if (clear)
+	    {
+			_vanillaSolvableModules[0].Clear();
+		    _vanillaSolvableModules[1].Clear();
+		    _vanillaSolvableModules[0].AddRange(GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && !x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)));
 
-        var modules = new List<KMGameInfo.KMModuleInfo>();
+		    _vanillaNeedyModules[0].Clear();
+		    _vanillaNeedyModules[1].Clear();
+		    _vanillaNeedyModules[0].AddRange(GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && !x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)));
 
-        var maxVanillaSolvablePerPool = Mathf.Max(vanillaSolvableModules.Count / Math.Max(vanillaSolvableSize,1), 1);
-        var maxVanillaNeedyPerPool = Mathf.Max(vanillaNeedyModules.Count / Math.Max(vanillaNeedySize, 1), 1);
-        var maxModSolvablePerPool = Mathf.Max(moddedSolvableModules.Count / Math.Max(moddedSolvableSize, 1), 1);
-        var maxModNeedyPerPool = Mathf.Max(moddedNeedyModules.Count / Math.Max(moddedNeedySize, 1), 1);
+		    _moddedSolvableModules[0].Clear();
+		    _moddedSolvableModules[1].Clear();
+			_moddedSolvableModules[0].AddRange(GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && !x.IsNeedy));
+
+		    _moddedNeedyModules[0].Clear();
+		    _moddedNeedyModules[1].Clear();
+		    _moddedNeedyModules[0].AddRange(GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && x.IsNeedy));
+		}
+
+        var maxVanillaSolvablePerPool = Mathf.Max(_vanillaSolvableModules[0].Count / (Math.Max(vanillaSolvableSize,1) * bombs), 1);
+        var maxVanillaNeedyPerPool = Mathf.Max(_vanillaNeedyModules[0].Count / (Math.Max(vanillaNeedySize, 1) * bombs), 1);
+        var maxModSolvablePerPool = Mathf.Max(_moddedSolvableModules[0].Count / (Math.Max(moddedSolvableSize, 1) * bombs), 1);
+        var maxModNeedyPerPool = Mathf.Max(_moddedNeedyModules[0].Count / (Math.Max(moddedNeedySize, 1) * bombs), 1);
 
         try
         {
             for(var i = 0; i < vanillaSolvableSize; i++)
             {
-                var pool = AddComponent(PopModule(vanillaSolvableModules, ref modules, "Vanilla Solvable"));
-                for (var j = 1; j < maxVanillaSolvablePerPool; j++)
-                {
-                    AddComponent(PopModule(vanillaSolvableModules, ref modules, "Vanilla Solvable"), ref pool);
-                }
-                pools.Add(pool);
-            }
-            modules.Clear();
+	            var pool = AddComponent(PopVanillaSolvableModule, maxVanillaSolvablePerPool);
+	            var pool2 = pools.FirstOrDefault(x => x.ComponentTypes.All(y => pool.ComponentTypes.Contains(y)));
+	            if (pool2 != null)
+		            pool2.Count++;
+	            else
+					pools.Add(pool);
+			}
 
             for (var i = 0; i < moddedSolvableSize; i++)
             {
-                var pool = AddComponent(PopModule(moddedSolvableModules, ref modules, "Modded Solvable"));
-                for (var j = 1; j < maxModSolvablePerPool; j++)
-                {
-                    AddComponent(PopModule(moddedSolvableModules, ref modules, "Modded Solvable"), ref pool);
-                }
-                pools.Add(pool);
-            }
-            modules.Clear();
+	            var pool = AddComponent(PopModdedSolvableModule, maxModSolvablePerPool);
+				var pool2 = pools.FirstOrDefault(x => x.ModTypes.All(y => pool.ModTypes.Contains(y)));
+	            if (pool2 != null)
+		            pool2.Count++;
+	            else
+		            pools.Add(pool);
+			}
 
             for (var i = 0; i < vanillaNeedySize; i++)
             {
-                var pool = AddComponent(PopModule(vanillaNeedyModules, ref modules, "Vanilla Needy"));
-                for (var j = 1; j < maxVanillaNeedyPerPool; j++)
-                {
-                    AddComponent(PopModule(vanillaNeedyModules, ref modules, "Vanilla Needy"), ref pool);
-                }
-                pools.Add(pool);
-            }
-            modules.Clear();
+	            var pool = AddComponent(PopVanillaNeedyModule, maxVanillaNeedyPerPool);
+				var pool2 = pools.FirstOrDefault(x => x.ComponentTypes.All(y => pool.ComponentTypes.Contains(y)));
+	            if (pool2 != null)
+		            pool2.Count++;
+	            else
+		            pools.Add(pool);
+			}
 
             for (var i = 0; i < moddedNeedySize; i++)
             {
-                var pool = AddComponent(PopModule(moddedNeedyModules, ref modules, "Modded Needy"));
-                for (var j = 1; j < maxModNeedyPerPool; j++)
-                {
-                    AddComponent(PopModule(moddedNeedyModules, ref modules, "Modded Needy"), ref pool);
-                }
-                pools.Add(pool);
-            }
+	            var pool = AddComponent(PopModdedNeedyModule, maxModNeedyPerPool);
+	            var pool2 = pools.FirstOrDefault(x => x.ModTypes.All(y => pool.ModTypes.Contains(y)));
+	            if (pool2 != null)
+		            pool2.Count++;
+	            else
+		            pools.Add(pool);
+			}
         }
         catch (NullModuleException ex)
         {
@@ -1024,7 +1220,7 @@ public class BombCreator : MonoBehaviour
         return pools;
     }
 
-    private List<KMComponentPool> BuildComponentPools()
+    private List<KMComponentPool> BuildComponentPools(bool clear)
     {
         var pools = new List<KMComponentPool>();
 
@@ -1037,7 +1233,7 @@ public class BombCreator : MonoBehaviour
 
         for (var i = 0; i < mixedNeedySize; i++)
         {
-            if (_random.NextDouble() < vanillaModules)
+            if (Random.NextDouble() < vanillaModules)
                 vanillaNeedySize++;
             else
                 moddedNeedySize++;
@@ -1047,20 +1243,16 @@ public class BombCreator : MonoBehaviour
         var vanillaSolvableSize = Mathf.FloorToInt((Settings.Modules - Settings.NeedyModules) * vanillaModules);
         var moddedSolvableSize = Mathf.FloorToInt((Settings.Modules - Settings.NeedyModules) * moddedModules);
         var mixedSolvableSize = (Settings.Modules - Settings.NeedyModules) - vanillaSolvableSize - moddedSolvableSize;
-
-        int rewardPoints = Convert.ToInt32((5 * Settings.Modules) - (3 * vanillaSolvableSize)) * ((!FactoryRoom.Installed() || Settings.FactoryMode == 0) ? Settings.Bombs : 1);
-        TwitchPlays.SetReward(rewardPoints);
-        TwitchPlays.SendMessage("Reward for completing bomb: " + rewardPoints);
-
-        for (var i = 0; i < mixedSolvableSize; i++)
+		
+	    for (var i = 0; i < mixedSolvableSize; i++)
         {
-            if (_random.NextDouble() < vanillaModules)
+            if (Random.NextDouble() < vanillaModules)
                 vanillaSolvableSize++;
             else
                 moddedSolvableSize++;
         }
 
-        var moddedSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && !x.IsNeedy).ToList();
+		var moddedSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && !x.IsNeedy).ToList();
         var moddedNeedyModules = GameInfo.GetAvailableModuleInfo().Where(x => x.IsMod && x.IsNeedy).ToList();
 
         var vanillaSolvableModules = GameInfo.GetAvailableModuleInfo().Where(x => !x.IsMod && !x.IsNeedy && !Settings.DisabledModuleIds.Contains(x.ModuleId)).ToList();
@@ -1128,7 +1320,6 @@ public class BombCreator : MonoBehaviour
             pool.Count = moddedSolvableSize;
             pools.Add(pool);
         }
-        
 
         return pools;
     }
@@ -1140,7 +1331,7 @@ public class BombCreator : MonoBehaviour
 		Denied
 	}
 
-	private IEnumerator AllowPowerUsers(Permissions permission, string power, string errorIfNotAllowed)
+	private IEnumerator AllowPowerUsers(Permissions permission, PowerLevel power, string errorIfNotAllowed)
 	{
 		ActionAllowed allowed = ActionAllowed.Unfinished;
 		yield return null;
@@ -1150,15 +1341,20 @@ public class BombCreator : MonoBehaviour
 			new Action(() => allowed = ActionAllowed.Allowed),
 			new Action(() => allowed = ActionAllowed.Denied)
 		};
+        yield return null;
+	    DebugLog("Permission = {0}, Result = {1}", permission, allowed);
 
 	    if (allowed == ActionAllowed.Allowed) yield break;
 	    allowed = ActionAllowed.Unfinished;
 	    yield return new object[]
 	    {
-	        power,
+	        EnumUtils.StringValueOf(power),
 	        new Action(() => allowed = ActionAllowed.Allowed),
 	        new Action(() => allowed = ActionAllowed.Denied)
 	    };
+	    yield return null;
+	    DebugLog("Power override {0}, Result = {1}", power, allowed);
+
 		if (allowed == ActionAllowed.Allowed) yield break;
 		Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
 		yield return "sendtochaterror " + errorIfNotAllowed;
@@ -1168,20 +1364,25 @@ public class BombCreator : MonoBehaviour
     {
         BombCreatorEnabled,
         BombCreatorAllowedMoreThanFiveNeedyModules,
-        BombCreatorAllowedToChangeVanillaSeed
+        BombCreatorAllowedToChangeVanillaSeed,
+		BombCreatorAllowedToExceed199CombinedModules,
+		BombCreatorAllowedToChangeTimeModeTimeLimit,
     }
 
     private static Dictionary<string, bool> _permissions = new Dictionary<string, bool>
     {
         { Permissions.BombCreatorEnabled.ToString(), true },
         { Permissions.BombCreatorAllowedMoreThanFiveNeedyModules.ToString(), false },
-        { Permissions.BombCreatorAllowedToChangeVanillaSeed.ToString(), false }
+        { Permissions.BombCreatorAllowedToChangeVanillaSeed.ToString(), false },
+	    { Permissions.BombCreatorAllowedToExceed199CombinedModules.ToString(), false },
+	    { Permissions.BombCreatorAllowedToChangeTimeModeTimeLimit.ToString(), false },
     };
 
-    private IEnumerator AllowBombCreator()
+    private IEnumerator AllowBombCreator(bool front=true)
     {
         yield return _permissions;
-        yield return AllowPowerUsers(Permissions.BombCreatorEnabled, "mods", "Only mods or higher are allowed to use Bomb Creator");
+        yield return AllowPowerUsers(Permissions.BombCreatorEnabled, PowerLevel.Mod, "Only mods or higher are allowed to use Bomb Creator");
+        yield return front ? "show front" : "show back";
     }
 
     private string TwitchHelpMessage = "Set time with !{0} time 45:00. Set the Moulde cound with !{0} modules 23. Set strikes with !{0} strikes 3. Start the bomb with !{0} start. Go to https://github.com/CaitSith2/KTANE-mods/wiki/BombCreator for more details.";
@@ -1189,12 +1390,20 @@ public class BombCreator : MonoBehaviour
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
-        TwitchShouldCancelCommand = false;
+	    bool infiniteMode = (FactoryRoom.Installed() && FactoryRoom.GetFactoryModes()[Settings.FactoryMode].Contains("∞"));
+	    int MaximumNonModeratorBombs = 199; //10 x 10 x 2 - 1
+
+		TwitchShouldCancelCommand = false;
         command = command.ToLowerInvariant();
         DebugLog("Received command !bombcreator {0}", command);
         string[] split = command.Split(new[] {" "}, StringSplitOptions.RemoveEmptyEntries);
-
-        if (command.Equals("duplicates") || command.Equals("no duplicates"))
+        if (command.Equals("artwork"))
+        {
+            yield return null;
+            UpdateArtwork();
+            yield return "show back";
+        }
+        else if (command.Equals("duplicates") || command.Equals("no duplicates"))
         {
             if (Settings.DuplicatesAllowed == command.Equals("duplicates")) yield break;
             yield return AllowBombCreator();
@@ -1253,12 +1462,10 @@ public class BombCreator : MonoBehaviour
                 else if (command.StartsWith("finite"))
                     factoryMode = 1;
 
-                if (command.Contains("time") && !command.Contains("strikes"))
+                if (command.Contains("time"))
                     factoryMode += 1;
-                else if (command.Contains("strikes") && !command.Contains("time"))
+                if (command.Contains("strikes"))
                     factoryMode += 2;
-                else if (command.Contains("time") && command.Contains("strikes"))
-                    factoryMode += 3;
             }
             yield return AllowBombCreator();
             while (Settings.FactoryMode < factoryMode)
@@ -1282,8 +1489,24 @@ public class BombCreator : MonoBehaviour
             {
                 case "start":
                     yield return AllowBombCreator();
-                    StartButton.OnInteract();
-                    StartButton.OnInteractEnded();
+
+	                if ((Settings.Modules * (infiniteMode ? 1 : Settings.Bombs)) > MaximumNonModeratorBombs)
+	                {
+		                int maxBombs = MaximumNonModeratorBombs / Settings.Modules;
+		                int maxModules = MaximumNonModeratorBombs / (infiniteMode ? 1 : Settings.Bombs);
+
+		                yield return AllowPowerUsers(Permissions.BombCreatorAllowedToExceed199CombinedModules, PowerLevel.Mod,
+			                string.Format(
+				                "Only a moderator or higher may start the bomb in this configuration.\nMaximum bombs for {0} modules is {1} bomb{2}.\nMaximum modules for {3} bomb{4} is {5} modules.",
+				                Settings.Modules, maxBombs, maxBombs == 1 ? "" : "s", 
+				                Settings.Bombs, Settings.Bombs == 1 ? "" : "s", maxModules));
+	                }
+
+                    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+                    var mission = CreateMission();
+                    if (mission != null)
+                        yield return mission;
+                    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
                     yield return new WaitForSeconds(0.1f);
                     yield break;
                 case "reset":
@@ -1338,15 +1561,19 @@ public class BombCreator : MonoBehaviour
                             yield return "sendtochaterror Time command not in correct format.";
                             yield break;
                     }
-                    seconds += 29;
-                    seconds /= 30;
-                    seconds *= 30;
+                    seconds += TwitchPlays.TimeMode() ? 59 : 29;
+                    seconds /= TwitchPlays.TimeMode() ? 60 : 30;
+                    seconds *= TwitchPlays.TimeMode() ? 60 : 30;
                     yield return AllowBombCreator();
-                    if (Mathf.Abs(Settings.Time - seconds) > 4*3600) yield return "elevator music";
-                    while (Settings.Time != seconds && !TwitchShouldCancelCommand)
+
+	                if (TwitchPlays.TimeMode())
+		                yield return AllowPowerUsers(Permissions.BombCreatorAllowedToChangeTimeModeTimeLimit, PowerLevel.Admin, "Only Twitch plays Admin or higher are allowed to change the time limit in time mode.");
+
+                    if (Mathf.Abs(BombTime - seconds) > 4*3600) yield return "elevator music";
+                    while (BombTime != seconds && !TwitchShouldCancelCommand)
                     {
-                        yield return AddTimer(30, () => Settings.Time >= seconds || TwitchShouldCancelCommand);
-                        yield return AddTimer(-30, () => Settings.Time <= seconds || TwitchShouldCancelCommand);
+                        yield return AddTimer(TwitchPlays.TimeMode() ? 60 : 30, () => BombTime >= seconds || TwitchShouldCancelCommand);
+                        yield return AddTimer(TwitchPlays.TimeMode() ? -60 : -30, () => BombTime <= seconds || TwitchShouldCancelCommand);
                         if (TwitchShouldCancelCommand) yield return "cancelled";
                     }
                     yield break;
@@ -1355,6 +1582,17 @@ public class BombCreator : MonoBehaviour
                     if (!int.TryParse(split[1], out moduleCount)) yield break;
                     if (moduleCount < 1 || moduleCount > GetMaxModules()) yield break;
                     yield return AllowBombCreator();
+	                if ((moduleCount * (infiniteMode ? 1 : Settings.Bombs) > MaximumNonModeratorBombs))
+	                {
+		                int maxBombs = MaximumNonModeratorBombs / moduleCount;
+		                int maxModules = MaximumNonModeratorBombs / (infiniteMode ? 1 : Settings.Bombs);
+
+						yield return AllowPowerUsers(Permissions.BombCreatorAllowedToExceed199CombinedModules, PowerLevel.Mod,
+				                string.Format("Only moderators or higher can exceed the max combined module count of {6}.\nMaximum bombs for {0} modules is {1} bomb{2}.\nMaximum modules for {3} bomb{4} is {5} modules.",
+								moduleCount, maxBombs, maxBombs == 1 ? "" : "s",
+								Settings.Bombs, Settings.Bombs == 1 ? "" : "s", maxModules, MaximumNonModeratorBombs));
+					}
+
                     if (Mathf.Abs(Settings.Modules - moduleCount) > 200) yield return "elevator music";
                     while (Settings.Modules != moduleCount && !TwitchShouldCancelCommand)
                     {
@@ -1383,7 +1621,7 @@ public class BombCreator : MonoBehaviour
                     yield return AllowBombCreator();
                     if (needyCount > 5)
 	                {
-		                yield return AllowPowerUsers(Permissions.BombCreatorAllowedMoreThanFiveNeedyModules, "mod", "Only moderators or higher can set the needy count above 5");
+		                yield return AllowPowerUsers(Permissions.BombCreatorAllowedMoreThanFiveNeedyModules, PowerLevel.Mod, "Only moderators or higher can set the needy count above 5");
 	                }
                     if (Mathf.Abs(Settings.NeedyModules - needyCount) > 200) yield return "elevator music";
                     while (Settings.NeedyModules != needyCount && !TwitchShouldCancelCommand)
@@ -1430,9 +1668,24 @@ public class BombCreator : MonoBehaviour
                     if (!MultipleBombs.Installed()) yield break;
                     if (FactoryRoom.Installed() && FactoryModeText.text.Contains(InfiniteSign)) yield break;
                     if (!int.TryParse(split[1], out bombsCount)) yield break;
-                    if (bombsCount < 1 || bombsCount > MultipleBombs.GetMaximumBombCount()) yield break;
+                    if (bombsCount < 1) yield break;
+	                if (bombsCount > MultipleBombs.GetMaximumBombCount())
+		                yield return string.Format("sendtochaterror The maximum bombs allowed by the current gameplay room is {0}", MultipleBombs.GetMaximumBombCount());
                     yield return AllowBombCreator();
-                    while (Settings.Bombs != bombsCount && !TwitchShouldCancelCommand)
+
+	                if ((Settings.Modules * (infiniteMode ? 1 : bombsCount) > MaximumNonModeratorBombs))
+	                {
+		                int maxBombs = MaximumNonModeratorBombs / Settings.Modules;
+		                int maxModules = MaximumNonModeratorBombs / (infiniteMode ? 1 : bombsCount);
+
+		                yield return AllowPowerUsers(Permissions.BombCreatorAllowedToExceed199CombinedModules, PowerLevel.Mod,
+			                string.Format(
+				                "Only moderators or higher can exceed the max combined module count of {6}.\nMaximum bombs for {0} modules is {1} bomb{2}.\nMaximum modules for {3} bomb{4} is {5} modules.",
+				                Settings.Modules, maxBombs, maxBombs == 1 ? "" : "s", 
+				                bombsCount, bombsCount == 1 ? "" : "s", maxModules, MaximumNonModeratorBombs));
+	                }
+					
+					while (Settings.Bombs != bombsCount && !TwitchShouldCancelCommand)
                     {
                         yield return AddBombs(1, () => Settings.Bombs >= bombsCount || TwitchShouldCancelCommand);
                         yield return AddBombs(-1, () => Settings.Bombs <= bombsCount || TwitchShouldCancelCommand);
@@ -1444,7 +1697,7 @@ public class BombCreator : MonoBehaviour
                     if (!VanillaRuleModifier.Installed()) yield break;
                     if (!int.TryParse(split[1], out vanillaSeed)) yield break;
                     yield return AllowBombCreator();
-                    yield return AllowPowerUsers(Permissions.BombCreatorAllowedToChangeVanillaSeed, "admin", "Only those with admin access or higher may set the vanilla seed.");
+                    yield return AllowPowerUsers(Permissions.BombCreatorAllowedToChangeVanillaSeed, PowerLevel.Admin, "Only those with admin access or higher may set the vanilla seed.");
 
                     if (Mathf.Abs(VanillaRuleModifier.GetRuleSeed() - vanillaSeed) > 300) yield return "elevator music";
                     while (VanillaRuleModifier.GetRuleSeed() != vanillaSeed && !TwitchShouldCancelCommand)
