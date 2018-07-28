@@ -5,6 +5,7 @@ using System.Reflection;
 
 namespace Assets.Scripts.RuleGenerator
 {
+    [RummageKeepReflectionSafe]
     public abstract class AbstractRuleGenerator
     {
         public bool Initialized { get; private set; }

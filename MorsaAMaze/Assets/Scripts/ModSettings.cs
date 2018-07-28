@@ -23,11 +23,16 @@ public class ModuleSettings
     public string HowToUse1 = "Sets the color of the various States. 0 = Off, 1 = Green, 2 = Red, 3 = Random";
     public string HowToUse2 = "The Default settings are: Solved = 0, Strike = 0, Off = 1, MorseOff = 1, MorseOn = 2";
     public string HowToUse3 = "If MorseXmitState is the same as OffState or either are set to Random, Both colors will be set randomly";
+
+    public bool AllowTwitchPlaysMorseCodeColorChange = true;
+    public bool AllowTwitchPlaysStatusLightColorChange = true;
+
+    public string RummageCredits = "This Module has been objuscated using Rummage, found at http://www.aldaray.com/Rummage";
 }
 
 public class ModSettings
 {
-    public readonly int ModSettingsVersion = 2;
+    public readonly int ModSettingsVersion = 3;
     public ModuleSettings Settings = new ModuleSettings();
 
     public string ModuleName { get; private set; }

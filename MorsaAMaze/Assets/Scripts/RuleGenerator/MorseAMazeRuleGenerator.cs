@@ -103,5 +103,19 @@ namespace Assets.Scripts.RuleGenerator
         }
 
         public List<Maze> Mazes = new List<Maze>();
+        public List<string> Words = new List<string>
+        {
+            //No Edgework
+            "kaboom","unicorn","quebec","bashly","slick","vector","flick","timwi","strobe",
+            "bombs","bravo","laundry","brick","kitty","halls","steak","break","beats",
+
+            //Edgework required
+            "leaks","sting","hello",
+            "victor","alien3","bistro",
+            "tango","timer","shell",
+            "boxes","trick","penguin",
+            "strike","elias","ktane",
+            "manual","zulu","november"
+        };
     }
 }

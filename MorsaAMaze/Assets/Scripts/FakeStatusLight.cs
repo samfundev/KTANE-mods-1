@@ -286,6 +286,8 @@ public class FakeStatusLight : MonoBehaviour
             if (OffColor == MorseTransmitColor || OffColor == StatusLightState.Random)
                 OffColor = (StatusLightState)Random.Range(0, 3);
         }
+	    if (string.IsNullOrEmpty(word)) yield break;
+
         SetLightColor(OffColor);
         foreach (var d in Morsify(word))
         {
@@ -299,6 +301,7 @@ public class FakeStatusLight : MonoBehaviour
             SetLightColor(OffColor);
             yield return new WaitForSeconds(0.25f);
         }
+        yield return new WaitForSeconds(3f);
         //_transmitting = false;
     }
 }

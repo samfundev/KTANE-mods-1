@@ -3,7 +3,7 @@
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <meta charset="utf-8">
-        <title>Morse-A-Maze — Keep Talking and Nobody Explodes Module</title>
+        <title>Morse-A-Maze-Swap — Keep Talking and Nobody Explodes Module</title>
         <meta name="viewport" content="initial-scale=1">
         <link rel="stylesheet" type="text/css" href="css/normalize.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
@@ -33,62 +33,63 @@
                 <div class="page page-bg-02">
                     <div class="page-header">
                         <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                        <span class="page-header-section-title">Morse-A-Maze</span>
+                        <span class="page-header-section-title">Morse-A-Maze-Swap</span>
                     </div>
                     <div class="page-content">
-                    	<img src="img/Component/Morse-A-Maze.svg" class="diagram" />
-						<h2>On the Subject of Morse-A-Maze</h2>
-						<p class="flavour-text">It is AMazing that the status light got a life of its own.</p>
+                    	<img src="img/Component/Morse-A-Maze-Swap.svg" class="diagram" />
+						<h2>On the Subject of Morse-A-Maze-Swap</h2>
+						<p class="flavour-text">Wait what? Now the status light is even more lost.</p>
 						<ul>
 							<li>Decode the Morse code from the blinking status light. Off state is green, On state is red.**</li>
-							<li>The first thing transmitted is the word used to find the maze.</li>
-							<li>The second thing transmitted is the coordinates the status light needs to be placed on. Coordinates are a letter from A–F, representing columns, followed by a number from 1–6, representing rows. The upper left is A1.</li>
+							<li>The first thing transmitted is the cyan maze word.</li>
+							<li>The second thing transmitted is the magenta maze word.</li>
+							<li>The third thing transmitted is the coordinates the status light needs to be placed on. Coordinates are a letter from A–F, representing columns, followed by a number from 1–6, representing rows. The upper left is A1.</li>
 							<li>If the word is listed in Table 1, use the corresponding information in the table to determine which maze to look up. If the number you get is greater than 18, keep subtracting 18 until you are in the range of 0–17.</li>
 							<li>Otherwise, look up the word in Tables 2 and 3.</li>
-							<li><strong>Warning:</strong> Do not cross the lines shown in the maze. These lines are invisible on the bomb.</li>
+							<li><strong>Warning:</strong> Do not cross the lines shown in the maze. These lines are invisible on the bomb. The wall colors determine your current maze.</li>
 							<li>If there is an unlit BOB indicator and 4 batteries in 3 holders in the configuration of 2×AA and 2×D, Bob will actively prevent you from earning any strikes. Thanks Bob.</li>
 						</ul>
-						Table 1:
+						Table 1: (There are 36 entirely new words that fill all of these tables.)
 						<table>
-							<tr><td>SHELL*</td><td colspan="3"><ul><li>If any two-factor widgets are present, use the sum of the 2nd least significant digit of each two-factor code.</li>
+							<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*</td><td colspan="3"><ul><li>If any two-factor widgets are present, use the sum of the 2nd least significant digit of each two-factor code.</li>
 								<li>Otherwise, use the number of unsolved modules.</li></ul></td></tr>
-							<tr><td>LEAKS*</td><td>Number of solved modules</td><td>STRIKE*</td><td>Number of strikes</td></tr>
-							<tr><td>HELLO</td><td>Number of battery holders</td><td>VICTOR</td><td>Number of unique ports</td></tr>
-							<tr><td>ALIEN 3</td><td>Total number of ports</td><td>BISTRO</td><td>Number of lit indicators</td></tr>
-							<tr><td>TANGO</td><td>Number of unlit indicators</td><td>TIMER</td><td>Number of indicators</td></tr>
-							<tr><td>BOXES</td><td>Number of port plates</td><td>TRICK</td><td>The last digit of the serial number</td></tr>
-							<tr><td>PENGUIN</td><td>The sum of the serial number digits</td><td>STING</td><td>Number of batteries</td></tr>
-							<tr><td>ELIAS</td><td>First serial number digit</td><td>KTANE</td><td>Starting time in minutes</td></tr>
-							<tr><td>MANUAL</td><td>Day of week at bomb start<br>(Sunday = 0, Saturday = 6).</td><td>ZULU</td><td>Number of empty port plates</td></tr>
-							<tr><td>NOVEMBER</td><td colspan="3">Position of first serial number letter minus one (A=0, B=1, C=2, ...)</td></tr>
+							<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*</td><td>Number of solved modules</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*</td><td>Number of strikes</td></tr>
+							<tr><td>&nbsp;</td><td>Number of battery holders</td><td>&nbsp;</td><td>Number of unique ports</td></tr>
+							<tr><td>&nbsp;</td><td>Total number of ports</td><td>&nbsp;</td><td>Number of lit indicators</td></tr>
+							<tr><td>&nbsp;</td><td>Number of unlit indicators</td><td>&nbsp;</td><td>Number of indicators</td></tr>
+							<tr><td>&nbsp;</td><td>Number of port plates</td><td>&nbsp;</td><td>The last digit of the serial number</td></tr>
+							<tr><td>&nbsp;</td><td>The sum of the serial number digits</td><td>&nbsp;</td><td>Number of batteries</td></tr>
+							<tr><td>&nbsp;</td><td>First serial number digit</td><td>&nbsp;</td><td>Starting time in minutes</td></tr>
+							<tr><td>&nbsp;</td><td>Day of week at bomb start<br>(Sunday = 0, Saturday = 6).</td><td>&nbsp;</td><td>Number of empty port plates</td></tr>
+							<tr><td>&nbsp;</td><td colspan="3">Position of first serial number letter minus one (A=0, B=1, C=2, ...)</td></tr>
 						</table>
 						* - The maze for these words can change.<br>
-						** - Refer to page 3 for colorblind mode details. Refer to page 4 for some configuration options.
+						** - Refer to page 4 for some configuration options.
 					</div>
 					<div class="page-footer relative-footer">Page 1 of 4</div>
                 </div>
                 <div class="page page-bg-02">
                     <div class="page-header">
                         <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                        <span class="page-header-section-title">Morse-A-Maze</span>
+                        <span class="page-header-section-title">Morse-A-Maze-Swap</span>
                     </div>
-                    <div class="page-content">
+                    <div class="page-content">						
 							Table 2:
 							<table style="border: none">
 								<tr>
-									<td>0 - KABOOM<br><img class="morseMaze" src="img/Morse-A-Maze/maze0.svg" /></td>
-									<td>1 - UNICORN<br><img class="morseMaze" src="img/Morse-A-Maze/maze1.svg" /></td>
-									<td>2 - QUEBEC<br><img class="morseMaze" src="img/Morse-A-Maze/maze2.svg" /></td>
+									<td>0 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>1 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>2 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
 								</tr>
 								<tr>
-									<td>3 - BASHLY<br><img class="morseMaze" src="img/Morse-A-Maze/maze3.svg" /></td>
-									<td>4 - SLICK<br><img class="morseMaze" src="img/Morse-A-Maze/maze4.svg" /></td>
-									<td>5 - VECTOR<br><img class="morseMaze" src="img/Morse-A-Maze/maze5.svg" /></td>
+									<td>3 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>4 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>5 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
 								</tr>
 								<tr>
-									<td>6 - FLICK<br><img class="morseMaze" src="img/Morse-A-Maze/maze6.svg" /></td>
-									<td>7 - TIMWI<br><img class="morseMaze" src="img/Morse-A-Maze/maze7.svg" /></td>
-									<td>8 - STROBE<br><img class="morseMaze" src="img/Morse-A-Maze/maze8.svg" /></td>
+									<td>6 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>7 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>8 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
 								</tr>
 
 							</table>
@@ -98,39 +99,37 @@
                 <div class="page page-bg-03">
                     <div class="page-header">
                         <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                        <span class="page-header-section-title">Morse-A-Maze</span>
+                        <span class="page-header-section-title">Morse-A-Maze-Swap</span>
                     </div>
                     <div class="page-content">
                     	Table 3:
                     	<table style="border: none">
 								<tr>
-									<td>9 - BOMBS<br><img class="morseMaze" src="img/Morse-A-Maze/maze9.svg" /></td>
-									<td>10 - BRAVO<br><img class="morseMaze" src="img/Morse-A-Maze/maze10.svg" /></td>
-									<td>11 - LAUNDRY<br><img class="morseMaze" src="img/Morse-A-Maze/maze11.svg" /></td>
+									<td>9 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>10 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>11 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
 								</tr>
 								<tr>
-									<td>12 - BRICK<br><img class="morseMaze" src="img/Morse-A-Maze/maze12.svg" /></td>
-									<td>13 - KITTY<br><img class="morseMaze" src="img/Morse-A-Maze/maze13.svg" /></td>
-									<td>14 - HALLS<br><img class="morseMaze" src="img/Morse-A-Maze/maze14.svg" /></td>
+									<td>12 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>13 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>14 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
 								</tr>
 								<tr>
-									<td>15 - STEAK<br><img class="morseMaze" src="img/Morse-A-Maze/maze15.svg" /></td>
-									<td>16 - BREAK<br><img class="morseMaze" src="img/Morse-A-Maze/maze16.svg" /></td>
-									<td>17 - BEATS<br><img class="morseMaze" src="img/Morse-A-Maze/maze17.svg" /></td>
+									<td>15 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>16 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
+									<td>17 - &nbsp;<br><br><img class="morseMaze" src="img/Morse-A-Maze-Swap/mazegrid.svg" /></td>
 								</tr>
 							</table>
-							<p>*If Colorblind mode is enabled, the module will ensure that at least the <strong>OffState</strong> or the <strong>MorseXmitState</strong> 
-								is set to Off, regardless of current configuration options.</p>
                     </div>
                    <div class="page-footer relative-footer">Page 3 of 4</div>
                 </div>
                 <div class="page page-bg-04">
                     <div class="page-header">
                         <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                        <span class="page-header-section-title">Morse-A-Maze</span>
+                        <span class="page-header-section-title">Morse-A-Maze-Swap</span>
                     </div>
                     <div class="page-content">
-                    	<img id="morseMazeChart" src="img/Morse-A-Maze/International_Morse_Code.svg">
+                    	<img id="morseMazeChart" src="img/Morse-A-Maze-Swap/International_Morse_Code.svg">
                     	<p><em>Configuration Options for <strong>MorseAMaze-settings.txt</strong></em><br>
                     	It is possible to change the colors of the status light for the various states of the module.  
                     		The following colors are possible.</p>
@@ -152,7 +151,7 @@
                     			(default: <b>Red</b>)</li>
                     	</ul>
                     	<p>Finally, if you wish to reset everything back to default, just change "<b>ResetToDefault</b>" 
-                    		from <b><em>false</em></b> to <b><em>true</em></b></p>                     	
+                    		from <b><em>false</em></b> to <b><em>true</em></b></p> 
                     </div>
                    <div class="page-footer relative-footer">Page 4 of 4</div>
                 </div>
