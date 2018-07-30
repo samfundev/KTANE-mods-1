@@ -25,7 +25,7 @@ public class KMColorblindMode : MonoBehaviour
 			WriteSettings(settings);
 
 			string moduleID = null;
-			bool moduleEnabled = true;
+			bool? moduleEnabled = null;
 
 			KMBombModule bombModule = GetComponent<KMBombModule>();
 			KMNeedyModule needyModule = GetComponent<KMNeedyModule>();
@@ -40,12 +40,11 @@ public class KMColorblindMode : MonoBehaviour
 
 			if (moduleID != null && !settings.EnabledModules.TryGetValue(moduleID, out moduleEnabled))
 			{
-				moduleEnabled = true;
-				settings.EnabledModules[moduleID] = true;
+				settings.EnabledModules[moduleID] = null;
 				WriteSettings(settings);
 			}
 			
-			return settings.Enabled && moduleEnabled;
+			return moduleEnabled ?? settings.Enabled;
 		}
 	}
 
@@ -60,5 +59,5 @@ public class KMColorblindMode : MonoBehaviour
 internal class ColorblindModeSettings
 {
 	public bool Enabled = false;
-	public Dictionary<string, bool> EnabledModules = new Dictionary<string, bool>();
+	public Dictionary<string, bool?> EnabledModules = new Dictionary<string, bool?>();
 }
