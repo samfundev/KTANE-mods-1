@@ -561,7 +561,7 @@ Prefab:
     - target: {fileID: 114763060946732214, guid: 838c182c8ea2cfb4285184851e18bf72,
         type: 2}
       propertyPath: _colorblindMode
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 838c182c8ea2cfb4285184851e18bf72, type: 2}

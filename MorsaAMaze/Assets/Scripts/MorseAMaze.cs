@@ -107,6 +107,48 @@ public class MorseAMaze : MonoBehaviour
         EdgeworkRules.DayOfWeek, EdgeworkRules.EmptyPortPlates, EdgeworkRules.SerialNumberLetter
     };
 
+	private bool _colorblindEnabled;
+	private bool _colorblindCalled;
+	public void EnableColorblindMode(bool enable)
+	{
+		if (!_colorblindCalled)
+		{
+			_colorblindCalled = true;
+			FakeStatusLight.PassColor = _modSettings.Settings.SolvedState;
+			FakeStatusLight.FailColor = _modSettings.Settings.StrikeState;
+			FakeStatusLight.OffColor = _modSettings.Settings.OffState;
+			FakeStatusLight.MorseTransmitColor = _modSettings.Settings.MorseXmitState;
+		}
+
+
+		if (_colorblindEnabled || !enable) return;
+		_colorblindEnabled = true;
+
+		var defaultColors = new ModuleSettings();
+		if (FakeStatusLight.PassColor == defaultColors.SolvedState &&
+		    FakeStatusLight.FailColor == defaultColors.StrikeState &&
+		    FakeStatusLight.OffColor == defaultColors.OffState &&
+		    FakeStatusLight.MorseTransmitColor == defaultColors.MorseXmitState)
+		{
+			FakeStatusLight.OffColor = Random.value < 0.5f ? StatusLightState.Red : StatusLightState.Green;
+			FakeStatusLight.MorseTransmitColor = StatusLightState.Off;
+		}
+		else
+		{
+			FakeStatusLight.PlayWord(null).MoveNext();
+			if ((FakeStatusLight.OffColor == StatusLightState.Green &&
+			     FakeStatusLight.MorseTransmitColor == StatusLightState.Red) ||
+			    (FakeStatusLight.OffColor == StatusLightState.Red &&
+			     FakeStatusLight.MorseTransmitColor == StatusLightState.Green))
+			{
+				if (Random.value < 0.5f)
+					FakeStatusLight.MorseTransmitColor = StatusLightState.Off;
+				else
+					FakeStatusLight.OffColor = StatusLightState.Off;
+			}
+		}
+	}
+
     // Use this for initialization
     // ReSharper disable once UnusedMember.Local
     [RummageNoRename]
@@ -127,39 +169,9 @@ public class MorseAMaze : MonoBehaviour
 
         if (BombModule != null)
             FakeStatusLight.Module = BombModule;
-
-        FakeStatusLight.PassColor = _modSettings.Settings.SolvedState;
-        FakeStatusLight.FailColor = _modSettings.Settings.StrikeState;
-        FakeStatusLight.OffColor = _modSettings.Settings.OffState;
-        FakeStatusLight.MorseTransmitColor = _modSettings.Settings.MorseXmitState;
 	    
-
-	    if (GetComponent<KMColorblindMode>().ColorblindModeActive)
-	    {
-		    var defaultColors = new ModuleSettings();
-		    if (FakeStatusLight.PassColor == defaultColors.SolvedState &&
-		        FakeStatusLight.FailColor == defaultColors.StrikeState &&
-		        FakeStatusLight.OffColor == defaultColors.OffState &&
-		        FakeStatusLight.MorseTransmitColor == defaultColors.MorseXmitState)
-		    {
-			    FakeStatusLight.OffColor = Random.value < 0.5f ? StatusLightState.Red : StatusLightState.Green;
-			    FakeStatusLight.MorseTransmitColor = StatusLightState.Off;
-		    }
-		    else
-		    {
-			    FakeStatusLight.PlayWord(null).MoveNext();
-				if ((FakeStatusLight.OffColor == StatusLightState.Green &&
-			         FakeStatusLight.MorseTransmitColor == StatusLightState.Red) ||
-			        (FakeStatusLight.OffColor == StatusLightState.Red &&
-			         FakeStatusLight.MorseTransmitColor == StatusLightState.Green))
-				{
-					if (Random.value < 0.5f)
-						FakeStatusLight.MorseTransmitColor = StatusLightState.Off;
-					else
-						FakeStatusLight.OffColor = StatusLightState.Off;
-				}
-		    }
-	    }
+		EnableColorblindMode(GetComponent<KMColorblindMode>().ColorblindModeActive);
+	    
 
         FakeStatusLight.GetStatusLights(StatusLight);
         FakeStatusLight.SetInActive();
@@ -974,7 +986,7 @@ public class MorseAMaze : MonoBehaviour
     private string TwitchManualCode = "Morse-A-Maze";
 
     [RummageNoRename]
-    private string TwitchHelpMessage = "!{0} move up down left right, !{0} move north east west south, !{0} move udlr or !{0} move news [make a series of status light moves]. Use !{0} colorcommands to see color changing commands. If you wish to be silly, you can make a fake strike with !{0} fakestrike";
+    private string TwitchHelpMessage = "!{0} move up down left right, !{0} move north east west south, !{0} move udlr or !{0} move news [make a series of status light moves]. Use !{0} colorcommands to see color changing commands. Enable colorblind mode with !{0} colorblind. If you wish to be silly, you can make a fake strike with !{0} fakestrike";
     // ReSharper restore InconsistentNaming
 #pragma warning restore 414
 
@@ -1001,6 +1013,12 @@ public class MorseAMaze : MonoBehaviour
 		        forcedSolve = true;
 	        }
         }
+
+	    if (command.Equals("colorblind"))
+	    {
+		    EnableColorblindMode(true);
+		    yield break;
+	    }
 
         if (command.Equals("colorcommands"))
         {

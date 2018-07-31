@@ -586,7 +586,7 @@ public class TheBigCircle : MonoBehaviour
 	}
 
 	private string TwitchHelpMessage =
-		"Submit the correct response with !{0} press blue black red. Reset the module with !{0} reset.  (Valid colors are Red, Orange, Yellow, Green, Blue, Magenta, White, blacK). You can also be silly, and cause the circle to spin at random speeds/direction and fade in and out with !{0} spin";
+		"Submit the correct response with !{0} press blue black red. Reset the module with !{0} reset.  (Valid colors are Red, Orange, Yellow, Green, Blue, Magenta, White, blacK). Enable colorblind mode with !{0} colorblind. You can also be silly, and cause the circle to spin at random speeds/direction and fade in and out with !{0} spin";
 
 	private bool TwitchShouldCancelCommand;
 
@@ -605,6 +605,14 @@ public class TheBigCircle : MonoBehaviour
 
 	public IEnumerator ProcessCommands(string[] split)
 	{
+		if (split[0].Equals("colorblind"))
+		{
+			yield return null;
+			foreach (var tm in WedgeTextMeshes)
+				tm.gameObject.SetActive(true);
+			yield break;
+		}
+
 		if (split[0].Equals("reset"))
 		{
 			yield return null;
