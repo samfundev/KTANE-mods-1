@@ -1,0 +1,329 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BFF4CAD1-11B4-450D-95E7-45653C3F234C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VanillaRuleModifierAssembly</RootNamespace>
+    <AssemblyName>VanillaRuleModifierAssembly</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\Assets\Plugins\Managed\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\..\..\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="KMFramework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\KMFramework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEditor">
+      <HintPath>C:\Program Files\Unity 2017.1\Editor\Data\Managed\UnityEditor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>C:\Program Files\Unity 2017.1\Editor\Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>C:\Program Files\Unity 2017.1\Editor\Data\UnityExtensions\Unity\GUISystem\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="PropertiesBehaviour.cs" />
+    <Compile Include="ReflectionHelper.cs" />
+    <Compile Include="RuleSetGenerators\ButtonRuleGenerator.cs" />
+    <Compile Include="ConvertedTypes.cs" />
+    <Compile Include="ManualFileName.cs" />
+    <Compile Include="QueryablePorts.cs" />
+    <Compile Include="RuleSetGenerators\ManualGenerator.cs" />
+    <Compile Include="RuleSetGenerators\ModRuleGenerator.cs" />
+    <Compile Include="RuleSetGenerators\ModRuleSetGenerator.cs" />
+    <Compile Include="RuleSetGenerators\SimonRuleGenerator.cs" />
+    <Compile Include="RuleSetGenerators\VennWireGenerator.cs" />
+    <Compile Include="ModSettings.cs" />
+    <Compile Include="RuleSetGenerators\MorseCodeRuleGenerator.cs" />
+    <Compile Include="RuleSetGenerators\PasswordRuleGenerator.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ReplaceText.cs" />
+    <Compile Include="RuleSetGenerators\WireRuleGenerator.cs" />
+    <Compile Include="StringExtension.cs" />
+    <Compile Include="VanillaRuleModifier.cs" />
+    <Compile Include="RuleSeedModifierProperties.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Capacitor Discharge.html" />
+    <None Include="Manual\font\AnonymousPro-Bold.bytes" />
+    <None Include="Manual\font\AnonymousPro-BoldItalic.bytes" />
+    <None Include="Manual\font\AnonymousPro-Italic.bytes" />
+    <None Include="Manual\font\AnonymousPro-Regular.bytes" />
+    <None Include="Manual\font\CALIFB.bytes" />
+    <None Include="Manual\font\CALIFI.bytes" />
+    <None Include="Manual\font\CALIFR.bytes" />
+    <None Include="Manual\font\Morse_Font.bytes" />
+    <None Include="Manual\font\OpusChordsSansStd.bytes" />
+    <None Include="Manual\font\OpusStd.bytes" />
+    <None Include="Manual\font\OstrichSans-Heavy_90.bytes" />
+    <None Include="Manual\font\specialelite-cyrillic.bytes" />
+    <None Include="Manual\font\SpecialElite.bytes" />
+    <None Include="Manual\font\trebuc.bytes" />
+    <None Include="Manual\font\trebucbd.bytes" />
+    <None Include="Manual\font\trebucbi.bytes" />
+    <None Include="Manual\font\trebucit.bytes" />
+    <None Include="Manual\img\Keypads\1-copyright.bytes" />
+    <None Include="Manual\img\Keypads\10-teepee.bytes" />
+    <None Include="Manual\img\Keypads\11-six.bytes" />
+    <None Include="Manual\img\Keypads\12-squigglyn.bytes" />
+    <None Include="Manual\img\Keypads\13-at.bytes" />
+    <None Include="Manual\img\Keypads\14-ae.bytes" />
+    <None Include="Manual\img\Keypads\15-meltedthree.bytes" />
+    <None Include="Manual\img\Keypads\16-euro.bytes" />
+    <None Include="Manual\img\Keypads\17-circle.bytes" />
+    <None Include="Manual\img\Keypads\18-nwithhat.bytes" />
+    <None Include="Manual\img\Keypads\19-dragon.bytes" />
+    <None Include="Manual\img\Keypads\2-filledstar.bytes" />
+    <None Include="Manual\img\Keypads\20-questionmark.bytes" />
+    <None Include="Manual\img\Keypads\21-paragraph.bytes" />
+    <None Include="Manual\img\Keypads\22-rightc.bytes" />
+    <None Include="Manual\img\Keypads\23-leftc.bytes" />
+    <None Include="Manual\img\Keypads\24-pitchfork.bytes" />
+    <None Include="Manual\img\Keypads\25-tripod.bytes" />
+    <None Include="Manual\img\Keypads\26-cursive.bytes" />
+    <None Include="Manual\img\Keypads\27-tracks.bytes" />
+    <None Include="Manual\img\Keypads\28-balloon.bytes" />
+    <None Include="Manual\img\Keypads\29-weirdnose.bytes" />
+    <None Include="Manual\img\Keypads\3-hollowstar.bytes" />
+    <None Include="Manual\img\Keypads\30-upsidedowny.bytes" />
+    <None Include="Manual\img\Keypads\31-bt.bytes" />
+    <None Include="Manual\img\Keypads\4-smileyface.bytes" />
+    <None Include="Manual\img\Keypads\5-doublek.bytes" />
+    <None Include="Manual\img\Keypads\6-omega.bytes" />
+    <None Include="Manual\img\Keypads\7-squidknife.bytes" />
+    <None Include="Manual\img\Keypads\8-pumpkin.bytes" />
+    <None Include="Manual\img\Keypads\9-hookn.bytes" />
+    <None Include="Manual\img\ktane-logo.bytes" />
+    <None Include="Manual\img\page-bg-noise-01.bytes" />
+    <None Include="Manual\img\page-bg-noise-02.bytes" />
+    <None Include="Manual\img\page-bg-noise-03.bytes" />
+    <None Include="Manual\img\page-bg-noise-04.bytes" />
+    <None Include="Manual\img\page-bg-noise-05.bytes" />
+    <None Include="Manual\img\page-bg-noise-06.bytes" />
+    <None Include="Manual\img\page-bg-noise-07.bytes" />
+    <None Include="Manual\img\web-background.bytes" />
+    <None Include="Manual\img\Who’s on First\eye-icon.bytes" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Complicated Wires.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Keypads.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Knobs.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Mazes.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Memory.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Morse Code.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Passwords.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Simon Says.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\The Button.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Venting Gas.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Whos on First.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Wire Sequences.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\Wires.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\css\dark-theme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\css\font.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\css\jquery-ui.1.12.1.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\css\main.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\css\main-before.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\css\main-orig.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\css\normalize.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Bomb.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\BombSide.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\appendix-batteries\Battery-AA.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\appendix-batteries\Battery-D.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\appendix-ports\DVI.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\appendix-ports\Parallel.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\appendix-ports\PS2.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\appendix-ports\RJ45.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\appendix-ports\Serial.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\appendix-ports\StereoRCA.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Capacitor Discharge.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Complicated Wires.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Component.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\IndicatorWidget.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Keypads.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Knobs.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Mazes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Memory.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Morse Code.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\NeedyComponent.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Passwords.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Simon Says.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\The Button.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\TimerComponent.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Venting Gas.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Whos on First.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Wire Sequences.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Component\Wires.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\MorseCode\International_Morse_Code.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\img\Simon Says\SimonComponent_ColourLegend.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\js\highlighter.js.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\js\jquery.3.1.1.min.js.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Manual\js\jquery-ui.1.12.1.min.js.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(TargetPath)" "H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods\VanillaRuleModifier"</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
