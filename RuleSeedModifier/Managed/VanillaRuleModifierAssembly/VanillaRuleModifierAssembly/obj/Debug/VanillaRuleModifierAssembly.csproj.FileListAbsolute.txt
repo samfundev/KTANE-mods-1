@@ -12,4 +12,4 @@ H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleMo
 H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.csproj.CoreCompileInputs.cache
 H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.dll
 H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.pdb
-H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.csprojResolveAssemblyReference.cache
+H:\KTANE-Mods\RuleSeedModifier\Managed\VanillaRuleModifierAssembly\VanillaRuleModifierAssembly\obj\Debug\VanillaRuleModifierAssembly.csprojAssemblyReference.cache
