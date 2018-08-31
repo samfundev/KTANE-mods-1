@@ -106,14 +106,13 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         public ButtonRuleSet GenerateButtonRules(int seed)
         {
-            RuleSet = (ButtonRuleSet)GenerateRuleSet(seed);
+            RuleSet = (ButtonRuleSet) GenerateRuleSet(seed);
             RemoveRedundantRules();
             return RuleSet;
         }
 
         protected override AbstractRuleSet CreateRules(bool useDefault)
         {
-            
             return GenerateButtonRuleSet(useDefault);
         }
 
@@ -185,7 +184,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             SecondaryHoldQueryList = new List<Query>();
             for (var i = 0; i < Enum.GetNames(typeof(ButtonColor)).Length; i++)
             {
-                var colorDictionary = new Dictionary<string, object> {{"color", (ButtonColor) i}};
+                var colorDictionary = new Dictionary<string, object> { { "color", (ButtonColor) i } };
                 var colorQuery = new Query
                 {
                     Property = QueryableButtonProperty.IsButtonColor,
@@ -195,7 +194,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             }
             for (var j = 0; j < Enum.GetNames(typeof(BigButtonLEDColor)).Length; j++)
             {
-                var dictionary2 = new Dictionary<string, object> {{"color", (BigButtonLEDColor) j}};
+                var dictionary2 = new Dictionary<string, object> { { "color", (BigButtonLEDColor) j } };
                 var item2 = new Query
                 {
                     Property = QueryableButtonProperty.IsIndicatorColor,
@@ -205,7 +204,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             }
             for (var k = 0; k < Enum.GetNames(typeof(ButtonInstruction)).Length; k++)
             {
-                var dictionary3 = new Dictionary<string, object> {{"instruction", (ButtonInstruction) k}};
+                var dictionary3 = new Dictionary<string, object> { { "instruction", (ButtonInstruction) k } };
                 var item3 = new Query
                 {
                     Property = QueryableButtonProperty.IsButtonInstruction,
@@ -216,7 +215,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             }
             for (var l = 1; l < 3; l++)
             {
-                var dictionary4 = new Dictionary<string, object> {{"batteryCount", l}};
+                var dictionary4 = new Dictionary<string, object> { { "batteryCount", l } };
                 var item4 = new Query
                 {
                     Property = QueryableProperty.MoreThanXBatteries,
@@ -229,7 +228,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 var list = new List<string>(IndicatorLabels);
                 var text = list[rand.Next(list.Count)];
                 list.Remove(text);
-                var dictionary5 = new Dictionary<string, object> {{"label", text}};
+                var dictionary5 = new Dictionary<string, object> { { "label", text } };
                 var item5 = new Query
                 {
                     Property = QueryableProperty.IndicatorXLit,
@@ -262,9 +261,9 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     };
                     PrimaryQueryList.Add(portQuery);
                 }
-                PrimaryQueryList.Add(new Query {Property = QueryablePorts.EmptyPortPlate, Args = new Dictionary<string, object>()});
-                SecondaryQueryList.Add(new Query {Property = QueryableProperty.DoesSerialNumberStartWithLetter, Args = new Dictionary<string, object>()});
-                SecondaryQueryList.Add(new Query() {Property = QueryableProperty.IsSerialNumberOdd, Args = new Dictionary<string, object>()});
+                PrimaryQueryList.Add(new Query { Property = QueryablePorts.EmptyPortPlate, Args = new Dictionary<string, object>() });
+                SecondaryQueryList.Add(new Query { Property = QueryableProperty.DoesSerialNumberStartWithLetter, Args = new Dictionary<string, object>() });
+                SecondaryQueryList.Add(new Query() { Property = QueryableProperty.IsSerialNumberOdd, Args = new Dictionary<string, object>() });
             }
         }
 
@@ -284,7 +283,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         protected List<Solution> CreateSolutionsList(bool holdAllowed = true)
         {
-            var list = new List<Solution> {ButtonSolutions.Hold, ButtonSolutions.Press};
+            var list = new List<Solution> { ButtonSolutions.Hold, ButtonSolutions.Press };
             if (!holdAllowed)
                 list.Remove(ButtonSolutions.Hold);
             if (CommonReflectedTypeInfo.IsModdedSeed)
@@ -321,7 +320,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             };
             if (CommonReflectedTypeInfo.IsModdedSeed)
             {
-                list.AddRange(new []
+                list.AddRange(new[]
                 {
                     ButtonSolutions.ReleaseOnTimerText("6"),
                     ButtonSolutions.ReleaseOnTimerText("7"),
@@ -334,11 +333,10 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     list.Add(ReleaseWhenLeastSignificantSecondIs(i));
                 }
                 list.Add(ReleaseAtAnyTime);
-                list.Add(ReleaseOneSecondAfterSecondsAddToMultipleOfFour);
-                list.Add(ReleaseWhenSecondsDigitsAddsToFive);
-                list.Add(ReleaseWhenSecondsDigitsAddsToSeven);
-                list.Add(ReleaseWhenSecondsDigitsAddsToThreeOrThirteen);
-                list.Add(ReleaseWhenSecondsIsMultipleOfSeven);
+                list.Add(ReleaseWhenSecondsAddToMultipleOfFour);
+                list.Add(ReleaseWhenSecondsDigitsAddToFive);
+                list.Add(ReleaseWhenSecondsDigitsAddToSeven);
+                list.Add(ReleaseWhenSecondsDigitsAddToThreeOrThirteen);
                 list.Add(ReleaseWhenSecondsPrimeOrZero);
             }
             foreach (var key in list)
@@ -366,10 +364,10 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             "FRK"
         };
 
-        protected static Solution ReleaseWhenSecondsDigitsAddsToSeven = new Solution
+        protected static Solution ReleaseWhenSecondsDigitsAddToSeven = new Solution
         {
             Text = "release when the two seconds digits add up to 7.",
-            SolutionMethod = delegate(BombComponent comp, Dictionary<string, object> args)
+            SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
 
                 var time = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
@@ -380,12 +378,12 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             }
         };
 
-        protected static Solution ReleaseWhenSecondsDigitsAddsToThreeOrThirteen = new Solution
+        protected static Solution ReleaseWhenSecondsDigitsAddToThreeOrThirteen = new Solution
         {
             Text = "release when the two seconds digits add up to 3 or 13.",
-            SolutionMethod = delegate(BombComponent comp, Dictionary<string, object> args)
+            SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
-                var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
+                var time = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
                 time = (time / 10) + (time % 10);
                 if (time > 10) time -= 10;
                 Debug.Log("seconds sum = " + time);
@@ -393,27 +391,16 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             }
         };
 
-        protected static Solution ReleaseWhenSecondsDigitsAddsToFive = new Solution
+        protected static Solution ReleaseWhenSecondsDigitsAddToFive = new Solution
         {
             Text = "release when the two seconds digits add up to 5.",
             SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
-                var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
+                var time = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
                 time = (time / 10) + (time % 10);
                 if (time > 10) time -= 10;
                 Debug.Log("seconds sum = " + time);
                 return time == 5 ? 0 : 1;
-            }
-        };
-
-        protected static Solution ReleaseWhenSecondsIsMultipleOfSeven = new Solution
-        {
-            Text = "release when the total number of seconds remaining is a multiple of 7.",
-            SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
-            {
-                var time = (int)comp.Bomb.GetTimer().TimeRemaining;
-                Debug.Log("(total time multiple 7), time % 7 = " + (time % 7));
-                return (time % 7) == 0 ? 0 : 1;
             }
         };
 
@@ -422,22 +409,19 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             Text = "release when the number of seconds displayed is either prime or 0.",
             SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
-                var time = (int)comp.Bomb.GetTimer().TimeRemaining % 60;
+                var time = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
                 Debug.Log("(prime or 0), seconds = " + time);
-                var valid = new[] {0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59};
+                var valid = new[] { 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59 };
                 return valid.Contains(time) ? 0 : 1;
             }
         };
 
-        protected static Solution ReleaseOneSecondAfterSecondsAddToMultipleOfFour = new Solution
+        protected static Solution ReleaseWhenSecondsAddToMultipleOfFour = new Solution
         {
-            Text = "release one second after the two seconds digits add up to a multiple of 4.",
+            Text = "release when the two seconds digits add up to a multiple of 4.",
             SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
-                var time = (int)comp.Bomb.GetTimer().TimeRemaining;
-                Debug.Log("(multiple of 4), one second earlier digits sum = " + (time / 10) + "+" + (time % 10) + "=" + ((time / 10) + (time % 10)));
-                time++;
-                time %= 60;
+                var time = (int) comp.Bomb.GetTimer().TimeRemaining % 60;
                 time = (time / 10) + (time % 10);
                 return (time % 4) == 0 ? 0 : 1;
             }
@@ -451,7 +435,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 Text = $"release when right most seconds digit is {seconds}.",
                 SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
                 {
-                    var time = (int)comp.Bomb.GetTimer().TimeRemaining % 10;
+                    var time = (int) comp.Bomb.GetTimer().TimeRemaining % 10;
                     Debug.Log("(right most seconds is " + seconds + "), time = " + time);
                     return time == seconds ? 0 : 1;
                 }
@@ -467,7 +451,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
         protected static Solution TapWhenSecondsMatch = new Solution()
         {
             Text = "press and immediately release when the two seconds digits on the timer match.",
-            SolutionMethod = delegate(BombComponent comp, Dictionary<string, object> args)
+            SolutionMethod = delegate (BombComponent comp, Dictionary<string, object> args)
             {
                 var buttonComponent = comp as ButtonComponent;
                 // ReSharper disable once PossibleNullReferenceException

@@ -90,7 +90,6 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 case 2:
                     var ruleDict = new Dictionary<VennWireState, CutInstruction>
                     {
-
                         {new VennWireState(false, false, false, false), CutInstruction.Cut},
                         {new VennWireState(false, false, false, true), CutInstruction.CutIfTwoOrMoreBatteriesPresent},
                         {new VennWireState(false, false, true, false), CutInstruction.Cut},
