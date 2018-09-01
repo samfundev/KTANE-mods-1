@@ -39,3 +39,5 @@ Freeplay-Helper.sln
 VanillaRuleModifier.csproj
 VanillaRuleModifier.Editor.csproj
 VanillaRuleModifier.sln
+Assets/Plugins/Managed/VanillaRuleModifierAssembly.dll
+Assets/Plugins/Managed/VanillaRuleModifierAssembly.pdb
