@@ -116,10 +116,44 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             return GenerateButtonRuleSet(useDefault);
         }
 
+        private Rule mkRule(Solution solution, params Query[] queries) { return new Rule { Queries = queries.ToList(), Solution = solution }; }
+        private Query mkQuery(QueryableProperty prop, Dictionary<string, object> args = null)
+        {
+            var query = new Query { Property = prop };
+            if (args != null)
+                query.Args = args;
+            return query;
+        }
+        private Query mkQuery(QueryableProperty prop, string argName, object argValue)
+        {
+            var query = new Query { Property = prop };
+            if (argName != null)
+                query.Args[argName] = argValue;
+            return query;
+        }
+
         protected ButtonRuleSet GenerateButtonRuleSet(bool useDefault = false)
         {
-            BuildQueryLists();
             var buttonRuleSet = new ButtonRuleSet();
+            if (useDefault)
+            {
+                buttonRuleSet.RuleList.Add(mkRule(ButtonSolutions.Hold, mkQuery(QueryableButtonProperty.IsButtonColor, "color", ButtonColor.blue), mkQuery(QueryableButtonProperty.IsButtonInstruction, "instruction", ButtonInstruction.Abort)));
+                buttonRuleSet.RuleList.Add(mkRule(ButtonSolutions.Press, mkQuery(QueryableProperty.MoreThanXBatteries, "batteryCount", 1), mkQuery(QueryableButtonProperty.IsButtonInstruction, "instruction", ButtonInstruction.Detonate)));
+                buttonRuleSet.RuleList.Add(mkRule(ButtonSolutions.Hold, mkQuery(QueryableButtonProperty.IsButtonColor, "color", ButtonColor.white), mkQuery(QueryableProperty.IndicatorXLit, "label", "CAR")));
+                buttonRuleSet.RuleList.Add(mkRule(ButtonSolutions.Press, mkQuery(QueryableProperty.MoreThanXBatteries, "batteryCount", 2), mkQuery(QueryableProperty.IndicatorXLit, "label", "FRK")));
+                buttonRuleSet.RuleList.Add(mkRule(ButtonSolutions.Hold, mkQuery(QueryableButtonProperty.IsButtonColor, "color", ButtonColor.yellow)));
+                buttonRuleSet.RuleList.Add(mkRule(ButtonSolutions.Press, mkQuery(QueryableButtonProperty.IsButtonColor, "color", ButtonColor.red), mkQuery(QueryableButtonProperty.IsButtonInstruction, "instruction", ButtonInstruction.Hold)));
+                buttonRuleSet.RuleList.Add(mkRule(ButtonSolutions.Hold, mkQuery(QueryableButtonProperty.ButtonOtherwise)));
+
+                buttonRuleSet.HoldRuleList.Add(mkRule(ButtonSolutions.ReleaseOnTimerText("4"), mkQuery(QueryableButtonProperty.IsIndicatorColor, "color", BigButtonLEDColor.Blue)));
+                buttonRuleSet.HoldRuleList.Add(mkRule(ButtonSolutions.ReleaseOnTimerText("1"), mkQuery(QueryableButtonProperty.IsIndicatorColor, "color", BigButtonLEDColor.White)));
+                buttonRuleSet.HoldRuleList.Add(mkRule(ButtonSolutions.ReleaseOnTimerText("5"), mkQuery(QueryableButtonProperty.IsIndicatorColor, "color", BigButtonLEDColor.Yellow)));
+                buttonRuleSet.HoldRuleList.Add(mkRule(ButtonSolutions.ReleaseOnTimerText("1"), mkQuery(QueryableButtonProperty.IndicatorOtherwise)));
+
+                return buttonRuleSet;
+            }
+
+            BuildQueryLists();
             while (buttonRuleSet.RuleList.Count < MaxInitialRules && PrimaryQueryList.Count > 0)
             {
                 var baseQuery = PopQueryFromList(PrimaryQueryList);
