@@ -384,10 +384,12 @@
                     var r = a.dist - b.dist;
                     return r === 0 ? a.pref - b.pref : r;
                 });
-                //toAdd.splice(Math.min(Math.min(rnd.next(1, 4), NumFrequenciesUsed - words.length), toAdd.length));
+                toAdd.splice(Math.min(Math.min(rnd.next(1, 4), 36 - words.length), toAdd.length));
                 console.log(`[Morse Code rule seed] From ${words[i]}, adding words: ${toAdd.map(x => `${x.word} (${x.dist})`).join(', ')}`);
                 toAdd.forEach(x => { words.push(x.word); });
             }
+            words = words.slice(0, 36);
+            words = rnd.shuffleArray(words);
             //var stuff = words.map((w, ix) => { return { word: w, freq: freqs[ix] }; });
             //stuff.sort((a, b) => a.freq - b.freq);
             console.log(`[Morse-A-Maze rule seed] After sort: ${words.join(', ')}`);
@@ -434,7 +436,7 @@
                 Table 1:
                 <table>
                     <tr>
-                        <td><div id="morse-maze-word-0"></div></td>
+                        <td><div id="morse-maze-word-8"></div></td>
                         <td colspan="3">
                             <ul>
                                 <li>If any two-factor widgets are present, use the sum of the 2nd least significant digit of each two-factor code.</li>
@@ -442,12 +444,12 @@
                             </ul>
                         </td>
                     </tr>
-                    <tr><td><div id="morse-maze-word-1"></div></td><td>Number of solved modules</td><td><div id="morse-maze-word-2"></div></td><td>Number of strikes</td></tr>
-                    <tr><td><div id="morse-maze-word-3"></div></td><td>Number of battery holders</td><td><div id="morse-maze-word-4"></div></td><td>Number of unique ports</td></tr>
-                    <tr><td><div id="morse-maze-word-5"></div></td><td>Total number of ports</td><td><div id="morse-maze-word-6"></div></td><td>Number of lit indicators</td></tr>
-                    <tr><td><div id="morse-maze-word-7"></div></td><td>Number of unlit indicators</td><td><div id="morse-maze-word-8"></div></td><td>Number of indicators</td></tr>
+                    <tr><td><div id="morse-maze-word-0"></div></td><td>Number of solved modules</td><td><div id="morse-maze-word-12"></div></td><td>Number of strikes</td></tr>
+                    <tr><td><div id="morse-maze-word-2"></div></td><td>Number of battery holders</td><td><div id="morse-maze-word-3"></div></td><td>Number of unique ports</td></tr>
+                    <tr><td><div id="morse-maze-word-4"></div></td><td>Total number of ports</td><td><div id="morse-maze-word-5"></div></td><td>Number of lit indicators</td></tr>
+                    <tr><td><div id="morse-maze-word-6"></div></td><td>Number of unlit indicators</td><td><div id="morse-maze-word-7"></div></td><td>Number of indicators</td></tr>
                     <tr><td><div id="morse-maze-word-9"></div></td><td>Number of port plates</td><td><div id="morse-maze-word-10"></div></td><td>The last digit of the serial number</td></tr>
-                    <tr><td><div id="morse-maze-word-11"></div></td><td>The sum of the serial number digits</td><td><div id="morse-maze-word-12"></div></td><td>Number of batteries</td></tr>
+                    <tr><td><div id="morse-maze-word-11"></div></td><td>The sum of the serial number digits</td><td><div id="morse-maze-word-1"></div></td><td>Number of batteries</td></tr>
                     <tr><td><div id="morse-maze-word-13"></div></td><td>First serial number digit</td><td><div id="morse-maze-word-14"></div></td><td>Starting time in minutes</td></tr>
                     <tr><td><div id="morse-maze-word-15"></div></td><td>Day of week at bomb start<br>(Sunday = 0, Saturday = 6).</td><td><div id="morse-maze-word-16"></div></td><td>Number of empty port plates</td></tr>
                     <tr><td><div id="morse-maze-word-17"></div></td><td colspan="3">Position of first serial number letter minus one (A=0, B=1, C=2, ...)</td></tr>

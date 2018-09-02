@@ -49,7 +49,7 @@ namespace Assets.Scripts.RuleGenerator
 		    }
 
 			Words.Clear();
-		    Words.AddRange(chosenWords.Take(36));
+		    Words.AddRange(chosenWords.Take(36).OrderBy(x => rng.NextDouble()));
 	    }
 
 	    private static int LevenshteinDistance(string a, string b)
