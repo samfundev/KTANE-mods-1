@@ -36,8 +36,9 @@ public class MorseAMaze : MonoBehaviour
     public AudioClip GlassBreak;
 
     public KMModSettings ModSettings;
+	public KMRuleSeedable RuleSeed;
 
-    private Transform _currentLocation;
+	private Transform _currentLocation;
     private Transform _destination;
 
     private CoroutineQueue _movements;
@@ -50,11 +51,6 @@ public class MorseAMaze : MonoBehaviour
     private string _souvenirQuestionWordPlaying;
 
     private ModSettings _modSettings;
-
-    private static MorseAMazeRuleGenerator MazeRuleSet
-    {
-        get { return MorseAMazeRuleGenerator.Instance; }
-    }
 
     private enum EdgeworkRules
     {
@@ -80,20 +76,6 @@ public class MorseAMaze : MonoBehaviour
     }
 
     private int _rule;
-    private string[] _morseCodeWords =
-    {
-        //No Edgework
-        "kaboom","unicorn","quebec","bashly","slick","vector","flick","timwi","strobe",
-        "bombs","bravo","laundry","brick","kitty","halls","steak","break","beats",
-
-        //Edgework required
-        "leaks","sting","hello",
-        "victor","alien3","bistro",
-        "tango","timer","shell",
-        "boxes","trick","penguin",
-        "strike","elias","ktane",
-        "manual","zulu","november"
-    };
 
     private readonly EdgeworkRules[] _edgeworkRules =
     {
@@ -155,6 +137,7 @@ public class MorseAMaze : MonoBehaviour
     [RummageNoMarkPublic]
     private void Start()
     {
+		MorseAMazeRuleGenerator.GenerateRules(RuleSeed.GetRNG());
         StartCoroutine(TwitchPlays.Refresh());
         _modSettings = new ModSettings(BombModule);
         _modSettings.ReadSettings();
@@ -326,8 +309,8 @@ public class MorseAMaze : MonoBehaviour
             {
                 /*SetWall(x, y, false, !_mazes[maze, y, x].Contains("d"));
                 SetWall(x, y, true, !_mazes[maze, y, x].Contains("r"));*/
-                SetWall(x, y, false, MazeRuleSet.Mazes[maze].GetCell(x, y).WallDown);
-                SetWall(x, y, true, MazeRuleSet.Mazes[maze].GetCell(x, y).WallRight);
+                SetWall(x, y, false, MorseAMazeRuleGenerator.Mazes[maze].GetCell(x, y).WallDown);
+                SetWall(x, y, true, MorseAMazeRuleGenerator.Mazes[maze].GetCell(x, y).WallRight);
             }
         }
     }
@@ -665,12 +648,12 @@ public class MorseAMaze : MonoBehaviour
         Right.OnInteract += delegate { MoveRight(); return false; };
  
         
-        _rule = Random.Range(0, _morseCodeWords.Length);
+        _rule = Random.Range(0, MorseAMazeRuleGenerator.Words.Count);
         //if (BombModule.GetIDNumber() == 1)
         //    _rule = _edgeworkRules.ToList().IndexOf(EdgeworkRules.Strikes);
 
         _unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2 && BombInfo.GetBatteryHolderCount() == 3;
-        _souvenirQuestionWordPlaying = _morseCodeWords[_rule];
+        _souvenirQuestionWordPlaying = MorseAMazeRuleGenerator.Words[_rule];
 
         StartCoroutine(PlayWordLocation(_souvenirQuestionWordPlaying));
 
@@ -767,7 +750,7 @@ public class MorseAMaze : MonoBehaviour
 
         if ((x > 5) || (y > 5) || (maze == -1) || (endXY == 66)) return false;
         //var directions = _mazes[maze, y, x];
-        var cell = MazeRuleSet.Mazes[maze].GetCell(x, y);
+        var cell = MorseAMazeRuleGenerator.Mazes[maze].GetCell(x, y);
         var directions = new[] { cell.WallUp, cell.WallDown, cell.WallLeft, cell.WallRight };
         if (startXY == endXY) return true;
         _explored[startXY] = true;
@@ -877,7 +860,7 @@ public class MorseAMaze : MonoBehaviour
             BombModule.LogFormat("Starting Location: {0} - Destination Location: {1}",
                 _souvenirQuestionStartingLocation, _souvenirQuestionEndingLocation);
             BombModule.LogFormat("Rule used to Look up the Maze = {0}", GetRuleName());
-            BombModule.LogFormat("Playing Morse code word: \"{0}\"", _morseCodeWords[_rule]);
+            BombModule.LogFormat("Playing Morse code word: \"{0}\"", MorseAMazeRuleGenerator.Words[_rule]);
 
 
             if (_unicorn)
@@ -888,14 +871,14 @@ public class MorseAMaze : MonoBehaviour
             _firstGeneration = false;
             BombModule.LogFormat("Maze Solution from {0} to {1} in maze \"{2} - {3}\" is: {4}",
                 GetCoordinates(_currentLocation),
-                GetCoordinates(_destination), maze, _morseCodeWords[maze], sb);
+                GetCoordinates(_destination), maze, MorseAMazeRuleGenerator.Words[maze], sb);
         }
         else if (!_forcedSolve)
         {
             BombModule.LogFormat("Updating the maze for rule {0}", _edgeworkRules[_rule]);
             BombModule.LogFormat("Maze Solution from {0} to {1} in maze \"{2} - {3}\" is: {4}",
                 GetCoordinates(_currentLocation),
-                GetCoordinates(_destination), maze, _morseCodeWords[maze], sb);
+                GetCoordinates(_destination), maze, MorseAMazeRuleGenerator.Words[maze], sb);
         }
         
         return sb.ToString();

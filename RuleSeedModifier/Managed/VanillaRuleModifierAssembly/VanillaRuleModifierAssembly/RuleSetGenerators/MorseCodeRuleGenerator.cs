@@ -49,7 +49,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             {
                 words.AddRange(ExtendedWords);
 
-                freqs = freqs.OrderBy(x => rand.NextDouble()).Take(NumFrequenciesUsed).ToList();
+                //freqs = freqs.OrderBy(x => rand.NextDouble()).Take(NumFrequenciesUsed).ToList();
 
                 // Choose 8 base words
                 var numBaseWords = NumFrequenciesUsed / 2;

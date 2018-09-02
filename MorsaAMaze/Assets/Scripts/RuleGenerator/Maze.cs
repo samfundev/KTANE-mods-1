@@ -30,36 +30,36 @@ namespace Assets.Scripts.RuleGenerator
             return CellGrid[x][y];
         }
 
-        public void BuildMaze(AbstractRuleGenerator.RandomNext nextminmax)
+        public void BuildMaze(MonoRandom rng)
         {
             for (var i = 0; i < 6; i++)
             {
                 for (var j = 0; j < 6; j++)
                 {
-                    if (i > 0) nextminmax();
-                    if (j > 0) nextminmax();
+                    if (i > 0) rng.Next();
+                    if (j > 0) rng.Next();
                 }
             }
-            PopulateMaze(nextminmax);
-            nextminmax();
-            nextminmax();   //Burn the coordinate circles.
+            PopulateMaze(rng);
+            rng.Next();
+            rng.Next();   //Burn the coordinate circles.
         }
 
-        public void PopulateMaze(AbstractRuleGenerator.RandomNext nextminmax)
+        public void PopulateMaze(MonoRandom rng)
         {
             var cellStack = new Stack<MazeCell>();
-            var x = nextminmax(0, 6);
-            var y = nextminmax(0, 6);
+            var x = rng.Next(0, 6);
+            var y = rng.Next(0, 6);
             var cell = GetCell(x, y);
-            VisitCell(cell, cellStack, nextminmax);
+            VisitCell(cell, cellStack, rng);
         }
 
-        public void VisitCell(MazeCell cell, Stack<MazeCell> cellStack, AbstractRuleGenerator.RandomNext nextminmax)
+        public void VisitCell(MazeCell cell, Stack<MazeCell> cellStack, MonoRandom rng)
         {
             while (cell != null)
             {
                 cell.Visited = true;
-                var mazeCell = GetNextNeigbour(cell, nextminmax);
+                var mazeCell = GetNextNeigbour(cell, rng);
                 if (mazeCell != null)
                 {
                     MazeCell.RemoveWalls(cell, mazeCell);
@@ -73,7 +73,7 @@ namespace Assets.Scripts.RuleGenerator
             }
         }
 
-        public MazeCell GetNextNeigbour(MazeCell cell, AbstractRuleGenerator.RandomNext nextminmax)
+        public MazeCell GetNextNeigbour(MazeCell cell, MonoRandom rng)
         {
             var list = new List<MazeCell>();
             if(cell.X > 0                           && !CellGrid[cell.X - 1][cell.Y].Visited) list.Add(CellGrid[cell.X-1][cell.Y]);
@@ -81,54 +81,8 @@ namespace Assets.Scripts.RuleGenerator
             if(cell.Y > 0                           && !CellGrid[cell.X][cell.Y - 1].Visited) list.Add(CellGrid[cell.X][cell.Y - 1]);
             if(cell.Y < CellGrid[cell.X].Count - 1 && !CellGrid[cell.X][cell.Y + 1].Visited) list.Add(CellGrid[cell.X][cell.Y + 1]);
             return list.Count > 0 
-                ? list[nextminmax(0, list.Count)] 
+                ? list[rng.Next(0, list.Count)] 
                 : null;
-        }
-
-        public string ToSVG()
-        {
-            int sizeX = 300;
-            int sizeY = 300;
-            SVGGenerator svggenerator = new SVGGenerator(sizeX, sizeY);
-            float num3 = (float)sizeX / (float)Size;
-            float num4 = (float)sizeY / (float)Size;
-            for (int i = 0; i < Size; i++)
-            {
-                for (int j = 0; j < Size; j++)
-                {
-                    MazeCell mazeCell = CellGrid[i][j];
-                    float num5 = (float)i * num3;
-                    float num6 = (float)j * num4;
-                    svggenerator.DrawCircle(num5 + num3 / 2f, num6 + num4 / 2f, 3f, true);
-                    if (mazeCell.WallUp)
-                    {
-                        string strokeWidth = "3";
-                        if (j == 0)
-                        {
-                            strokeWidth = "10";
-                        }
-                        svggenerator.DrawLine(num5, num6, num5 + num3, num6, strokeWidth, string.Empty);
-                    }
-                    if (mazeCell.WallLeft)
-                    {
-                        string strokeWidth2 = "3";
-                        if (i == 0)
-                        {
-                            strokeWidth2 = "10";
-                        }
-                        svggenerator.DrawLine(num5, num6, num5, num6 + num4, strokeWidth2, string.Empty);
-                    }
-                    if (i == Size - 1)
-                    {
-                        svggenerator.DrawLine(num5 + num3, num6, num5 + num3, num6 + num4, "10", string.Empty);
-                    }
-                    if (j == Size - 1)
-                    {
-                        svggenerator.DrawLine(num5, num6 + num4, num5 + num3, num6 + num4, "10", string.Empty);
-                    }
-                }
-            }
-            return svggenerator.ToString();
         }
     }
 }
