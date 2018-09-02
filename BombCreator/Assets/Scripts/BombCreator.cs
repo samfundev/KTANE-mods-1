@@ -255,7 +255,7 @@ public class BombCreator : MonoBehaviour
         ModuleDisableButton.OnInteract += ModuleDisableButtonPressed;
 
         SeedMinusButton.OnInteract += delegate { StartCoroutine(AddSeed(-1)); return false; };
-        SeedDigitSelectbutton.OnInteract += delegate { Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform); _seedDigitSelectHoldTime = Time.time; return false; };
+        SeedDigitSelectbutton.OnInteract += delegate { StartCoroutine(SeedDigitHolding()); return false; };
         SeedManualButton.OnInteract += OpenManualDirectory;
         SeedPlusButton.OnInteract += delegate { StartCoroutine(AddSeed(1)); return false; };
 
@@ -348,13 +348,62 @@ public class BombCreator : MonoBehaviour
         }
     }
 
+	private bool _holdingSeedDigit;
+	private IEnumerator SeedDigitHolding()
+	{
+		var prev = 1;
+		var current = 0f;
+		Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+		_holdingSeedDigit = true;
+		_seedDigitSelectHoldTime = Time.time;
+		while (_holdingSeedDigit && prev < 7)
+		{
+			yield return null;
+			current += Time.fixedDeltaTime;
+			if (current < 0.5f) continue;
+
+			BombsText.text = prev < 4 
+				? string.Format("Seed reset in {0:0.00}", 3.0f - current) 
+				: string.Format("Random seed in {0:0.00}", 6.0f - current);
+
+			if (prev >= current) continue;
+
+			prev = Mathf.CeilToInt(current);
+			if (prev < 4)
+				continue;
+
+			if (prev == 4)
+			{
+				Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.LightBuzz, transform);
+				_currentSeedDigit = 0;
+				VanillaRuleModifier.SetRuleSeed(1);
+				UpdateDisplay();
+			}
+		}
+
+		while (_holdingSeedDigit)
+		{
+			VanillaRuleModifier.SetRuleSeed(Random.Next(int.MaxValue));
+			UpdateDisplay();
+			yield return null;
+		}
+
+		UpdateDisplay();
+		UpdateModuleDisableDisplay();
+	}
+
     private void EndSeedDigitInteract()
     {
-        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
-        float time = Time.time - _seedDigitSelectHoldTime;
-        _currentSeedDigit += time < 0.25f ? 1 : 9;
-        _currentSeedDigit %= 10;
-        UpdateDisplay();
+	    _holdingSeedDigit = false;
+        var time = Time.time - _seedDigitSelectHoldTime;
+	    if (time >= 3.0f)
+	    {
+		    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.LightBuzzShort, transform);
+			return;
+	    }
+
+	    _currentSeedDigit += time < 0.25f ? 1 : 9;
+	    _currentSeedDigit %= 10;
     }
 
     private bool OpenManualDirectory()
@@ -393,6 +442,7 @@ public class BombCreator : MonoBehaviour
         UpdateModuleDisableDisplay();
     }
 
+	private static int _artworkIndex = -1;
     private void UpdateArtwork()
     {
         foreach (Transform t in Artwork)
@@ -400,12 +450,20 @@ public class BombCreator : MonoBehaviour
             t.gameObject.SetActive(false);
         }
 
-	    var artwork = Artwork[0];
 
-		while(Artwork[0] == artwork)
-			Artwork = Artwork.OrderBy(x => Random.NextDouble()).ToList();
+	    if (_artworkIndex < 0 || _artworkIndex >= Artwork.Count)
+	    {
+		    var artwork = Artwork.Last();
 
-        Artwork[0].gameObject.SetActive(true);
+		    do
+		    {
+			    Artwork = Artwork.OrderBy(x => Random.NextDouble()).ToList();
+		    } while (Artwork.First() == artwork);
+
+		    _artworkIndex = 0;
+	    }
+
+	    Artwork[_artworkIndex++].gameObject.SetActive(true);
     }
 
     private int GetMaxModules()
@@ -1410,6 +1468,29 @@ public class BombCreator : MonoBehaviour
             yield return null;
             UpdateArtwork();
             yield return "show back";
+        }
+		else if (command.StartsWith("artwork ") && split.Length > 1)
+        {
+	        var pieces = Artwork.Where(x => x.GetComponentsInChildren<TextMesh>(true).Any(y =>
+		        y.text.ToLowerInvariant().Contains(string.Join(" ", split.Skip(1).ToArray()).ToLowerInvariant()))).ToList();
+
+	        if (pieces.Count == 0)
+	        {
+		        yield return "sendtochaterror Sorry, I could not find any artwork \"named\" nor \"drawn by\": " + string.Join(" ", split.Skip(1).ToArray());
+		        yield break;
+	        }
+
+			yield return null;
+
+	        foreach (var t in Artwork)
+		        t.gameObject.SetActive(false);
+	        
+	        if (pieces.Count > 1)
+		        pieces = pieces.OrderBy(x => Random.NextDouble()).ToList();
+
+		    pieces[0].gameObject.SetActive(true);
+
+	        yield return "show back";
         }
         else if (command.Equals("duplicates") || command.Equals("no duplicates"))
         {
