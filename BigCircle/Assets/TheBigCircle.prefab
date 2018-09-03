@@ -246,6 +246,7 @@ GameObject:
   - component: {fileID: 114000011235468186}
   - component: {fileID: 114000012680928556}
   - component: {fileID: 114213496404849306}
+  - component: {fileID: 114676194424911994}
   m_Layer: 0
   m_Name: TheBigCircle
   m_TagString: Untagged
@@ -3809,6 +3810,7 @@ MonoBehaviour:
   BombModule: {fileID: 114000011233473382}
   Audio: {fileID: 114000011235468186}
   BombInfo: {fileID: 114000013514366626}
+  RuleSeed: {fileID: 114676194424911994}
 --- !u!114 &114000012693482436
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -4137,6 +4139,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - GUI/KT 3D Text Diffuse
+--- !u!114 &114676194424911994
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000011121523510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bec9e065b520014aac8a96b0313792b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _seed: 1
 --- !u!114 &114680982462575778
 MonoBehaviour:
   m_ObjectHideFlags: 1

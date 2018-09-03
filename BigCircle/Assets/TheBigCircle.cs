@@ -8,6 +8,8 @@ using Assets.Scripts.RuleGenerator;
 using Random = UnityEngine.Random;
 using Rnd = UnityEngine.Random;
 
+// ReSharper disable once UnusedMember.Global
+// ReSharper disable once CheckNamespace
 public class TheBigCircle : MonoBehaviour
 {
 
@@ -22,6 +24,8 @@ public class TheBigCircle : MonoBehaviour
 	public KMAudio Audio;
 	public KMBombInfo BombInfo;
 
+	public KMRuleSeedable RuleSeed;
+
 	#endregion
 
 	#region Prviate Variables
@@ -33,7 +37,7 @@ public class TheBigCircle : MonoBehaviour
 	private Coroutine _spinCircle = null;
 
 
-	private Color[] _wedgeColors = Ext.NewArray(
+	private readonly Color[] _wedgeColors = Ext.NewArray(
 			"CC0000", //red
 			"CC7308", //orange
 			"C9CC21", //yellow
@@ -47,7 +51,7 @@ public class TheBigCircle : MonoBehaviour
 			Convert.ToInt32(c.Substring(4, 2), 16) / 255f))
 		.ToArray();
 
-	private string[] _colorNames =
+	private readonly string[] _colorNames =
 	{
 		"red",
 		"orange",
@@ -66,16 +70,12 @@ public class TheBigCircle : MonoBehaviour
 
 	#endregion
 
-	private static BigCircleRuleGenerator BigCircleRuleSet
-	{
-		get { return BigCircleRuleGenerator.Instance; }
-	}
-
 	// Use this for initialization
 	void Start()
 	{
+		BigCircleRuleGenerator.CreateRules(RuleSeed.GetRNG());
 		_colorblindMode = GetComponent<KMColorblindMode>().ColorblindModeActive;
-		colorLookup = BigCircleRuleSet.Rules;
+		colorLookup = BigCircleRuleGenerator.Rules;
 		BombModule.GenerateLogFriendlyName();
 		_rotateCounterClockwise = Rnd.value < 0.5;
 		WedgeRenderers[0].material.color = Color.cyan;
@@ -120,20 +120,15 @@ public class TheBigCircle : MonoBehaviour
 		BombModule.LogFormat(
 			"Bob, Our true lord and savior has come to save the Day.: Press any solution that would be valid for any characters present on the serial number at any time.");
 		var serial = BombInfo.GetSerialNumber().ToUpperInvariant();
-		if (_rotateCounterClockwise)
-		{
 
-			BombModule.Log("Circle is spinning counter-clockwise.");
-		}
-		else
-		{
-			BombModule.Log("Circle is spinning clockwise.");
-		}
+		BombModule.Log(_rotateCounterClockwise 
+			? "Circle is spinning counter-clockwise." 
+			: "Circle is spinning clockwise.");
 
 		for (var i = 0; i < serial.Length; i++)
 		{
 			var index = serial.Substring(i, 1);
-			var colorIndex = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".IndexOf(index, StringComparison.Ordinal);
+			var colorIndex = BigCircleRuleGenerator.SerialNumberLookup.IndexOf(index, StringComparison.Ordinal);
 			if (colorIndex < 0)
 			{
 				BombModule.LogFormat("Unrecognized Serial number character: {0} - Passing the module now", index);
@@ -142,7 +137,7 @@ public class TheBigCircle : MonoBehaviour
 			}
 
 			var lookup = new List<WedgeColors>(colorLookup[colorIndex / 3]);
-			if (_rotateCounterClockwise)
+			if (_rotateCounterClockwise == BigCircleRuleGenerator.ReverseOrderIfCounterClockwise)
 				lookup.Reverse();
 
 			if (ValidBOBColors.Any(x => x[0] == lookup[0] && x[1] == lookup[1] && x[2] == lookup[2])) continue;
@@ -171,8 +166,6 @@ public class TheBigCircle : MonoBehaviour
 
 		var total = 0;
 
-
-
 		var customIndicatorRule = new List<string>();
 		var litIndicators = BombInfo.GetOnIndicators().ToList();
 		var indicators = BombInfo.GetIndicators().ToList();
@@ -188,42 +181,85 @@ public class TheBigCircle : MonoBehaviour
 				litIndicators.Remove(indicator);
 			}
 
-			switch (indicator)
+			switch (BigCircleRuleGenerator.IndicatorRules.IndexOf(indicator))
 			{
-				case "IND":
+				case 5:
 					score = 0;
 					break;
-				case "BOB":
-				case "CAR":
-				case "CLR":
-					score = lit ? 1 : -1;
+				case 0:
+				case 1:
+				case 2:
+					score = lit == BigCircleRuleGenerator.IndicatorLitPositive[0] ? 1 : -1;
 					break;
-				case "FRK":
-				case "FRQ":
-				case "MSA":
-				case "NSA":
-					score = lit ? 2 : -2;
+				case 3:
+				case 4:
+				case 6:
+				case 7:
+					score = lit == BigCircleRuleGenerator.IndicatorLitPositive[1] ? 2 : -2;
 					break;
-				case "SIG":
-				case "SND":
-				case "TRN":
-					score = lit ? 3 : -3;
+				case 8:
+				case 9:
+				case 10:
+					score = lit == BigCircleRuleGenerator.IndicatorLitPositive[2] ? 3 : -3;
 					break;
 				default:
-					score = 6;
+					score = BigCircleRuleGenerator.AddSpecialIndicators ? 6 : -6;
 					break;
 			}
 
 			if (score < 6)
 				BombModule.LogFormat("{0} {1}: {2:+#;-#}", lit ? "Lit" : "Unlit", indicator, score);
 			else
-				customIndicatorRule.Add(string.Format("Custom indicator: {0} {1}: +6", lit ? "Lit" : "Unlit", indicator));
+				customIndicatorRule.Add(string.Format("Custom indicator: {0} {1}: {2}6", lit ? "Lit" : "Unlit", indicator, BigCircleRuleGenerator.AddSpecialIndicators ? "+" : "-"));
+
 			total += score;
 		}
 
-		score = BombInfo.GetBatteryCount() % 2 == 0 ? -4 : 4;
-		BombModule.LogFormat("{0} Batteries ({1}): {2}", BombInfo.GetBatteryCount(), score < 0 ? "Even" : "Odd", score);
-		total += score;
+		var rule4Positive = BigCircleRuleGenerator.Rule4PositiveEven ? 1 : 0;
+		var rule4Even = BigCircleRuleGenerator.Rule4PositiveEven ? 4 : -4;
+		switch (BigCircleRuleGenerator.Rule4)
+		{
+			case Rule4.Batteries:
+				score = BombInfo.GetBatteryCount() % 2 == rule4Positive ? -4 : 4;
+				BombModule.LogFormat("{0} Batteries ({1}): {2}", BombInfo.GetBatteryCount(), score == rule4Even ? "Even" : "Odd", score);
+				total += score;
+				break;
+			case Rule4.BatteryHolders:
+				score = BombInfo.GetBatteryHolderCount() % 2 == rule4Positive ? -4 : 4;
+				BombModule.LogFormat("{0} Battery Holders ({1}): {2}", BombInfo.GetBatteryHolderCount(), score == rule4Even ? "Even" : "Odd", score);
+				total += score;
+				break;
+			case Rule4.FirstSerialDigit:
+				score = BombInfo.GetSerialNumberNumbers().First() % 2 == rule4Positive ? -4 : 4;
+				BombModule.LogFormat("First Serial Number Digit {0} ({1}): {2}", BombInfo.GetSerialNumberNumbers().First(), score == rule4Even ? "Even" : "Odd", score);
+				total += score;
+				break;
+			case Rule4.LastSerialDigit:
+				score = BombInfo.GetSerialNumberNumbers().Last() % 2 == rule4Positive ? -4 : 4;
+				BombModule.LogFormat("Last Serial Number Digit {0} ({1}): {2}", BombInfo.GetSerialNumberNumbers().Last(), score == rule4Even ? "Even" : "Odd", score);
+				total += score;
+				break;
+			case Rule4.PortPlates:
+				score = BombInfo.GetPortPlateCount() % 2 == rule4Positive ? -4 : 4;
+				BombModule.LogFormat("{0} Port Plates ({1}): {2}", BombInfo.GetPortPlateCount(), score == rule4Even ? "Even" : "Odd", score);
+				total += score;
+				break;
+			case Rule4.TotalPorts:
+				score = BombInfo.GetPortCount() % 2 == rule4Positive ? -4 : 4;
+				BombModule.LogFormat("{0} Ports ({1}): {2}", BombInfo.GetPortCount(), score == rule4Even ? "Even" : "Odd", score);
+				total += score;
+				break;
+			case Rule4.UniquePorts:
+				score = BombInfo.CountUniquePorts() % 2 == rule4Positive ? -4 : 4;
+				BombModule.LogFormat("{0} Unique Ports ({1}): {2}", BombInfo.CountUniquePorts(), score == rule4Even ? "Even" : "Odd", score);
+				total += score;
+				break;
+			default:
+				ForceSolve(string.Format("Unrecognized rule: {0}", BigCircleRuleGenerator.Rule4));
+				return 0;
+		}
+
+		
 
 		var dviRule = new List<string>();
 		var customPorts = new List<string>();
@@ -231,44 +267,45 @@ public class TheBigCircle : MonoBehaviour
 		{
 			foreach (var port in plate)
 			{
-				if (port == KMBombInfoExtensions.KnownPortType.Parallel.ToString())
+				if (port == BigCircleRuleGenerator.PortRules1[0].ToString())
 				{
-					if (plate.Contains(KMBombInfoExtensions.KnownPortType.Serial.ToString()))
+					if (plate.Contains(BigCircleRuleGenerator.PortRules1[1].ToString()))
 					{
-						BombModule.Log("Port plate with both parallel and serial: -4");
-						total -= 4;
+						BombModule.Log(string.Format("Port plate with both {0} and {1}: {2}4", BigCircleRuleGenerator.PortRules1[0], BigCircleRuleGenerator.PortRules1[1], BigCircleRuleGenerator.PortRules1Positive ? "-" : "+"));
+						total += BigCircleRuleGenerator.PortRules1Positive ? -4 : 4;
 					}
 					else
 					{
-						BombModule.LogFormat("Port plate with only parallel: +5");
-						total += 5;
+						BombModule.LogFormat(string.Format("Port plate with {0}: {1}5", BigCircleRuleGenerator.PortRules1[0], BigCircleRuleGenerator.PortRules1Positive ? "+" : "-"));
+						total += BigCircleRuleGenerator.PortRules1Positive ? 5 : -5;
 					}
 
 					continue;
 				}
 
-				if (port == KMBombInfoExtensions.KnownPortType.Serial.ToString()) continue;
-				if (port == KMBombInfoExtensions.KnownPortType.DVI.ToString())
+				if (port == BigCircleRuleGenerator.PortRules1[1].ToString()) continue;
+				if (port == BigCircleRuleGenerator.PortRules2[0].ToString())
 				{
-					if (plate.Contains(KMBombInfoExtensions.KnownPortType.StereoRCA.ToString()))
+					if (plate.Contains(BigCircleRuleGenerator.PortRules2[1].ToString()))
 					{
-						dviRule.Add("Port plate with both DVI-D and Stereo RCA: +4");
-						total += 4;
+						dviRule.Add(string.Format("Port plate with both {0} and {1}: {2}4", BigCircleRuleGenerator.PortRules2[0], BigCircleRuleGenerator.PortRules2[1], BigCircleRuleGenerator.PortRules2Positive ? "-" : "+"));
+						total += BigCircleRuleGenerator.PortRules2Positive ? -4 : 4;
 					}
 					else
 					{
-						dviRule.Add("Port plate with DVI-D: -5");
-						total -= 5;
+						dviRule.Add(string.Format("Port plate with {0}: {1}5", BigCircleRuleGenerator.PortRules2[0], BigCircleRuleGenerator.PortRules2Positive ? "+" : "-"));
+						total += BigCircleRuleGenerator.PortRules2Positive ? 5 : -5;
 					}
 
 					continue;
 				}
 
-				if (port == KMBombInfoExtensions.KnownPortType.RJ45.ToString()) continue;
-				if (port == KMBombInfoExtensions.KnownPortType.StereoRCA.ToString()) continue;
-				if (port == KMBombInfoExtensions.KnownPortType.PS2.ToString()) continue;
-				customPorts.Add(string.Format("Special port {0}: -6", port));
-				total = total - 6;
+				if (port == BigCircleRuleGenerator.PortRules2[1].ToString()) continue;
+				if (port == BigCircleRuleGenerator.PortRules2[2].ToString()) continue;
+				if (port == BigCircleRuleGenerator.PortRules2[3].ToString()) continue;
+
+				customPorts.Add(string.Format("Special port {0}: {1}6", port, BigCircleRuleGenerator.AddSpecialPorts ? "+" : "-"));
+				total += BigCircleRuleGenerator.AddSpecialPorts ? 6 : -6;
 			}
 		}
 
@@ -323,14 +360,20 @@ public class TheBigCircle : MonoBehaviour
 		BombModule.LogFormat("Base total: {0}", total);
 
 
-		const int solvedMultiplier = 3;
+		int solvedMultiplier = BigCircleRuleGenerator.ScorePositive ? 3 : -3;
 		total += solved * solvedMultiplier;
 		if (solved > 0)
-			BombModule.LogFormat("{0} solved modules: +{1}", solved, solved * solvedMultiplier);
+			BombModule.LogFormat("{0} solved modules: {2}{1}", solved, solved * solvedMultiplier, BigCircleRuleGenerator.ScorePositive ? "+" : "-");
 
 		total += twofactor;
 		foreach (var twoFA in BombInfo.GetTwoFactorCodes())
-			BombModule.LogFormat("Two Factor {0}: +{1}", twoFA, twoFA % 10);
+		{
+			var sum = twoFA;
+			while (sum >= 10 && BigCircleRuleGenerator.TwoFactorDigit == TwoFactorDigit.MostSignicant)
+				sum /= 10;
+			sum %= 10;
+			BombModule.LogFormat("Two Factor {2} significant digit of {0}: {3}{1}", twoFA, sum, BigCircleRuleGenerator.TwoFactorDigit == TwoFactorDigit.MostSignicant ? "most" : "least", BigCircleRuleGenerator.AddTwoFactor ? "+" : "-");
+		}
 
 		BombModule.LogFormat("Total: {0}", total);
 
@@ -347,7 +390,7 @@ public class TheBigCircle : MonoBehaviour
 		BombModule.LogFormat("Extended serial number is {0}.", serial);
 		BombModule.LogFormat("Using Character {0}, which is {1}.", total % 10, index);
 
-		var colorIndex = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".IndexOf(index, StringComparison.Ordinal);
+		var colorIndex = BigCircleRuleGenerator.SerialNumberLookup.IndexOf(index, StringComparison.Ordinal);
 
 		if (colorIndex < 0)
 		{
@@ -357,15 +400,16 @@ public class TheBigCircle : MonoBehaviour
 
 		var lookup = new List<WedgeColors>(colorLookup[colorIndex / 3]);
 
-		if (_rotateCounterClockwise)
-		{
+		BombModule.Log(BigCircleRuleGenerator.ReverseOrderIfCounterClockwise
+			? "Reverse order is spinning counter-clockwise"
+			: "Reverse order if spinning clockwise.");
+
+		if (_rotateCounterClockwise == BigCircleRuleGenerator.ReverseOrderIfCounterClockwise)
 			lookup.Reverse();
-			BombModule.Log("Circle is spinning counter-clockwise.");
-		}
-		else
-		{
-			BombModule.Log("Circle is spinning clockwise.");
-		}
+
+		BombModule.Log(_rotateCounterClockwise 
+			? "Circle is spinning counter-clockwise." 
+			: "Circle is spinning clockwise.");
 
 		BombModule.LogFormat("Solution: {0}, {1}, {2}", lookup[0], lookup[1], lookup[2]);
 
@@ -526,6 +570,23 @@ public class TheBigCircle : MonoBehaviour
 		}
 	}
 
+	private int GetTwoFactorSum()
+	{
+			var sum = 0;
+			foreach (var twofactor in BombInfo.GetTwoFactorCodes())
+			{
+				var tf = twofactor;
+				while (tf >= 10 && BigCircleRuleGenerator.TwoFactorDigit == TwoFactorDigit.MostSignicant)
+					tf /= 10;
+
+				tf %= 10;
+
+				sum += BigCircleRuleGenerator.AddTwoFactor ? tf : -tf;
+			}
+
+			return sum;
+	}
+
 	private IEnumerator UpdateSolution()
 	{
 		if (IsBobPresent())
@@ -540,8 +601,8 @@ public class TheBigCircle : MonoBehaviour
 		}
 
 		var solved = BombInfo.GetSolvedModuleNames().Count;
-		var twofactorsum = BombInfo.GetTwoFactorCodes().Sum(twofactor => twofactor % 10);
-		BombModule.LogFormat("Getting solution for 0 modules solved and Two Factor sum of {0}", twofactorsum);
+		var twofactorsum = GetTwoFactorSum();
+		BombModule.LogFormat("Getting solution for 0 modules solved and {1} Significant Two Factor digit sum of {0}", twofactorsum, BigCircleRuleGenerator.TwoFactorDigit == TwoFactorDigit.MostSignicant ? "Most" : "Least");
 		_currentSolution = GetSolution(solved, twofactorsum);
 
 		do
@@ -549,13 +610,13 @@ public class TheBigCircle : MonoBehaviour
 			_holdTime += Time.deltaTime;
 			yield return null;
 			var solvedUpdate = BombInfo.GetSolvedModuleNames().Count;
-			var twofactorUpdate = BombInfo.GetTwoFactorCodes().Sum(twofactor => twofactor % 10);
+			var twofactorUpdate = GetTwoFactorSum();
 			if (_currentState > 0 || (solved == solvedUpdate && twofactorsum == twofactorUpdate))
 				continue;
 			if (solved != solvedUpdate)
 				BombModule.LogFormat("Updating solution for {0} modules solved", solvedUpdate);
 			if (twofactorsum != twofactorUpdate)
-				BombModule.LogFormat("Updating solution for new two factor sum of {0}", twofactorUpdate);
+				BombModule.LogFormat("Updating solution for new {1} significant two factor digit sum of {0}", twofactorUpdate, BigCircleRuleGenerator.TwoFactorDigit == TwoFactorDigit.MostSignicant ? "most" : "least");
 			solved = solvedUpdate;
 			twofactorsum = twofactorUpdate;
 			_currentSolution = GetSolution(solved, twofactorsum);
@@ -742,5 +803,95 @@ public class TheBigCircle : MonoBehaviour
 
 		yield return "cancelled";
 		TwitchShouldCancelCommand = false;
+	}
+
+	public void CreateColorArray()
+	{
+		var vanillarules = new[] {
+			new[] {WedgeColors.Red, WedgeColors.Yellow, WedgeColors.Blue},
+			new[] {WedgeColors.Orange, WedgeColors.Green, WedgeColors.Magenta},
+			new[] {WedgeColors.Blue, WedgeColors.Black, WedgeColors.Red},
+			new[] {WedgeColors.Magenta, WedgeColors.White, WedgeColors.Orange},
+			new[] {WedgeColors.Orange, WedgeColors.Blue, WedgeColors.Black},
+			new[] {WedgeColors.Green, WedgeColors.Red, WedgeColors.White},
+			new[] {WedgeColors.Magenta, WedgeColors.Yellow, WedgeColors.Black},
+			new[] {WedgeColors.Red, WedgeColors.Orange, WedgeColors.Yellow},
+			new[] {WedgeColors.Yellow, WedgeColors.Green, WedgeColors.Blue},
+			new[] {WedgeColors.Blue, WedgeColors.Magenta, WedgeColors.Red},
+			new[] {WedgeColors.Black, WedgeColors.White, WedgeColors.Green},
+			new[] {WedgeColors.White, WedgeColors.Yellow, WedgeColors.Blue}
+		};
+		var rng = new MonoRandom(1);
+
+		var swaps = new[]
+		{
+			8, 33,
+			57, 214,
+			204, 80,
+			241, 134,
+			65, 177,
+			130, 74,
+			227, 207,
+			0, 136,
+			98, 279,
+			192, 309,
+			333, 116,
+			267, 186,
+		};
+
+		var possibleColorSets = new List<WedgeColors[]>();
+		for (var i = 0; i < 8; i++)
+		{
+			for (var j = 0; j < 8; j++)
+			{
+				if (j == i) continue;
+				for (var k = 0; k < 8; k++)
+				{
+					if (k == i || k == j) continue; 
+					possibleColorSets.Add(new [] {(WedgeColors)i, (WedgeColors)j, (WedgeColors)k});
+				}
+			}
+		}
+
+		for (var i = 0; i < 12; i++)
+		{
+			var temp = possibleColorSets[swaps[(i * 2) + 0]];
+			possibleColorSets[swaps[(i * 2) + 0]] = possibleColorSets[swaps[(i * 2) + 1]];
+			possibleColorSets[swaps[(i * 2) + 1]] = temp;
+		}
+
+		var initalarray = "var possibleColorSets = new[] {" + Environment.NewLine;
+		for (var i = 0; i < 336; i++)
+		{
+			initalarray += "    new[] {WedgeColors." + possibleColorSets[i][0] + ", WedgeColors." + possibleColorSets[i][1] +
+			               ", WedgeColors." + possibleColorSets[i][2] + "}," + Environment.NewLine;
+		}
+		initalarray += "};";
+
+		Debug.Log(initalarray);
+
+		
+
+
+		var shuffled = possibleColorSets.OrderBy(x => rng.NextDouble()).ToList();
+
+		for (var i = 0; i < vanillarules.Length; i++)
+		{
+			int pos = -1;
+			int pos2 = -1;
+			for (var j = 0; j < possibleColorSets.Count; j++)
+			{
+				if (possibleColorSets[j][0] == vanillarules[i][0] && possibleColorSets[j][1] == vanillarules[i][1] && possibleColorSets[j][2] == vanillarules[i][2])
+					pos = j;
+				if (possibleColorSets[j][0] == shuffled[i][0] && possibleColorSets[j][1] == shuffled[i][1] && possibleColorSets[j][2] == shuffled[i][2])
+					pos2 = j;
+			}
+
+
+			//var pos = Enumerable.Range(0, possibleColorSets.Count).First(x => possibleColorSets[x][0] == vanillarules[i][0] && possibleColorSets[x][1] == vanillarules[i][1] && possibleColorSets[x][2] == vanillarules[i][2]);
+			//var pos2 = Enumerable.Range(0, possibleColorSets.Count).First(x => possibleColorSets[x][0] == shuffled[i][0] && possibleColorSets[x][1] == shuffled[i][1] && possibleColorSets[x][2] == shuffled[i][2]);
+			Debug.LogFormat("Set {0} is at position {1}, but needs to be at {2}", i, pos, pos2);
+		}
+
 	}
 }
