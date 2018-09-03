@@ -222,22 +222,25 @@ public class BombCreator : MonoBehaviour
         TwitchModeButton.OnInteract += delegate
         {
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-	        if (!TwitchPlays.TimeMode() && !TwitchPlays.ZenMode())
+	        switch (TwitchPlays.GetGameMode())
 	        {
-		        TwitchPlays.SetTimeMode(true);
-	        }
-	        else
-	        {
-		        TwitchPlays.SetTimeMode(false);
-		        TwitchPlays.SetZenMode(!TwitchPlays.ZenMode());
+				case GameModes.NormalMode:
+					TwitchPlays.SetGameMode(GameModes.TimeMode);
+					break;
+				case GameModes.TimeMode:
+					TwitchPlays.SetGameMode(GameModes.ZenMode);
+					break;
+				default:
+					TwitchPlays.SetGameMode(GameModes.NormalMode);
+					break;
 	        }
 
 	        UpdateDisplay();
             return false;
         };
 
-        TimeMinusButton.OnInteract += delegate { StartCoroutine(AddTimer(TwitchPlays.TimeMode() ? -60 : -30)); return false; };
-        TimePlusButton.OnInteract += delegate { StartCoroutine(AddTimer(TwitchPlays.TimeMode() ? 60 : 30)); return false; };
+        TimeMinusButton.OnInteract += delegate { StartCoroutine(AddTimer(TwitchPlays.GetGameMode() == GameModes.TimeMode ? -60 : -30)); return false; };
+        TimePlusButton.OnInteract += delegate { StartCoroutine(AddTimer(TwitchPlays.GetGameMode() == GameModes.TimeMode ? 60 : 30)); return false; };
 
         ModulesMinusButton.OnInteract += delegate { StartCoroutine(AddModules(-1)); return false; };
         ModulesPlusButton.OnInteract += delegate { StartCoroutine(AddModules(1)); return false; };
@@ -328,24 +331,24 @@ public class BombCreator : MonoBehaviour
     private void Update()
     {
         if (!TwitchPlays.Installed()) return;
-        if (!TwitchPlays.TimeMode() && !TwitchPlays.ZenMode())
-        {
-	        if (TwitchModeLabel.text == "Normal Mode") return;
-	        TwitchModeLabel.text = "Normal Mode";
-	        UpdateDisplay();
-        }
-        else if (TwitchPlays.TimeMode())
-        {
-	        if (TwitchModeLabel.text == "Time Mode") return;
-            TwitchModeLabel.text = "Time Mode";
-	        UpdateDisplay();
-        }
-        else
-        {
-	        if (TwitchModeLabel.text == "Zen Mode") return;
-            TwitchModeLabel.text = "Zen Mode";
-	        UpdateDisplay();
-        }
+	    switch (TwitchPlays.GetGameMode())
+	    {
+			case GameModes.NormalMode:
+				if (TwitchModeLabel.text == "Normal Mode") return;
+				TwitchModeLabel.text = "Normal Mode";
+				UpdateDisplay();
+				break;
+			case GameModes.TimeMode:
+				if (TwitchModeLabel.text == "Time Mode") return;
+				TwitchModeLabel.text = "Time Mode";
+				UpdateDisplay();
+				break;
+			case GameModes.ZenMode:
+				if (TwitchModeLabel.text == "Zen Mode") return;
+				TwitchModeLabel.text = "Zen Mode";
+				UpdateDisplay();
+				break;
+	    }
     }
 
 	private bool _holdingSeedDigit;
@@ -493,10 +496,10 @@ public class BombCreator : MonoBehaviour
 
     private int BombTime
     {
-        get { return TwitchPlays.TimeMode() ? Settings.TwitchPlaysTimeModeTime : Settings.Time; }
+        get { return TwitchPlays.GetGameMode() == GameModes.TimeMode ? Settings.TwitchPlaysTimeModeTime : Settings.Time; }
         set
         {
-            if (TwitchPlays.TimeMode()) Settings.TwitchPlaysTimeModeTime = value;
+            if (TwitchPlays.GetGameMode() == GameModes.TimeMode) Settings.TwitchPlaysTimeModeTime = value;
             else Settings.Time = value;
         }
     }
@@ -1072,7 +1075,7 @@ public class BombCreator : MonoBehaviour
 		int rewardPoints = staticMode ? rewardPointList.Sum() : rewardPointList.Max();
 	    int maxTimeAllowed = staticMode ? maxTimeAllowedList.Sum() : maxTimeAllowedList.Max();
 	    int maxStrikesAllowed = Mathf.Max(3, Settings.Modules / 12);
-	    if (TwitchPlays.TimeMode())
+	    if (TwitchPlays.GetGameMode() == GameModes.TimeMode)
 		    maxTimeAllowed = 300;
 
 	    double multiplier = 1;
@@ -1650,19 +1653,19 @@ public class BombCreator : MonoBehaviour
                             yield return "sendtochaterror Time command not in correct format.";
                             yield break;
                     }
-                    seconds += TwitchPlays.TimeMode() ? 59 : 29;
-                    seconds /= TwitchPlays.TimeMode() ? 60 : 30;
-                    seconds *= TwitchPlays.TimeMode() ? 60 : 30;
+                    seconds += TwitchPlays.GetGameMode() == GameModes.TimeMode ? 59 : 29;
+                    seconds /= TwitchPlays.GetGameMode() == GameModes.TimeMode ? 60 : 30;
+                    seconds *= TwitchPlays.GetGameMode() == GameModes.TimeMode ? 60 : 30;
                     yield return AllowBombCreator();
 
-	                if (TwitchPlays.TimeMode())
+	                if (TwitchPlays.GetGameMode() == GameModes.TimeMode)
 		                yield return AllowPowerUsers(Permissions.BombCreatorAllowedToChangeTimeModeTimeLimit, PowerLevel.Admin, "Only Twitch plays Admin or higher are allowed to change the time limit in time mode.");
 
                     if (Mathf.Abs(BombTime - seconds) > 4*3600) yield return "elevator music";
                     while (BombTime != seconds && !TwitchShouldCancelCommand)
                     {
-                        yield return AddTimer(TwitchPlays.TimeMode() ? 60 : 30, () => BombTime >= seconds || TwitchShouldCancelCommand);
-                        yield return AddTimer(TwitchPlays.TimeMode() ? -60 : -30, () => BombTime <= seconds || TwitchShouldCancelCommand);
+                        yield return AddTimer(TwitchPlays.GetGameMode() == GameModes.TimeMode ? 60 : 30, () => BombTime >= seconds || TwitchShouldCancelCommand);
+                        yield return AddTimer(TwitchPlays.GetGameMode() == GameModes.TimeMode ? -60 : -30, () => BombTime <= seconds || TwitchShouldCancelCommand);
                         if (TwitchShouldCancelCommand) yield return "cancelled";
                     }
                     yield break;
