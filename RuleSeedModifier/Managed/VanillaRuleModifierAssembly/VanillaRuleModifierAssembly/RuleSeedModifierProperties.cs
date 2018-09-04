@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace VanillaRuleModifierAssembly
@@ -11,7 +13,8 @@ namespace VanillaRuleModifierAssembly
             AddProperty("IsSeedVanilla", new Property(IsSeedVanilla_Get, null));
             AddProperty("IsSeedModded", new Property(IsSeedModded_Get, null));
             AddProperty("GetRuleManual",new Property(RuleManaul_Get, null));
-		}
+            AddProperty("AddSupportedModule", new Property(null, SupportedModules_Set));
+        }
 
 		public static void AddSupportedModule(string moduleType)
 	    {
@@ -24,6 +27,12 @@ namespace VanillaRuleModifierAssembly
 			    
 		    }
 	    }
+
+        private static void SupportedModules_Set(object moduleName)
+        {
+            if (moduleName is string mn)
+                AddSupportedModule(mn);
+        }
 
 	    private object RuleSeed_Get()
         {

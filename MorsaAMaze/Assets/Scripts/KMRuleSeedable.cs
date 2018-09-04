@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class KMRuleSeedable : MonoBehaviour
@@ -19,6 +20,23 @@ public class KMRuleSeedable : MonoBehaviour
         IDictionary<string, object> ruleSeedModifierAPI = ruleSeedModifierAPIGameObject.GetComponent<IDictionary<string, object>>();
         if (!ruleSeedModifierAPI.ContainsKey("RuleSeed"))
             return new MonoRandom(1);
+
+		//Add the module to the list of supported modules if possible.
+	    if (ruleSeedModifierAPI.ContainsKey("AddSupportedModule"))
+	    {
+		    string key;
+		    KMBombModule bombModule = GetComponent<KMBombModule>();
+		    KMNeedyModule needyModule = GetComponent<KMNeedyModule>();
+
+		    if (bombModule != null)
+			    key = bombModule.ModuleType;
+		    else if (needyModule != null)
+			    key = needyModule.ModuleType;
+		    else
+			    key = Regex.Replace(gameObject.name, @"\(Clone\)$", "");
+
+		    ruleSeedModifierAPI["AddSupportedModule"] = key;
+	    }
 
         return new MonoRandom((ruleSeedModifierAPI["RuleSeed"] as int?) ?? 1);
     }
