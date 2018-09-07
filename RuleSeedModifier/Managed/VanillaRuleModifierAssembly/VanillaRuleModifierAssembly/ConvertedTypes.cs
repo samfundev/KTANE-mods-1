@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using Assets.Scripts.Manual;
 using Assets.Scripts.Rules;
 using UnityEngine;
 using VanillaRuleModifierAssembly.RuleSetGenerators;
+using Object = UnityEngine.Object;
 
 namespace VanillaRuleModifierAssembly
 {
@@ -79,6 +82,38 @@ namespace VanillaRuleModifierAssembly
             DebugLog("Done Generating Rules for seed {0}", seed);
 
             return bombRules;
+        }
+
+        public static IEnumerator AddWidgetToBomb(KMWidget widget)
+        {
+            DebugLog("Started AddWidgetToBomb");
+            var modwidget = widget.GetComponent<ModWidget>();
+            DebugLog("Tried to Get Modwidget");
+            if (modwidget == null)
+            {
+                DebugLog("Modwidget not defined. Creating it now.");
+                modwidget = widget.gameObject.AddComponent<ModWidget>();
+            }
+
+            DebugLog("Definitely have mod widget");
+            var generators = Object.FindObjectsOfType<WidgetGenerator>();
+            DebugLog($"{generators.Length} Widget Generators found");
+            while (generators.Length == 0)
+            {
+                yield return null;
+                generators = Object.FindObjectsOfType<WidgetGenerator>();
+                DebugLog($"{generators.Length} Widget Generators found");
+            }
+            
+            foreach(var g in generators)
+            {
+                if (modwidget == null) break;
+                DebugLog("Adding required widget");
+                if(!g.RequiredWidgets.Contains(modwidget))
+                    g.RequiredWidgets.Add(modwidget);
+            }
+
+            yield break;
         }
 
         public static RuleManager GenerateRules(int seed)

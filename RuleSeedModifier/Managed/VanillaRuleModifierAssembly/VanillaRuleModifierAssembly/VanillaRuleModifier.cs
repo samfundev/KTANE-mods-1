@@ -131,8 +131,15 @@ public class VanillaRuleModifier : MonoBehaviour
 
     public KMGameInfo.State CurrentState = KMGameInfo.State.Unlock;
     private KMGameInfo.State _prevState = KMGameInfo.State.Unlock;
+    private Coroutine AddWidget;
     private void OnStateChange(KMGameInfo.State state)
     {
+        if (AddWidget != null)
+        {
+            StopCoroutine(AddWidget);
+            AddWidget = null;
+        }
+
         DebugLog("Transitioning from {1} to {0}", state, CurrentState);
         if((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
         {
@@ -141,8 +148,12 @@ public class VanillaRuleModifier : MonoBehaviour
             DebugLog("Generating Rules based on Seed {0}", seed);
             GenerateRules(seed);
             ManualGenerator.Instance.WriteManual(seed);
+            if(seed != 1)
+                AddWidget = StartCoroutine(AddWidgetToBomb(RuleSeedWidget));
         }
         _prevState = CurrentState;
         CurrentState = state;
     }
+
+    public KMWidget RuleSeedWidget;
 }
