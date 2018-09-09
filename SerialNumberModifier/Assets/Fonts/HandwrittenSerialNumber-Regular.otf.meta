@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 338e1b14cae582946b832c030dd736fe
+timeCreated: 1536437553
+licenseType: Pro
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Handwritten Serial Number
+  fontNames:
+  - Handwritten Serial Number
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

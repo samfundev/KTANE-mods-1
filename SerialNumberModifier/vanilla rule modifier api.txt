@@ -1,0 +1,32 @@
+[h1]For mod developers[/h1]
+[u]Mod API[/u]
+The mod exposes a public API that can be used by other mods to interoperate with it.
+The API is exposed through a GameObject named [i]VanillaRuleModifierProperties[/i] that has an [i]IDicionary<string, object>[/i] component. This IDictionary contains keys and values (in this text also called properties) that allow for interoperation with the mod. The full set of keys is described in the table below.
+If the GameObject does not exist it means that the Multiple Bombs mod is not installed.
+Please note that the IDictionary is delcared with a generic value type of [i]object[/i] to allow each property to have their own types. The type of each property is detailed in the properties table. Make sure to cast the values to the right type and to pass objects of the right type when setting properties.
+Available properties:
+[table]
+[tr][th]Key[/th][th]Type[/th][th]Can Set[/th][th]Description[/th][/tr]
+[tr][td]RuleSeed[/td][td]int[/td][td]True[/td][td]Gets or Sets the rule seed.
+Note: This property can only be written to during setup.[/td][/tr]
+[tr][td]GetRuleManual[/td][td]string[/td][td]False[/td][td]Genenerates the manual for the currently set seed and returns the path to the directory containing that manual.
+Note: This property can only be read during setup.[/td][/tr]
+[tr][td]IsSeedVanilla[/td][td]bool[/td][td]False[/td][td]This is used to determine which rule set generator is in use.[/td][/tr]
+[tr][td]IsSeedModded[/td][td]bool[/td][td]False[/td][td]Vanilla seed numbers are 1, 2, and everything -3 and below.[/td][/tr]
+[/table]
+
+API usage example:
+[code]
+//Example method that uses the API to set the rule seed.
+public void SetRuleSeed(int seed, bool applyNextBomb)
+{
+	GameObject vanillaRuleModifierAPIGameObject = GameObject.Find("VanillaRuleModifierProperties");
+	if(vanillaRuleModifierAPIGameObject == null) //If the Vanilla Rule Modifer is not installed, return.
+		return;
+	IDictionary<string, object> vanillaRuleModifierAPI = vanillaRuleModifierAPIGameObject.GetComponent<IDictionary<string, object>>();
+	if(applyNextBomb)
+		vanillaRuleModifierAPI["RuleSeed"] = new object[] {seed, true};
+	else
+		vanillaRuleModifierAPI["RuleSeed"] = seed;
+}
+[/code]

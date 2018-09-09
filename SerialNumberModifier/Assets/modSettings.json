@@ -1,0 +1,19 @@
+{
+  "SettingsVersion": 2,
+  "HowToUse0": "Don't Touch this value. It is used by the mod internally to determine if there are new settings to be saved.",
+
+  "ResetToDefault": false,
+  "HowToReset": "Changing this setting to true will reset ALL your setting back to default.",
+
+  "Enabled": true,
+  "HowToUse1": "If disabled, the built in serial number widget will be used instead.",
+
+  "ForbiddenSerialNumberLettersNumbers": "OY",
+  "HowToUse4": "Serial number letters/digits specified here will be disallowed to appear",
+  "HowToUse5": "Note, at least one letter and one digit MUST be allowed.",
+  "HowToUse6": "If every letter/digit is marked as forbidden, the widget will silently forbid NONE of them.",
+  "HowToUse7": "The default letters that are forbidden are \"O\" and \"Y \"",
+
+  "ShowSerialNumberBeforeLightsTurnOn": false,
+  "HowToUse8": "If Enabled, the serial number text is readable before the lights turn on for the first time."
+}
