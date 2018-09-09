@@ -8,6 +8,8 @@
         <link rel="stylesheet" type="text/css" href="css/normalize.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
         <link rel="stylesheet" type='text/css' href="css/font.css">
+        <script src='js/highlighter.js'></script>
+    	<script src="js/ruleseed.js"></script>
         <style>
 		.repeaters-table {
 			float:left;
@@ -20,6 +22,73 @@
 			padding: 0.1em;
 		}
 		</style>
+	<script>
+		var encryptedIndicatorData = [
+			['ใ',  [5, 0, 4],   ['G', 'D', 'G']],
+			['ɮ',  [4, 0, 5],   ['Z', 'D', 'R']],
+			['ʖ',  [0, -1, 4],  ['C', 'S', 'O']],
+			['ฬ',  [0, 2, 5],   ['J', 'X', 'Y']],
+			['น',  [2, 1, 2],   ['V', 'B', 'L']],
+			['Þ',  [-2, 5, 5],  ['T', 'L', 'J']],
+			['ฏ',  [4, 1, 2],   ['L', 'A', 'O']],
+			['Ѩ',  [3, 5, 4],   ['G', 'A', 'S']],
+			['Ԉ',  [4, 4, 2],   ['F', 'S', 'M']],
+			['Ԓ',  [3, 2, 3],   ['P', 'O', 'F']],
+			['ด',  [-1, 3, 4],  ['K', 'Q', 'K']],
+			['ล',  [-1, -2, 4], ['D', 'N', 'L']],
+			['Ж',  [5, 0, 5],   ['Q', 'O', 'Z']],
+			['Ⴟ',  [5, 5, 3],   ['W', 'M', 'C']],
+		];
+		
+		var IndicatorLookup = [
+			"CLR", "IND", "TRN", "FRK", "CAR", "FRQ", "NSA", "SIG", "MSA", "SND", "BOB"
+		];
+	
+	
+		function setRules(rnd)
+        {
+        	for (var index=0; index < rnd.next(0, 25); index++)
+        		rnd.nextDouble();
+        	
+        	var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        	var table = rnd.shuffleArray(encryptedIndicatorData).slice(0, 13);
+        	
+        	for (var index=0; index < 13; index++)
+        	{
+        		table[index][1][0] = rnd.next(0, 8) - 2;
+			    table[index][1][1] = rnd.next(0, 8) - 2;
+			    table[index][1][2] = rnd.next(2, 6);
+
+			    table[index][2][0] = alphabet[rnd.next(0, 26)];
+			    table[index][2][1] = alphabet[rnd.next(0, 26)];
+			    table[index][2][2] = alphabet[rnd.next(0, 26)];
+        	}
+        	
+        	var indicators = rnd.shuffleArray(IndicatorLookup);
+        	setEncryptedIndicatorTable(table, indicators);
+        }
+        
+        function setDefaultRules(rnd)
+        {
+            setEncryptedIndicatorTable(encryptedIndicatorData.slice(0, 13), IndicatorLookup);
+        }
+        
+        function setEncryptedIndicatorTable(table, indicators)
+        {
+        	for(var i = 0; i < 13; i++)
+        	{
+        		var d = table[i];
+        		console.log(`Symbol: ${d[0]} - Left: ${d[1][0]} / ${d[2][0]}  - Middle: ${d[1][1]} / ${d[2][1]}  - Right: ${d[1][2]} / ${d[2][2]} `);
+        		document.getElementById('symbol-' + i).innerHTML = d[0];
+        		document.getElementById('leftmap-' + i).innerHTML = d[1][0] + " / " + d[2][0];
+        		document.getElementById('middlemap-' + i).innerHTML = d[1][1] + " / " + d[2][1];
+        		document.getElementById('rightmap-' + i).innerHTML = d[1][2] + " / " + d[2][2];
+        		
+        		if(i < 11)
+        			document.getElementById('indicator-' + i).innerHTML = indicators[i];
+        	}
+        }
+	</script>
     </head>
     <body>
         <div id="ManualContent">
@@ -101,33 +170,36 @@
                         <p>This indicator works like any other, except that the label is sometimes encrypted. In the case of encryption, use the following instructions. The three letters next to the indicator light have been replaced with arcane symbols. Find the sum of the numbers gained from looking up each symbol in the left table. If the result is in the range [1,11], then use that result in the second table to find the label. Otherwise, each symbol instead represents the letters in the first table.</p>
 
 						<!-- Simon table -->
-							<table class="repeaters-table"><tbody><tr><th rowspan = "2">Symbol</th><th colspan = "3">in Position</th></tr><tr><th>X__</th><th>_X_</th><th>__X</th></tr><tr><th><font size="6">ใ</font></th><th>5 / G</th><th>0 / D</th><th>4 / G</th></tr>
-							<tr><th><font size="6">ɮ</font></th><th>4 / Z</th><th>0 / D</th><th>5 / R</th></tr>
-							<tr><th><font size="6">ʖ</font></th><th>0 / C</th><th>-1 / S</th><th>4 / O</th></tr>
-							<tr><th><font size="6">ฬ</font></th><th>0 / J</th><th>2 / X</th><th>5 / Y</th></tr>
-							<tr><th><font size="6">น</font></th><th>2 / V</th><th>1 / B</th><th>2 / L</th></tr>
-							<tr><th><font size="6">Þ</font></th><th>-2 / T</th><th>5 / L</th><th>5 / J</th></tr>
-							<tr><th><font size="6">ฏ</font></th><th>4 / L</th><th>1 / A</th><th>2 / O</th></tr>
-							<tr><th><font size="6">Ѩ</font></th><th>3 / G</th><th>5 / A</th><th>4 / S</th></tr>
-							<tr><th><font size="6">Ԉ</font></th><th>4 / F</th><th>4 / S</th><th>2 / M</th></tr>
-							<tr><th><font size="6">Ԓ</font></th><th>3 / P</th><th>2 / O</th><th>3 / F</th></tr>
-							<tr><th><font size="6">ด</font></th><th>-1 / K</th><th>3 / Q</th><th>4 / K</th></tr>
-							<tr><th><font size="6">ล</font></th><th>-1 / D</th><th>-2 / N</th><th>4 / L</th></tr>
-							<tr><th><font size="6">Ж</font></th><th>5 / Q</th><th>0 / O</th><th>5 / Z</th></tr>
+							<table class="repeaters-table"><tbody>
+							<tr><th rowspan = "2">Symbol</th><th colspan = "3">in Position</th></tr>
+							<tr><th>X__</th><th>_X_</th><th>__X</th></tr>
+							<tr><th><font size="6" id="symbol-0">ใ</font></th><th id="leftmap-0">5 / G</th><th id="middlemap-0">0 / D</th><th id="rightmap-0">4 / G</th></tr>
+							<tr><th><font size="6" id="symbol-1">ɮ</font></th><th id="leftmap-1">4 / Z</th><th id="middlemap-1">0 / D</th><th id="rightmap-1">5 / R</th></tr>
+							<tr><th><font size="6" id="symbol-2">ʖ</font></th><th id="leftmap-2">0 / C</th><th id="middlemap-2">-1 / S</th><th id="rightmap-2">4 / O</th></tr>
+							<tr><th><font size="6" id="symbol-3">ฬ</font></th><th id="leftmap-3">0 / J</th><th id="middlemap-3">2 / X</th><th id="rightmap-3">5 / Y</th></tr>
+							<tr><th><font size="6" id="symbol-4">น</font></th><th id="leftmap-4">2 / V</th><th id="middlemap-4">1 / B</th><th id="rightmap-4">2 / L</th></tr>
+							<tr><th><font size="6" id="symbol-5">Þ</font></th><th id="leftmap-5">-2 / T</th><th id="middlemap-5">5 / L</th><th id="rightmap-5">5 / J</th></tr>
+							<tr><th><font size="6" id="symbol-6">ฏ</font></th><th id="leftmap-6">4 / L</th><th id="middlemap-6">1 / A</th><th id="rightmap-6">2 / O</th></tr>
+							<tr><th><font size="6" id="symbol-7">Ѩ</font></th><th id="leftmap-7">3 / G</th><th id="middlemap-7">5 / A</th><th id="rightmap-7">4 / S</th></tr>
+							<tr><th><font size="6" id="symbol-8">Ԉ</font></th><th id="leftmap-8">4 / F</th><th id="middlemap-8">4 / S</th><th id="rightmap-8">2 / M</th></tr>
+							<tr><th><font size="6" id="symbol-9">Ԓ</font></th><th id="leftmap-9">3 / P</th><th id="middlemap-9">2 / O</th><th id="rightmap-9">3 / F</th></tr>
+							<tr><th><font size="6" id="symbol-10">ด</font></th><th id="leftmap-10">-1 / K</th><th id="middlemap-10">3 / Q</th><th id="rightmap-10">4 / K</th></tr>
+							<tr><th><font size="6" id="symbol-11">ล</font></th><th id="leftmap-11">-1 / D</th><th id="middlemap-11">-2 / N</th><th id="rightmap-11">4 / L</th></tr>
+							<tr><th><font size="6" id="symbol-12">Ж</font></th><th id="leftmap-12">5 / Q</th><th id="middlemap-12">0 / O</th><th id="rightmap-12">5 / Z</th></tr>
 						</tbody></table>
 
 						<table class="repeaters-table"><tbody><tr><th>Result</th><th>Indicator</th></tr>
-							<tr><th>1</th><th>CLR</th></tr>
-							<tr><th>2</th><th>IND</th></tr>
-							<tr><th>3</th><th>TRN</th></tr>
-							<tr><th>4</th><th>FRK</th></tr>
-							<tr><th>5</th><th>CAR</th></tr>
-							<tr><th>6</th><th>FRQ</th></tr>
-							<tr><th>7</th><th>NSA</th></tr>
-							<tr><th>8</th><th>SIG</th></tr>
-							<tr><th>9</th><th>MSA</th></tr>
-							<tr><th>10</th><th>SND</th></tr>
-							<tr><th>11</th><th>BOB</th></tr>
+							<tr><th>1</th><th id="indicator-0">CLR</th></tr>
+							<tr><th>2</th><th id="indicator-1">IND</th></tr>
+							<tr><th>3</th><th id="indicator-2">TRN</th></tr>
+							<tr><th>4</th><th id="indicator-3">FRK</th></tr>
+							<tr><th>5</th><th id="indicator-4">CAR</th></tr>
+							<tr><th>6</th><th id="indicator-5">FRQ</th></tr>
+							<tr><th>7</th><th id="indicator-6">NSA</th></tr>
+							<tr><th>8</th><th id="indicator-7">SIG</th></tr>
+							<tr><th>9</th><th id="indicator-8">MSA</th></tr>
+							<tr><th>10</th><th id="indicator-9">SND</th></tr>
+							<tr><th>11</th><th id="indicator-10">BOB</th></tr>
 						</tbody></table>
 						
 						<p style="float:right; width: 44%; margin-right:4%;"></p>

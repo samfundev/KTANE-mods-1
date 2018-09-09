@@ -60,6 +60,7 @@ public class MultipleWidgets : MonoBehaviour
 
     public KMBombInfo Info;
     public AudioClip Notify;
+	public KMRuleSeedable RuleSeed;
     #endregion
 
     #region private variables
@@ -364,24 +365,47 @@ public class MultipleWidgets : MonoBehaviour
         return l[i];
     }
 
-    private void initDicts()
+    private void initDicts(MonoRandom rng)
     {
-        addSymbol('ใ', new int[] { 5, 0, 4 }, new char[] { 'G', 'D', 'G' });
-        addSymbol('ɮ', new int[] { 4, 0, 5 }, new char[] { 'Z', 'D', 'R' });
-        addSymbol('ʖ', new int[] { 0, -1, 4 }, new char[] { 'C', 'S', 'O' });
-        addSymbol('ฬ', new int[] { 0, 2, 5 }, new char[] { 'J', 'X', 'Y' });
-        addSymbol('น', new int[] { 2, 1, 2 }, new char[] { 'V', 'B', 'L' });
-        addSymbol('Þ', new int[] { -2, 5, 5 }, new char[] { 'T', 'L', 'J' });
-        addSymbol('ฏ', new int[] { 4, 1, 2 }, new char[] { 'L', 'A', 'O' });
-        addSymbol('Ѩ', new int[] { 3, 5, 4 }, new char[] { 'G', 'A', 'S' });
-        addSymbol('Ԉ', new int[] { 4, 4, 2 }, new char[] { 'F', 'S', 'M' });
-        addSymbol('Ԓ', new int[] { 3, 2, 3 }, new char[] { 'P', 'O', 'F' });
-        addSymbol('ด', new int[] { -1, 3, 4 }, new char[] { 'K', 'Q', 'K' });
-        addSymbol('ล', new int[] { -1, -2, 4 }, new char[] { 'D', 'N', 'L' });
-        addSymbol('Ж', new int[] { 5, 0, 5 }, new char[] { 'Q', 'O', 'Z' });
-        //addSymbol('Ⴟ', new int[] { 5, 5, 3 }, new char[] { 'W', 'M', 'C' });
+	    if (rng.Seed == 1)
+	    {
+		    addSymbol('ใ', new int[] {5, 0, 4}, new char[] {'G', 'D', 'G'});
+		    addSymbol('ɮ', new int[] {4, 0, 5}, new char[] {'Z', 'D', 'R'});
+		    addSymbol('ʖ', new int[] {0, -1, 4}, new char[] {'C', 'S', 'O'});
+		    addSymbol('ฬ', new int[] {0, 2, 5}, new char[] {'J', 'X', 'Y'});
+		    addSymbol('น', new int[] {2, 1, 2}, new char[] {'V', 'B', 'L'});
+		    addSymbol('Þ', new int[] {-2, 5, 5}, new char[] {'T', 'L', 'J'});
+		    addSymbol('ฏ', new int[] {4, 1, 2}, new char[] {'L', 'A', 'O'});
+		    addSymbol('Ѩ', new int[] {3, 5, 4}, new char[] {'G', 'A', 'S'});
+		    addSymbol('Ԉ', new int[] {4, 4, 2}, new char[] {'F', 'S', 'M'});
+		    addSymbol('Ԓ', new int[] {3, 2, 3}, new char[] {'P', 'O', 'F'});
+		    addSymbol('ด', new int[] {-1, 3, 4}, new char[] {'K', 'Q', 'K'});
+		    addSymbol('ล', new int[] {-1, -2, 4}, new char[] {'D', 'N', 'L'});
+		    addSymbol('Ж', new int[] {5, 0, 5}, new char[] {'Q', 'O', 'Z'});
+			//addSymbol('Ⴟ', new int[] { 5, 5, 3 }, new char[] { 'W', 'M', 'C' });
+		}
+		else
+	    {
+		    for (var index = 0; index < rng.Next(0, 25); index++)
+			    rng.NextDouble();
+		    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		    foreach (var c in "ใɮʖฬนÞฏѨԈԒดลЖႿ".OrderBy(x => rng.NextDouble()).Take(13))
+		    {
+			    var x = rng.Next(0, 8) - 2;
+			    var y = rng.Next(0, 8) - 2;
+			    var z = rng.Next(2, 6);
 
-        chars = new List<char>(answers.Keys);
+			    var i = alphabet[rng.Next(0, 26)];
+			    var j = alphabet[rng.Next(0, 26)];
+			    var k = alphabet[rng.Next(0, 26)];
+
+				addSymbol(c, new int[] {x, y, z}, new char[] {i, j, k} );
+		    }
+
+		    labels = labels.OrderBy(x => rng.NextDouble()).ToArray();
+	    }
+
+	    chars = new List<char>(answers.Keys);
     }
 
     private string getIndicator(int i, string secondary)
@@ -399,7 +423,7 @@ public class MultipleWidgets : MonoBehaviour
 
     private void setSolution()
     {
-        initDicts();
+        initDicts(RuleSeed.GetRNG());
         if (lastTime != (int)Time.realtimeSinceStartup)
         {
             modules = 0;
