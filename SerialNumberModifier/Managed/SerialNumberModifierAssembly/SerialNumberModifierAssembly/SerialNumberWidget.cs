@@ -9,7 +9,9 @@ public class SerialNumberWidget : Widget
     public List<SerialNumberTag> Tags;
     private SerialNumberTag _tag;
 
+
     private string _serialNumber = string.Empty;
+    private string _tagSerial = string.Empty;
 
     private void Awake()
     {
@@ -42,10 +44,17 @@ public class SerialNumberWidget : Widget
         _serialNumber += letters.Substring(Random.Range(0, letters.Length), 1);
         _serialNumber += letters.Substring(Random.Range(0, letters.Length), 1);
         _serialNumber += digits.Substring(Random.Range(0, digits.Length), 1);
-        Debug.LogFormat("[SerialNumber] Randomizing Serial Number: {0}", _serialNumber);
 
         DebugLog("Picking a random tag");
         _tag = Tags[Random.Range(0, Tags.Count)];
+        _tagSerial = SetTagSerialNumber();
+
+        //if (_tag.name.Equals("Vanilla Serial Number"))
+            Debug.LogFormat("[SerialNumber] Randomizing Serial Number: {0}", _serialNumber);
+        //else
+        //    DebugLog($"Tag: [{_tag.name}] BaseSerial: [{_serialNumber}] TagFormattedSerial: [{_tagSerial}]");
+
+        
 
         DebugLog("Hiding all unused tags");
         foreach (var t in Tags)
@@ -63,7 +72,7 @@ public class SerialNumberWidget : Widget
 
         DebugLog("Setting serial number text if allowed to do so before lights go on");
         WriteTextMesh(settings.ShowSerialNumberBeforeLightsTurnOn 
-            ? SetTagSerialNumber() 
+            ? _tagSerial
             : string.Empty);
     }
 
@@ -128,7 +137,7 @@ public class SerialNumberWidget : Widget
     {
         DebugLog("Now showing the serial number if it is not already shown");
         if(!SerialNumberModifier.Settings.Settings.ShowSerialNumberBeforeLightsTurnOn)
-            WriteTextMesh(SetTagSerialNumber());
+            WriteTextMesh(_tagSerial);
     }
 
     public override string GetQueryResponse(string queryKey, string queryInfo)

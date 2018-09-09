@@ -99,6 +99,7 @@ namespace SerialNumberModifierAssembly
                     DebugLog("Capturing original serial number widget");
                     var newsnw = Object.Instantiate(osnw, Vector3.zero, Quaternion.identity, SerialNumberWidget.transform);
                     var osnwt = newsnw.transform;
+                    osnwt.name = "Vanilla Serial Number";
                     var tag = osnwt.gameObject.AddComponent<SerialNumberTag>();
                     tag.SerialNumber = newsnw.SerialTextMesh;
                     Object.DestroyImmediate(newsnw, false);
