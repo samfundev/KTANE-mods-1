@@ -40,14 +40,15 @@ namespace SerialNumberModifierAssembly
             for (var i = 0; i < serialnumberWidget.Tags.Count; i++)
             {
                 var t = serialnumberWidget.Tags[i];
-                if (t.SerialNumber == null)
+                t.gameObject.SetActive(false);
+
+                if (t.SerialNumber == null && (t.TextMeshes == null || t.TextMeshes.Length == 0))
                 {
                     serialnumberWidget.Tags.Remove(t);
                     i--;
                     continue;
                 }
 
-                t.gameObject.SetActive(false);
                 t.Screws = t.Screws == null 
                     ? new Transform[0] 
                     : t.Screws.Where(x => x != null).Select(x => x).ToArray();

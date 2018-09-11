@@ -56,6 +56,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LicensePlates.cs" />
     <Compile Include="PropertiesBehaviour.cs" />
     <Compile Include="ReflectionHelper.cs" />
     <Compile Include="ConvertedTypes.cs" />

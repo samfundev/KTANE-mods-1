@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: bd4116f69cb777b46b52594b012f7f2c
+timeCreated: 1536554786
+licenseType: Pro
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: License Plate
+  fontNames:
+  - License Plate
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
