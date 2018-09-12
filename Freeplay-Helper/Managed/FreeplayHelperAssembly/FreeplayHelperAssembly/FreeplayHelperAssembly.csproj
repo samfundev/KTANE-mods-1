@@ -54,4 +54,7 @@
     <Compile Include="ReflectionHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(TargetPath)" "H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods\FreeplayTimerModuleHelper"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

@@ -6,21 +6,15 @@ using UnityEngine;
     {
         private static GameObject _gameObject;
 
-        private static IDictionary<string, object> Properties
-        {
-            get
-            {
-                return _gameObject == null
-                    ? null
-                    : _gameObject.GetComponent<IDictionary<string, object>>();
-            }
-        }
+        private static IDictionary<string, object> Properties => _gameObject == null
+            ? null
+            : _gameObject.GetComponent<IDictionary<string, object>>();
 
         //Call this in KMGameState.Setup
         public static IEnumerator Refresh()
         {
-            _gameObject = GameObject.Find("MultipleBombs_Info");
-            for (var i = 0; i < 120 && _gameObject == null; i++)
+            _gameObject = null;
+            for (var i = 0; i < 4 && _gameObject == null; i++)
             {
                 _gameObject = GameObject.Find("MultipleBombs_Info");
                 yield return null;
@@ -36,9 +30,7 @@ using UnityEngine;
         {
             try
             {
-                return Properties != null
-                    ? (int) Properties[MaxBombCount]
-                    : 1;
+                return (int?) Properties?[MaxBombCount] ?? 1;
             }
             catch
             {
@@ -50,9 +42,7 @@ using UnityEngine;
         {
             try
             {
-                return Properties != null
-                    ? (int) Properties[BombCount]
-                    : 1;
+                return (int?) Properties?[BombCount] ?? 1;
             }
             catch
             {

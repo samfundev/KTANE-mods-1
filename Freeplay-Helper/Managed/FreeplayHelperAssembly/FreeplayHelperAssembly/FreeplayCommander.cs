@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Reflection;
+using DarkTonic.MasterAudio;
 using UnityEngine;
 
 public class FreeplayCommander
@@ -29,6 +31,29 @@ public class FreeplayCommander
         SelectableChildren = Selectable.Children;
         FloatingHoldable = FreeplayDevice.GetComponent<FloatingHoldable>();
         _selectableManager = KTInputManager.Instance.SelectableManager;
+        
+
+        _oringinalTimeIncrementHandler = FreeplayDevice.TimeIncrement.OnPush;
+        _originalTimeDecrementHandler = FreeplayDevice.TimeDecrement.OnPush;
+        _originalModuleIncrementHandler = FreeplayDevice.ModuleCountIncrement.OnPush;
+        _originalModuleDecrementHandler = FreeplayDevice.ModuleCountDecrement.OnPush;
+
+        FreeplayDevice.TimeIncrement.OnPush = () => { FreeplayDevice.StartCoroutine(IncrementBombTimer()); };
+        FreeplayDevice.TimeDecrement.OnPush = () => { FreeplayDevice.StartCoroutine(DecrementBombTimer()); };
+        FreeplayDevice.ModuleCountIncrement.OnPush = () => { FreeplayDevice.StartCoroutine(IncrementModuleCount()); };
+        FreeplayDevice.ModuleCountDecrement.OnPush = () => { FreeplayDevice.StartCoroutine(DecrementModuleCount()); };
+
+        if (!MultipleBombs.Installed())
+            return;
+
+        _bombsIncrementButton = SelectableChildren[3].GetComponent<KeypadButton>();
+        _bombsDecrementButton = SelectableChildren[2].GetComponent<KeypadButton>();
+
+        _originalBombIncrementHandler = _bombsIncrementButton.OnPush;
+        _originalBombDecrementHandler = _bombsDecrementButton.OnPush;
+
+        _bombsIncrementButton.OnPush = () => { FreeplayDevice.StartCoroutine(IncrementBombCount()); };
+        _bombsDecrementButton.OnPush = () => { FreeplayDevice.StartCoroutine(DecrementBombCount()); };
     }
     #endregion
 
@@ -87,13 +112,16 @@ public class FreeplayCommander
             switch (_index)
             {
                 case freeplaySelection.Timer:
-                    handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementBombTimer() : IncrementBombTimer();
+                    //handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementBombTimer() : IncrementBombTimer();
+                    SelectObject(Input.GetKeyDown(KeyCode.LeftArrow) ? FreeplayDevice.TimeDecrement : FreeplayDevice.TimeIncrement);
                     break;
                 case freeplaySelection.Bombs:
-                    handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementBombCount() : IncrementBombCount();
+                    //handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementBombCount() : IncrementBombCount();
+                    SelectObject(Input.GetKeyDown(KeyCode.LeftArrow) ? _bombsDecrementButton : _bombsIncrementButton);
                     break;
                 case freeplaySelection.Modules:
-                    handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementModuleCount() : IncrementModuleCount();
+                    //handler = Input.GetKeyDown(KeyCode.LeftArrow) ? DecrementModuleCount() : IncrementModuleCount();
+                    SelectObject(Input.GetKeyDown(KeyCode.LeftArrow) ? FreeplayDevice.ModuleCountDecrement : FreeplayDevice.ModuleCountIncrement);
                     break; 
                 case freeplaySelection.Needy:
                     handler = SetNeedy();
@@ -228,27 +256,35 @@ public class FreeplayCommander
     private static float Acceleration = 0.005f;
     private static float minDelay = 0.01f;
 
+    public bool IsHeld(KeypadButton button)
+    {
+        return (bool)(typeof(KeypadButton).GetField("isBeingPushed", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(button) ?? false);
+    }
+
     public IEnumerator IncrementBombTimer()
     {
         var button = FreeplayDevice.TimeIncrement;
-        var buttonSelectable = button.GetComponent<Selectable>();
         float delay = startDelay;
-        while (Input.GetKey(KeyCode.RightArrow))
+        while (Input.GetKey(KeyCode.RightArrow) || IsHeld(button))
         {
-            SelectObject(buttonSelectable);
+                MasterAudio.PlaySound3DFollowTransformAndForget("singlebeep", FreeplayDevice.transform, 1f, null, 0f, null);
+                _oringinalTimeIncrementHandler.Invoke();
+
             yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
             delay -= Acceleration;
         }
     }
 
+
+
     public IEnumerator DecrementBombTimer()
     {
         var button = FreeplayDevice.TimeDecrement;
-        var buttonSelectable = button.GetComponent<Selectable>();
         float delay = startDelay;
-        while (Input.GetKey(KeyCode.LeftArrow))
+        while (Input.GetKey(KeyCode.LeftArrow) || IsHeld(button))
         {
-            SelectObject(buttonSelectable);
+                MasterAudio.PlaySound3DFollowTransformAndForget("singlebeep", FreeplayDevice.transform, 1f, null, 0f, null);
+                _originalTimeDecrementHandler.Invoke();
             yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
             delay -= Acceleration;
         }
@@ -257,11 +293,11 @@ public class FreeplayCommander
     public IEnumerator IncrementModuleCount()
     {
         var button = FreeplayDevice.ModuleCountIncrement;
-        var buttonSelectable = button.GetComponent<Selectable>();
         float delay = startDelay;
-        while (Input.GetKey(KeyCode.RightArrow))
+        while (Input.GetKey(KeyCode.RightArrow) || IsHeld(button))
         {
-            SelectObject(buttonSelectable);
+                MasterAudio.PlaySound3DFollowTransformAndForget("singlebeep", FreeplayDevice.transform, 1f, null, 0f, null);
+                _originalModuleIncrementHandler.Invoke();
             yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
             delay -= Acceleration;
         }
@@ -270,11 +306,11 @@ public class FreeplayCommander
     public IEnumerator DecrementModuleCount()
     {
         var button = FreeplayDevice.ModuleCountDecrement;
-        var buttonSelectable = button.GetComponent<Selectable>();
         float delay = startDelay;
-        while (Input.GetKey(KeyCode.LeftArrow))
+        while (Input.GetKey(KeyCode.LeftArrow) || IsHeld(button))
         {
-            SelectObject(buttonSelectable);
+                MasterAudio.PlaySound3DFollowTransformAndForget("singlebeep", FreeplayDevice.transform, 1f, null, 0f, null);
+                _originalModuleDecrementHandler.Invoke();
             yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
             delay -= Acceleration;
         }
@@ -282,12 +318,13 @@ public class FreeplayCommander
 
     public IEnumerator IncrementBombCount()
     {
-        if (!MultipleBombs.Installed())
-            yield break;
+        var button = _bombsIncrementButton;
+
         float delay = startDelay;
-        while (Input.GetKey(KeyCode.RightArrow))
+        while (Input.GetKey(KeyCode.RightArrow) || IsHeld(button))
         {
-            SelectObject(SelectableChildren[3]);
+                MasterAudio.PlaySound3DFollowTransformAndForget("singlebeep", FreeplayDevice.transform, 1f, null, 0f, null);
+                _originalBombIncrementHandler.Invoke();
             yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
             delay -= Acceleration;
         }
@@ -295,12 +332,13 @@ public class FreeplayCommander
 
     public IEnumerator DecrementBombCount()
     {
-        if (!MultipleBombs.Installed())
-            yield break;
+        var button = _bombsDecrementButton;
+
         float delay = startDelay;
-        while (Input.GetKey(KeyCode.LeftArrow))
+        while (Input.GetKey(KeyCode.LeftArrow) || IsHeld(button))
         {
-            SelectObject(SelectableChildren[2]);
+                MasterAudio.PlaySound3DFollowTransformAndForget("singlebeep", FreeplayDevice.transform, 1f, null, 0f, null);
+                _originalBombDecrementHandler.Invoke();
             yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
             delay -= Acceleration;
         }
@@ -313,9 +351,7 @@ public class FreeplayCommander
         bool hasNeedy = currentSettings.HasNeedy;
         if (hasNeedy != on)
         {
-            MonoBehaviour needyToggle = FreeplayDevice.NeedyToggle;
-            //_toggleMethod.Invoke(needyToggle, null);
-            SelectObject( needyToggle.GetComponent<Selectable>() );
+            SelectObject(FreeplayDevice.NeedyToggle);
 
         }
         yield return null;
@@ -328,9 +364,7 @@ public class FreeplayCommander
         bool isHardcore = currentSettings.IsHardCore;
         if (isHardcore != on)
         {
-            MonoBehaviour hardcoreToggle = FreeplayDevice.HardcoreToggle;
-            //_toggleMethod.Invoke(hardcoreToggle, null);
-            SelectObject( hardcoreToggle.GetComponent<Selectable>() );
+            SelectObject(FreeplayDevice.HardcoreToggle);
         }
         yield return null;
     }
@@ -342,17 +376,14 @@ public class FreeplayCommander
         bool onlyMods = currentSettings.OnlyMods;
         if (onlyMods != on)
         {
-            MonoBehaviour modsToggle = FreeplayDevice.ModsOnly;
-            //_toggleMethod.Invoke(modsToggle, null);
-            SelectObject( modsToggle.GetComponent<Selectable>() );
+            SelectObject(FreeplayDevice.ModsOnly);
         }
         yield return null;
     }
 
     public void StartBomb()
     {
-        MonoBehaviour startButton = FreeplayDevice.StartButton;
-        SelectObject( startButton.GetComponent<Selectable>() );
+        SelectObject(FreeplayDevice.StartButton);
     }
 
     public IEnumerator HoldFreeplayDevice()
@@ -379,6 +410,11 @@ public class FreeplayCommander
         {
             DeselectObject(Selectable);
         }
+    }
+
+    private void SelectObject(MonoBehaviour selectable)
+    {
+        SelectObject(selectable.GetComponent<Selectable>());
     }
 
     private void SelectObject(Selectable selectable)
@@ -415,6 +451,16 @@ public class FreeplayCommander
     }
 
     #endregion
+
+    private readonly PushEvent _oringinalTimeIncrementHandler;
+    private readonly PushEvent _originalTimeDecrementHandler;
+    private readonly PushEvent _originalModuleIncrementHandler;
+    private readonly PushEvent _originalModuleDecrementHandler;
+
+    private readonly KeypadButton _bombsIncrementButton;
+    private readonly KeypadButton _bombsDecrementButton;
+    private readonly PushEvent _originalBombIncrementHandler;
+    private readonly PushEvent _originalBombDecrementHandler;
 
     #region Readonly Fields
     public readonly FreeplayDevice FreeplayDevice = null;

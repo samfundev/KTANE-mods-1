@@ -61,6 +61,7 @@ public class FreePlayHelper : MonoBehaviour
     private IEnumerator CheckForFreeplayDevice()
     {
         yield return null;
+        yield return null;
         DebugLog("Attempting to find Freeplay device");
         
         IEnumerator multipleBombs = MultipleBombs.Refresh();
