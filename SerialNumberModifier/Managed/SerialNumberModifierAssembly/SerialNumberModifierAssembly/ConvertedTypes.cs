@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -9,10 +8,6 @@ namespace SerialNumberModifierAssembly
 {
     public static class CommonReflectedTypeInfo
     {
-        static CommonReflectedTypeInfo()
-        {
-        }
-
         public static void DebugLog(string message, params object[] args)
         {
             var debugstring = $"[Serial Number Modifier] {message}";

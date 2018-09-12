@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using System.IO;
-using SerialNumberModifierAssembly;
-using VanillaRuleModifierAssembly;
+﻿using UnityEngine;
 using static SerialNumberModifierAssembly.CommonReflectedTypeInfo;
 using Settings = SerialNumberModifierAssembly.ModSettings;
 
@@ -11,10 +6,10 @@ using Settings = SerialNumberModifierAssembly.ModSettings;
 // ReSharper disable once CheckNamespace
 public class SerialNumberModifier : MonoBehaviour
 {
-    private KMGameInfo _gameInfo = null;
-    public Settings _modSettings;
+    private KMGameInfo _gameInfo;
+    private Settings _modSettings;
 
-    private bool _started = false;
+    private bool _started;
     private void Start ()
     {
         _started = true;
@@ -73,6 +68,7 @@ public class SerialNumberModifier : MonoBehaviour
 
     private void UnloadMod()
     {
+        // ReSharper disable once DelegateSubtraction
         _gameInfo.OnStateChange -= OnStateChange;
         _enabled = false;
 

@@ -4,9 +4,10 @@ using Newtonsoft.Json;
 using UnityEngine;
 using static SerialNumberModifierAssembly.CommonReflectedTypeInfo;
 
+// ReSharper disable once CheckNamespace
 public class SerialNumberWidget : Widget
 {
-    public Transform OriginalSerialNumberWidgetCaptured = null;
+    public Transform OriginalSerialNumberWidgetCaptured;
     public List<SerialNumberTag> Tags;
     private SerialNumberTag _tag;
 
@@ -195,6 +196,7 @@ public class SerialNumberWidget : Widget
     public override void Activate()
     {
         _activated = true;
+        base.Activate();
     }
 
     public override string GetQueryResponse(string queryKey, string queryInfo)

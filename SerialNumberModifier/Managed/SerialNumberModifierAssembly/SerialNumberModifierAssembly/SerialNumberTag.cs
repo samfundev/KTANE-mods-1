@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using Random = System.Random;
 
 // ReSharper disable once CheckNamespace
 public class SerialNumberTag : MonoBehaviour
@@ -11,7 +8,7 @@ public class SerialNumberTag : MonoBehaviour
     //public Transform Cube;
     //public TextMesh Description;
     public string ForcedLetterNumberExclusions;
-    public UnityEngine.Object SerialNumber;
+    public Object SerialNumber;
     public TextMesh[] TextMeshes;
     public Transform[] Screws;
     public float UnscrewOffset;
