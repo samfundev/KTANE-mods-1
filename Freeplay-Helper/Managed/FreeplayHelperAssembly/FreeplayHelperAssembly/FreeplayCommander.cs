@@ -4,11 +4,12 @@ using System.Reflection;
 using DarkTonic.MasterAudio;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 public class FreeplayCommander
 {
     public static void DebugLog(string message, params object[] args) { FreePlayHelper.DebugLog(message, args); }
 
-    public enum freeplaySelection
+    public enum FreeplaySelection
     {
         Timer = 0,
         Bombs,
@@ -54,12 +55,12 @@ public class FreeplayCommander
 
     #region Helper Methods
 
-    private freeplaySelection _index = freeplaySelection.Timer;
+    private FreeplaySelection _index = FreeplaySelection.Timer;
 
     public bool UpdateHeldState()
     {
         var state = FloatingHoldable.HoldState == FloatingHoldable.HoldStateEnum.Held;
-        if (!state) _index = freeplaySelection.Timer;
+        if (!state) _index = FreeplaySelection.Timer;
         return state;
     }
 
@@ -83,20 +84,20 @@ public class FreeplayCommander
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             _index--;
-            if (_index == freeplaySelection.Bombs && !MultipleBombs.Installed())
-                _index = freeplaySelection.Timer;
-            if (_index < freeplaySelection.Timer)
-                _index = freeplaySelection.ModsOnly;
+            if (_index == FreeplaySelection.Bombs && !MultipleBombs.Installed())
+                _index = FreeplaySelection.Timer;
+            if (_index < FreeplaySelection.Timer)
+                _index = FreeplaySelection.ModsOnly;
             ToggleIndex();
             yield break;
         }
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             _index++;
-            if (_index == freeplaySelection.Bombs && !MultipleBombs.Installed())
-                _index = freeplaySelection.Modules;
-            if (_index > freeplaySelection.ModsOnly)
-                _index = freeplaySelection.Timer;
+            if (_index == FreeplaySelection.Bombs && !MultipleBombs.Installed())
+                _index = FreeplaySelection.Modules;
+            if (_index > FreeplaySelection.ModsOnly)
+                _index = FreeplaySelection.Timer;
             ToggleIndex();
             yield break;
         }
@@ -107,22 +108,22 @@ public class FreeplayCommander
         IEnumerator handler = null;
         switch (_index)
         {
-            case freeplaySelection.Timer:
+            case FreeplaySelection.Timer:
                 SelectObject(Input.GetKeyDown(KeyCode.LeftArrow) ? FreeplayDevice.TimeDecrement : FreeplayDevice.TimeIncrement);
                 break;
-            case freeplaySelection.Bombs:
+            case FreeplaySelection.Bombs:
                 SelectObject(Input.GetKeyDown(KeyCode.LeftArrow) ? _bombsDecrementButton : _bombsIncrementButton);
                 break;
-            case freeplaySelection.Modules:
+            case FreeplaySelection.Modules:
                 SelectObject(Input.GetKeyDown(KeyCode.LeftArrow) ? FreeplayDevice.ModuleCountDecrement : FreeplayDevice.ModuleCountIncrement);
                 break; 
-            case freeplaySelection.Needy:
+            case FreeplaySelection.Needy:
                 handler = SetNeedy();
                 break;
-            case freeplaySelection.Hardcore:
+            case FreeplaySelection.Hardcore:
                 handler = SetHardcore();
                 break;
-            case freeplaySelection.ModsOnly:
+            case FreeplaySelection.ModsOnly:
                 handler = SetModsOnly();
                 break;
             default:
@@ -145,7 +146,7 @@ public class FreeplayCommander
         var onlyMods = currentSettings.OnlyMods;
         switch (_index)
         {
-            case freeplaySelection.Timer:
+            case FreeplaySelection.Timer:
                 try
                 {
                     SelectObject(FreeplayDevice.TimeIncrement);
@@ -158,7 +159,7 @@ public class FreeplayCommander
                     DebugLog("Failed to Select the Timer buttons due to Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
                 }
                 break;
-            case freeplaySelection.Bombs:
+            case FreeplaySelection.Bombs:
                 try
                 {
                     if (!MultipleBombs.Installed())
@@ -174,7 +175,7 @@ public class FreeplayCommander
                     DebugLog("Failed to Select the Bomb count buttons due to Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
                 }
                 break;
-            case freeplaySelection.Modules:
+            case FreeplaySelection.Modules:
                 try
                 {
                     SelectObject(FreeplayDevice.ModuleCountIncrement);
@@ -187,7 +188,7 @@ public class FreeplayCommander
                     DebugLog("Failed to Select the Module count buttons due to Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
                 }
                 break;
-            case freeplaySelection.Needy:
+            case FreeplaySelection.Needy:
                 try
                 {
                     SelectObject(FreeplayDevice.NeedyToggle);
@@ -198,7 +199,7 @@ public class FreeplayCommander
                     DebugLog("Failed to Select the Needy toggle due to Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
                 }
                 break;
-            case freeplaySelection.Hardcore:
+            case FreeplaySelection.Hardcore:
                 try
                 {
                     SelectObject(FreeplayDevice.HardcoreToggle);
@@ -209,7 +210,7 @@ public class FreeplayCommander
                     DebugLog("Failed to Select the Hardcore toggle due to Exception: {0}, Stack Trace: {1}", ex.Message, ex.StackTrace);
                 }
                 break;
-            case freeplaySelection.ModsOnly:
+            case FreeplaySelection.ModsOnly:
                 try
                 {
                     SelectObject(FreeplayDevice.ModsOnly);
@@ -219,13 +220,13 @@ public class FreeplayCommander
                     {
                         if (Input.GetKey(KeyCode.DownArrow))
                         {
-                            _index = freeplaySelection.Timer;
-                            goto case freeplaySelection.Timer;
+                            _index = FreeplaySelection.Timer;
+                            goto case FreeplaySelection.Timer;
                         }
                         else
                         {
-                            _index = freeplaySelection.Hardcore;
-                            goto case freeplaySelection.Hardcore;
+                            _index = FreeplaySelection.Hardcore;
+                            goto case FreeplaySelection.Hardcore;
                         }
                     }
                 }
@@ -253,7 +254,7 @@ public class FreeplayCommander
         var delay = startDelay;
         while (Input.GetKey(keyCode) || IsHeld(button))
         {
-            MasterAudio.PlaySound3DFollowTransformAndForget("singlebeep", FreeplayDevice.transform, 1f, null, 0f, null);
+            MasterAudio.PlaySound3DFollowTransformAndForget("singlebeep", FreeplayDevice.transform, 1f, null);
             handler.Invoke();
 
             yield return new WaitForSeconds(Mathf.Max(delay, minDelay));
@@ -334,10 +335,10 @@ public class FreeplayCommander
     private readonly PushEvent _originalBombDecrementHandler;
 
     #region Readonly Fields
-    public readonly FreeplayDevice FreeplayDevice = null;
-    public Selectable Selectable = null;
-    public readonly FloatingHoldable FloatingHoldable = null;
-    private readonly SelectableManager _selectableManager = null;
+    public readonly FreeplayDevice FreeplayDevice;
+    public Selectable Selectable;
+    public readonly FloatingHoldable FloatingHoldable;
+    private readonly SelectableManager _selectableManager;
     #endregion
 }
 

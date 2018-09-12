@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-    public class MultipleBombs
+// ReSharper disable once CheckNamespace
+public class MultipleBombs
     {
         private static GameObject _gameObject;
 

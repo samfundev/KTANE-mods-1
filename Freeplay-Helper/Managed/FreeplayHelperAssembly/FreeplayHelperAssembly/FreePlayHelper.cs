@@ -1,14 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// ReSharper disable once UnusedMember.Global
 // ReSharper disable once CheckNamespace
 public class FreePlayHelper : MonoBehaviour
 {
-
-    private FreeplayCommander _freeplayCommander = null;
-    private KMGameInfo _gameInfo = null;
-    private KMGameInfo.State _state;
+    private FreeplayCommander _freeplayCommander;
+    private KMGameInfo _gameInfo;
 
     public static void DebugLog(string message, params object[] args)
     {
@@ -25,7 +22,7 @@ public class FreePlayHelper : MonoBehaviour
 	}
 	
 	// Update is called once per frame
-    private IEnumerator _handler = null;
+    private IEnumerator _handler;
 	void Update ()
 	{
 	    if (_freeplayCommander == null) return;
@@ -64,13 +61,13 @@ public class FreePlayHelper : MonoBehaviour
         yield return null;
         DebugLog("Attempting to find Freeplay device");
         
-        IEnumerator multipleBombs = MultipleBombs.Refresh();
+        var multipleBombs = MultipleBombs.Refresh();
         while (multipleBombs.MoveNext())
             yield return multipleBombs.Current;
         if (MultipleBombs.Installed())
             DebugLog("Multiple Bombs is also installed");
 
-        SetupRoom setupRoom = (SetupRoom)SceneManager.Instance.CurrentRoom;
+        var setupRoom = (SetupRoom)SceneManager.Instance.CurrentRoom;
         _freeplayCommander = new FreeplayCommander(setupRoom.FreeplayDevice);
     }
 }
