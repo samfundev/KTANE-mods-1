@@ -3,16 +3,12 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Assets.Scripts;
-using Assets.Scripts.RuleGenerator;
+using RuleGenerator;
 using Random = UnityEngine.Random;
 
-// ReSharper disable once CheckNamespace
-[RummageNoRename]
 public class MorseAMaze : MonoBehaviour
 {
     public FakeStatusLight FakeStatusLight;
@@ -38,10 +34,12 @@ public class MorseAMaze : MonoBehaviour
     public KMModSettings ModSettings;
 	public KMRuleSeedable RuleSeed;
 
+	public CoroutineQueue Movements;
+
 	private Transform _currentLocation;
     private Transform _destination;
 
-    private CoroutineQueue _movements;
+    
     private bool _solved;
     private bool _strikePending;
     private int _maze;
@@ -49,8 +47,10 @@ public class MorseAMaze : MonoBehaviour
     private string _souvenirQuestionStartingLocation;
     private string _souvenirQuestionEndingLocation;
     private string _souvenirQuestionWordPlaying;
+	private string[] _souvenirQuestionWordList;
 
-    private ModSettings _modSettings;
+
+	private ModSettings _modSettings;
 
     private enum EdgeworkRules
     {
@@ -132,16 +132,12 @@ public class MorseAMaze : MonoBehaviour
 	}
 
     // Use this for initialization
-    // ReSharper disable once UnusedMember.Local
-    [RummageNoRename]
-    [RummageNoMarkPublic]
     private void Start()
     {
 		MorseAMazeRuleGenerator.GenerateRules(RuleSeed.GetRNG());
         StartCoroutine(TwitchPlays.Refresh());
         _modSettings = new ModSettings(BombModule);
         _modSettings.ReadSettings();
-        _movements = gameObject.AddComponent<CoroutineQueue>();
         BombModule.GenerateLogFriendlyName();
         
 	    Locations.Shuffle();
@@ -267,7 +263,7 @@ public class MorseAMaze : MonoBehaviour
                 BombModule.LogFormat("Setting the status light to its normal Green color for solved.");
                 FakeStatusLight.HandlePass(StatusLightState.Green);
                 break;
-            case StatusLightState.Off:
+            //case StatusLightState.Off:
             default:
                 BombModule.LogFormat("Turning off the Status light. Kappa");
                 FakeStatusLight.HandlePass();
@@ -395,15 +391,16 @@ public class MorseAMaze : MonoBehaviour
     {
         BombModule.LogFormat("Instantly solving the module because the following error happened:");
         BombModule.LogFormat(reason, args);
-        _movements.CancelFutureSubcoroutines();
-        _movements.StopQueue();
+        Movements.CancelFutureSubcoroutines();
+        Movements.StopQueue();
 
         //Kill the Souvenir questions because of crash. This will make Souvenir ignore this Morse-A-Maze instance.
         _souvenirQuestionEndingLocation = null;
         _souvenirQuestionStartingLocation = null;
         _souvenirQuestionWordPlaying = null;
+	    _souvenirQuestionWordList = null;
 
-        _solved = true;
+		_solved = true;
         if (!FakeStatusLight.HasFakeStatusLightFailed)
         {
             StartCoroutine(MoveStatusLightToCorner());
@@ -565,12 +562,12 @@ public class MorseAMaze : MonoBehaviour
     {
         if (wall != null)
         {
-            _movements.AddToQueue(GiveStrike(wall, _currentLocation, newLocation));
+            Movements.AddToQueue(GiveStrike(wall, _currentLocation, newLocation));
             _strikePending = true;
             return false;
         }
 
-        _movements.AddToQueue(MoveToLocation(newLocation, _currentLocation));
+        Movements.AddToQueue(MoveToLocation(newLocation, _currentLocation));
         _currentLocation = newLocation;
         _solved |= GetCoordinates(newLocation) == GetCoordinates(_destination);
         return true;
@@ -648,11 +645,13 @@ public class MorseAMaze : MonoBehaviour
         Right.OnInteract += delegate { MoveRight(); return false; };
  
         
-        _rule = Random.Range(0, MorseAMazeRuleGenerator.Words.Count);
-        //if (BombModule.GetIDNumber() == 1)
-        //    _rule = _edgeworkRules.ToList().IndexOf(EdgeworkRules.Strikes);
+        
+	    _souvenirQuestionWordList = MorseAMazeRuleGenerator.Words.ToArray();
+	    _rule = Random.Range(0, _souvenirQuestionWordList.Length);
+		//if (BombModule.GetIDNumber() == 1)
+		//    _rule = _edgeworkRules.ToList().IndexOf(EdgeworkRules.Strikes);
 
-        _unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2 && BombInfo.GetBatteryHolderCount() == 3;
+		_unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2 && BombInfo.GetBatteryHolderCount() == 3;
         _souvenirQuestionWordPlaying = MorseAMazeRuleGenerator.Words[_rule];
 
         StartCoroutine(PlayWordLocation(_souvenirQuestionWordPlaying));
@@ -940,10 +939,9 @@ public class MorseAMaze : MonoBehaviour
     }
 
 #region TwitchPlays
-    private bool _forcedSolve = false;
+    private bool _forcedSolve;
     private string _forcedSolvePassword = "pYLlHFWNQAoJkxlnygZV1GOUzxAonEaAu9k3Mk0EoHJZLbCWfC6YmgLC78BTj4f";
 
-    [RummageNoRename]
     private IEnumerator TwitchHandleForcedSolve()
     {
         _forcedSolve = true;
@@ -959,21 +957,22 @@ public class MorseAMaze : MonoBehaviour
             }
         }
 
-        while (_movements.Processing)
+        while (Movements.Processing)
             yield return null;
     }
 
 #pragma warning disable 414
-    // ReSharper disable InconsistentNaming
-    [RummageNoRename]
-    private string TwitchManualCode = "Morse-A-Maze";
+	// ReSharper disable InconsistentNaming
+	// ReSharper disable UnusedMember.Global
+	[NonSerialized]
+	public string TwitchManualCode = "Morse-A-Maze";
 
-    [RummageNoRename]
-    private string TwitchHelpMessage = "!{0} move up down left right, !{0} move north east west south, !{0} move udlr or !{0} move news [make a series of status light moves]. Use !{0} colorcommands to see color changing commands. Enable colorblind mode with !{0} colorblind. If you wish to be silly, you can make a fake strike with !{0} fakestrike";
-    // ReSharper restore InconsistentNaming
+    [NonSerialized]
+    public string TwitchHelpMessage = "!{0} move up down left right, !{0} move north east west south, !{0} move udlr or !{0} move news [make a series of status light moves]. Use !{0} colorcommands to see color changing commands. Enable colorblind mode with !{0} colorblind. If you wish to be silly, you can make a fake strike with !{0} fakestrike";
+	// ReSharper restore InconsistentNaming
+	// ReSharper restore UnusedMember.Global
 #pragma warning restore 414
 
-    [RummageNoRename]
     private IEnumerator ProcessTwitchCommand(string command)
     {
         var originalCommand = command;
@@ -1143,12 +1142,12 @@ public class MorseAMaze : MonoBehaviour
         }
 
         yield return null;
-        if (matches.Count > 35 || _movements.Processing)
+        if (matches.Count > 35 || Movements.Processing)
         {
             yield return "elevator music";
         }
 
-        while (_movements.Processing)
+        while (Movements.Processing)
         {
             if (forcedSolve)
                 yield return true;
@@ -1167,7 +1166,7 @@ public class MorseAMaze : MonoBehaviour
             moved = true;
 	        if (!safe)
 	        {
-		        while (_movements.Processing)
+		        while (Movements.Processing)
 		        {
 			        yield return "trycancel";
 			        yield return new WaitForSeconds(0.1f);
@@ -1222,20 +1221,18 @@ public class MorseAMaze : MonoBehaviour
     }
     #endregion
 
-    // ReSharper disable once UnusedMember.Local
-    [RummageNoRename]
     private void Update ()
     {
-        if (_movements == null)
-        {
-            StartCoroutine(InstantlySolveModule("Module failed to Initialize"));
-            _movements = new CoroutineQueue();
-        }
-        if (_movements.Processing) return;
-        if (_solved) return;
-        
-	    // ReSharper disable once SwitchStatementMissingSomeCases
-	    switch (_edgeworkRules[_rule])
+	    if (Movements == null)
+	    {
+		    StartCoroutine(InstantlySolveModule("Module failed to Initialize"));
+		    return;
+	    }
+	    if (Movements.Processing) return;
+	    if (_solved) return;
+
+		// ReSharper disable once SwitchStatementMissingSomeCases
+		switch (_edgeworkRules[_rule])
 	    {
 	        case EdgeworkRules.SolveCount:
 	            if (_lastSolved != BombInfo.GetSolvedModuleNames().Count)

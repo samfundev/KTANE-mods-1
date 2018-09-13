@@ -11,11 +11,9 @@ public class CoroutineQueue : MonoBehaviour
 
     private void Update()
     {
-        if (!Processing && _coroutineQueue.Count > 0)
-        {
-            Processing = true;
-            _activeCoroutine = StartCoroutine(ProcessQueueCoroutine());
-        }
+	    if (Processing || _coroutineQueue.Count <= 0) return;
+	    Processing = true;
+	    _activeCoroutine = StartCoroutine(ProcessQueueCoroutine());
     }
 
     public void AddToQueue(IEnumerator subcoroutine)
@@ -57,8 +55,8 @@ public class CoroutineQueue : MonoBehaviour
 
     public bool Processing { get; private set; }
 
-    private Queue<IEnumerator> _coroutineQueue = null;
-    private Coroutine _activeCoroutine = null;
+    private Queue<IEnumerator> _coroutineQueue;
+    private Coroutine _activeCoroutine;
 
     public CoroutineQueue()
     {

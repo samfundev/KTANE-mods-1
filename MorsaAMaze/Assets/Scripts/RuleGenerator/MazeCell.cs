@@ -1,4 +1,4 @@
-namespace Assets.Scripts.RuleGenerator
+namespace RuleGenerator
 {
     public class MazeCell
     {

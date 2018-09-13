@@ -2383,6 +2383,7 @@ GameObject:
   - component: {fileID: 114000013553721246}
   - component: {fileID: 114763060946732214}
   - component: {fileID: 114052808651630946}
+  - component: {fileID: 114946509689397670}
   m_Layer: 0
   m_Name: MorseAMaze
   m_TagString: Untagged
@@ -10825,6 +10826,7 @@ MonoBehaviour:
   GlassBreak: {fileID: 8300000, guid: 4f1e0267b9f3d624cbaa7ab90273cc99, type: 3}
   ModSettings: {fileID: 114000013553721246}
   RuleSeed: {fileID: 114052808651630946}
+  Movements: {fileID: 114946509689397670}
 --- !u!114 &114000011353193498
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -12033,3 +12035,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _colorblindMode: 0
+--- !u!114 &114946509689397670
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000013873985696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0696a62f29b93614e9a88dad54d70c79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

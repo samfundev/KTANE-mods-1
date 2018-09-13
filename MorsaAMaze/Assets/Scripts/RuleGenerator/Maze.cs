@@ -1,21 +1,21 @@
 using System.Collections.Generic;
 
-namespace Assets.Scripts.RuleGenerator
+namespace RuleGenerator
 {
     public class Maze
     {
-        private int Size = 6;
+	    private const int Size = 6;
 
-        public List<List<MazeCell>> CellGrid;
+	    public List<List<MazeCell>> CellGrid;
 
         public Maze()
         {
             CellGrid = new List<List<MazeCell>>();
-            for (var i = 0; i < 6; i++)
+            for (var i = 0; i < Size; i++)
             {
                 var list = new List<MazeCell>();
                 CellGrid.Add(list);
-                for (var j = 0; j < 6; j++)
+                for (var j = 0; j < Size; j++)
                 {
                     var mazeCell = new MazeCell(i, j);
                     list.Add(mazeCell);
@@ -25,16 +25,16 @@ namespace Assets.Scripts.RuleGenerator
 
         public MazeCell GetCell(int x, int y)
         {
-            if (x < 0 || x >= 6 || y < 0 || y >= 6)
+            if (x < 0 || x >= Size || y < 0 || y >= Size)
                 return null;
             return CellGrid[x][y];
         }
 
         public void BuildMaze(MonoRandom rng)
         {
-            for (var i = 0; i < 6; i++)
+            for (var i = 0; i < Size; i++)
             {
-                for (var j = 0; j < 6; j++)
+                for (var j = 0; j < Size; j++)
                 {
                     if (i > 0) rng.Next();
                     if (j > 0) rng.Next();
@@ -48,8 +48,8 @@ namespace Assets.Scripts.RuleGenerator
         public void PopulateMaze(MonoRandom rng)
         {
             var cellStack = new Stack<MazeCell>();
-            var x = rng.Next(0, 6);
-            var y = rng.Next(0, 6);
+            var x = rng.Next(0, Size);
+            var y = rng.Next(0, Size);
             var cell = GetCell(x, y);
             VisitCell(cell, cellStack, rng);
         }
