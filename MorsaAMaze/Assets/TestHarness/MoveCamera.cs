@@ -17,10 +17,24 @@ public class MoveCamera : MonoBehaviour
     private bool isZooming;     // Is the camera zooming?
 
     private Transform _camera;
+	private Transform _bomb;
 
     void Start()
     {
+	    _bomb = new GameObject().transform;
+	    _bomb.name = "Bomb";
+	    foreach (KMBombModule module in FindObjectsOfType<KMBombModule>())
+		    module.transform.SetParent(_bomb, true);
+
+	    foreach (KMNeedyModule module in FindObjectsOfType<KMNeedyModule>())
+		    module.transform.SetParent(_bomb, true);
+
+	    foreach (KMWidget widget in FindObjectsOfType<KMWidget>())
+		    widget.transform.SetParent(_bomb, true);
+
         _camera = FindObjectOfType<Camera>().transform;
+	    //_camera.SetParent(transform, true);
+	    //_camera = transform;
     }
 
     //
@@ -53,14 +67,23 @@ public class MoveCamera : MonoBehaviour
         if (isRotating)
         {
             Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
+	        var speed = pos.y * turnSpeed;
 
-            _camera.RotateAround(_camera.position, _camera.right, -pos.y * turnSpeed);
-            _camera.RotateAround(_camera.position, Vector3.up, pos.x * turnSpeed);
-            mouseOrigin = Input.mousePosition;
-        }
+	        if (speed < 0 && _bomb.localEulerAngles.x > 180 && (_bomb.localEulerAngles.x + speed) < 270.5f)
+		        speed = 270.5f - _bomb.localEulerAngles.x;
+	        else if (speed > 0 && _bomb.localEulerAngles.x < 180 && (_bomb.localEulerAngles.x + speed) > 89.5f)
+		        speed = 89.5f - _bomb.localEulerAngles.x;
 
-        // Move the camera on it's XY plane
-        if (isPanning)
+	        //_bomb.RotateAround(_bomb.position, _bomb.right, pos.y * turnSpeed);
+			//_bomb.RotateAround(_bomb.position, Vector3.forward, pos.x * turnSpeed);
+	        _bomb.localEulerAngles += new Vector3(speed, 0, -pos.x * turnSpeed * 2);
+	        _bomb.localEulerAngles = new Vector3(_bomb.localEulerAngles.x, 0, _bomb.localEulerAngles.z);
+
+			mouseOrigin = Input.mousePosition;
+		}
+
+		// Move the camera on it's XY plane
+		if (isPanning)
         {
             Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
 

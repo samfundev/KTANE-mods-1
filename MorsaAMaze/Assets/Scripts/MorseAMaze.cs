@@ -44,10 +44,13 @@ public class MorseAMaze : MonoBehaviour
     private bool _strikePending;
     private int _maze;
 
-    private string _souvenirQuestionStartingLocation;
-    private string _souvenirQuestionEndingLocation;
-    private string _souvenirQuestionWordPlaying;
-	private string[] _souvenirQuestionWordList;
+	[SerializeField] private string _souvenirQuestionStartingLocation;
+	[SerializeField] private string _souvenirQuestionEndingLocation;
+	[SerializeField] private string _souvenirQuestionWordPlaying;
+#pragma warning disable 414
+	// ReSharper disable once NotAccessedField.Local
+	[SerializeField] private string[] _souvenirQuestionWordList;
+#pragma warning restore 414
 
 
 	private ModSettings _modSettings;
@@ -75,7 +78,7 @@ public class MorseAMaze : MonoBehaviour
         SerialNumberLetter
     }
 
-    private int _rule;
+    [SerializeField] private int _rule = -1;
 
     private readonly EdgeworkRules[] _edgeworkRules =
     {
@@ -145,6 +148,7 @@ public class MorseAMaze : MonoBehaviour
 
         BombModule.OnActivate += Activate;
 	    FakeStatusLight = Instantiate(FakeStatusLight);
+	    FakeStatusLight.transform.SetParent(transform, false);
 
         if (BombModule != null)
             FakeStatusLight.Module = BombModule;
@@ -643,18 +647,17 @@ public class MorseAMaze : MonoBehaviour
         Down.OnInteract += delegate { MoveDown(); return false; };
         Left.OnInteract += delegate { MoveLeft(); return false; };
         Right.OnInteract += delegate { MoveRight(); return false; };
- 
-        
-        
-	    _souvenirQuestionWordList = MorseAMazeRuleGenerator.Words.ToArray();
-	    _rule = Random.Range(0, _souvenirQuestionWordList.Length);
-		//if (BombModule.GetIDNumber() == 1)
-		//    _rule = _edgeworkRules.ToList().IndexOf(EdgeworkRules.Strikes);
 
+		if(!Application.isEditor || _rule < 0 || _rule >= 36)
+			_rule = Random.Range(0, 36);
+
+	    _souvenirQuestionWordPlaying = MorseAMazeRuleGenerator.Words[_rule];
+	    _souvenirQuestionWordList = MorseAMazeRuleGenerator.Words.OrderBy(x => Random.value).ToArray();
+	    
 		_unicorn = BombInfo.IsIndicatorOff("BOB") && BombInfo.GetBatteryHolderCount(2) == 1 && BombInfo.GetBatteryHolderCount(1) == 2 && BombInfo.GetBatteryHolderCount() == 3;
-        _souvenirQuestionWordPlaying = MorseAMazeRuleGenerator.Words[_rule];
+		
 
-        StartCoroutine(PlayWordLocation(_souvenirQuestionWordPlaying));
+		StartCoroutine(PlayWordLocation(_souvenirQuestionWordPlaying));
 
 
         switch (_edgeworkRules[_rule])
@@ -1230,6 +1233,7 @@ public class MorseAMaze : MonoBehaviour
 	    }
 	    if (Movements.Processing) return;
 	    if (_solved) return;
+	    if (_rule < 0 || _rule >= 36) return;
 
 		// ReSharper disable once SwitchStatementMissingSomeCases
 		switch (_edgeworkRules[_rule])

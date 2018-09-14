@@ -52,7 +52,30 @@ namespace RuleGenerator
 		    Words.AddRange(chosenWords.Take(36).OrderBy(x => rng.NextDouble()));
 	    }
 
-	    private static int LevenshteinDistance(string a, string b)
+	    public static List<string> GetSimilarWords(List<string> chosenWords, List<string> words, int totalWordsRequired, MonoRandom rng, bool log=true)
+	    {
+		    var numBaseWords = chosenWords.Count;
+		    for (var i = 0; i < numBaseWords && chosenWords.Count < 36; i++)
+		    {
+			    var prefix = chosenWords[i].Substring(1);
+			    var toAdd = words
+				    .Where(w => !chosenWords.Contains(w) && !w.EndsWith(prefix))
+				    .Select(w => (new { word = w, pref = rng.NextDouble(), dist = Similarity(w, chosenWords[i]) }))
+				    .ToList();
+			    toAdd.Sort((a, b) =>
+			    {
+				    var r = a.dist - b.dist;
+				    return r == 0 ? Math.Sign(a.pref - b.pref) : r;
+			    });
+			    var howmany = Math.Min(Math.Min(rng.Next(1, 4), 36 - chosenWords.Count), toAdd.Count);
+				if (log) Debug.LogFormat(@"[Password rule seed] From {0}, adding words: {1}", chosenWords[i], string.Join(", ", toAdd.Take(howmany).Select(w => string.Format("{0}/{1}/{2}", w.word, w.dist, w.pref)).ToArray()));
+			    chosenWords.AddRange(toAdd.Take(howmany).Select(inf => inf.word));
+		    }
+
+		    return chosenWords;
+	    }
+
+	    public static int LevenshteinDistance(string a, string b)
 	    {
 		    int lengthA = a.Length;
 		    int lengthB = b.Length;
@@ -66,7 +89,7 @@ namespace RuleGenerator
 		    return distances[lengthA, lengthB];
 	    }
 
-	    private static int Similarity(string a, string b)
+	    public static int Similarity(string a, string b)
 	    {
 		    var score = LevenshteinDistance(a, b);
 		    for (var i = 1; i < a.Length; i++)

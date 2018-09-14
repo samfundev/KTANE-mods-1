@@ -10827,6 +10827,11 @@ MonoBehaviour:
   ModSettings: {fileID: 114000013553721246}
   RuleSeed: {fileID: 114052808651630946}
   Movements: {fileID: 114946509689397670}
+  _souvenirQuestionStartingLocation: 
+  _souvenirQuestionEndingLocation: 
+  _souvenirQuestionWordPlaying: 
+  _souvenirQuestionWordList: []
+  _rule: -1
 --- !u!114 &114000011353193498
 MonoBehaviour:
   m_ObjectHideFlags: 1
