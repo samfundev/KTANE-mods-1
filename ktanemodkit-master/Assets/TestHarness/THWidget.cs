@@ -14,10 +14,17 @@
         public bool RJ45Port;
         public bool SerialPort;
         public bool StereoRCAPort;
+	    public bool ComponentVideoPort;
+	    public bool CompositeVideoPort;
+	    public bool HDMIPort;
+	    public bool VGAPort;
+	    public bool USBPort;
+	    public bool ACPort;
+	    public bool PCMCIAPort;
         public string[] CustomPorts;
 
-        // Batteries
-        public BatteryType BatteryType;
+		// Batteries
+		public BatteryType BatteryType;
         public int BatteryCount;
         public int MinBatteries;
         public int MaxBatteries;
@@ -26,6 +33,9 @@
         public IndicatorLabel IndicatorLabel;
         public string CustomLabel;
         public IndicatorState IndicatorState;
+
+		// TwoFactor
+	    public int TwoFactorResetTime;
 
         // Custom
         public string CustomQueryKey;
@@ -37,6 +47,7 @@
         BATTERY,
         PORT_PLATE,
         INDICATOR,
+		TWOFACTOR,
         RANDOM,
         CUSTOM
     }
