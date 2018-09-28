@@ -1234,41 +1234,73 @@ public class BombCreator : MonoBehaviour
             for(var i = 0; i < vanillaSolvableSize; i++)
             {
 	            var pool = AddComponent(PopVanillaSolvableModule, maxVanillaSolvablePerPool);
-	            var pool2 = pools.FirstOrDefault(x => x.ComponentTypes.All(y => pool.ComponentTypes.Contains(y)));
+	            var pool2 = pools.FirstOrDefault(x => x.ComponentTypes.Count > 0 && x.ComponentTypes[0] == pool.ComponentTypes[0]);
 	            if (pool2 != null)
+	            {
 		            pool2.Count++;
+					DebugLog("Updating Vanilla Solvable module pool count of pool containing {0} to {1} on {2} / {3}. Pool that was updated contains {4}",
+						pool.ComponentTypes[0], pool2.Count, i+1, vanillaSolvableSize, pool2.ModTypes.Count > 0 ? pool2.ModTypes[0] : pool2.ComponentTypes[0].ToString());
+		            
+	            }
 	            else
+	            {
+		            DebugLog("Added Vanilla Solvable module {0} / {1}: {2}", i + 1, vanillaSolvableSize, pool.ComponentTypes[0]);
 					pools.Add(pool);
-			}
+	            }
+	            
+            }
 
             for (var i = 0; i < moddedSolvableSize; i++)
             {
 	            var pool = AddComponent(PopModdedSolvableModule, maxModSolvablePerPool);
-				var pool2 = pools.FirstOrDefault(x => x.ModTypes.All(y => pool.ModTypes.Contains(y)));
-	            if (pool2 != null)
+	            var pool2 = pools.FirstOrDefault(x => x.ModTypes.Count > 0 && x.ModTypes[0].Equals(pool.ModTypes[0]));
+				if (pool2 != null)
+	            {
 		            pool2.Count++;
+		            DebugLog("Updating Modded Solvable module pool count of pool containing {0} to {1} on {2} / {3}. Pool that was updated contains {4}",
+			            pool.ModTypes[0], pool2.Count, i + 1, vanillaSolvableSize, pool2.ModTypes.Count > 0 ? pool2.ModTypes[0] : pool2.ComponentTypes[0].ToString());
+				}
 	            else
-		            pools.Add(pool);
+	            {
+		            DebugLog("Added Modded Solvable module {0} / {1}: {2}", i + 1, vanillaSolvableSize, pool.ModTypes[0]);
+					pools.Add(pool);
+	            }
+	            
 			}
 
             for (var i = 0; i < vanillaNeedySize; i++)
             {
 	            var pool = AddComponent(PopVanillaNeedyModule, maxVanillaNeedyPerPool);
-				var pool2 = pools.FirstOrDefault(x => x.ComponentTypes.All(y => pool.ComponentTypes.Contains(y)));
-	            if (pool2 != null)
-		            pool2.Count++;
-	            else
-		            pools.Add(pool);
+	            var pool2 = pools.FirstOrDefault(x => x.ComponentTypes.Count > 0 && x.ComponentTypes[0] == pool.ComponentTypes[0]);
+				if (pool2 != null)
+				{
+					pool2.Count++;
+					DebugLog("Updating Vanilla Needy module pool count of pool containing {0} to {1} on {2} / {3}. Pool that was updated contains {4}",
+						pool.ComponentTypes[0], pool2.Count, i + 1, vanillaSolvableSize, pool2.ModTypes.Count > 0 ? pool2.ModTypes[0] : pool2.ComponentTypes[0].ToString());
+
+				}
+				else
+				{
+					DebugLog("Added Vanilla Needy module {0} / {1}: {2}", i + 1, vanillaSolvableSize, pool.ComponentTypes[0]);
+					pools.Add(pool);
+				}
 			}
 
             for (var i = 0; i < moddedNeedySize; i++)
             {
 	            var pool = AddComponent(PopModdedNeedyModule, maxModNeedyPerPool);
-	            var pool2 = pools.FirstOrDefault(x => x.ModTypes.All(y => pool.ModTypes.Contains(y)));
-	            if (pool2 != null)
-		            pool2.Count++;
-	            else
-		            pools.Add(pool);
+	            var pool2 = pools.FirstOrDefault(x => x.ModTypes.Count > 0 && x.ModTypes[0].Equals(pool.ModTypes[0]));
+				if (pool2 != null)
+				{
+					pool2.Count++;
+					DebugLog("Updating Modded Needy module pool count of pool containing {0} to {1} on {2} / {3}. Pool that was updated contains {4}",
+						pool.ModTypes[0], pool2.Count, i + 1, vanillaSolvableSize, pool2.ModTypes.Count > 0 ? pool2.ModTypes[0] : pool2.ComponentTypes[0].ToString());
+				}
+				else
+				{
+					DebugLog("Added Modded Needy module {0} / {1}: {2}", i + 1, vanillaSolvableSize, pool.ModTypes[0]);
+					pools.Add(pool);
+				}
 			}
         }
         catch (NullModuleException ex)
@@ -1471,6 +1503,7 @@ public class BombCreator : MonoBehaviour
             yield return null;
             UpdateArtwork();
             yield return "show back";
+	        yield return new WaitForSeconds(1f);
         }
 		else if (command.StartsWith("artwork ") && split.Length > 1)
         {
@@ -1494,7 +1527,8 @@ public class BombCreator : MonoBehaviour
 		    pieces[0].gameObject.SetActive(true);
 
 	        yield return "show back";
-        }
+	        yield return new WaitForSeconds(1f);
+		}
         else if (command.Equals("duplicates") || command.Equals("no duplicates"))
         {
             if (Settings.DuplicatesAllowed == command.Equals("duplicates")) yield break;
