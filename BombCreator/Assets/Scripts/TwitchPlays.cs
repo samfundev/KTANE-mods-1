@@ -59,6 +59,8 @@ namespace Assets.Scripts
 					SetTimeMode(TweakProperties, false);
 					SetZenMode(Properties, false);
 					SetZenMode(TweakProperties, false);
+					SetSteadyMode(Properties, false);
+					SetSteadyMode(TweakProperties, false);
 					break;
 				case GameModes.TimeMode:
 					SetTimeMode(Properties, !tweaks);
@@ -68,6 +70,10 @@ namespace Assets.Scripts
 					SetZenMode(Properties, !tweaks);
 					SetZenMode(TweakProperties, tweaks);
 					break;
+				case GameModes.SteadyMode:
+					SetSteadyMode(Properties, !tweaks);
+					SetSteadyMode(TweakProperties, tweaks);
+					break;
 		    }
 	    }
 
@@ -76,12 +82,15 @@ namespace Assets.Scripts
 		    bool tweaks = Properties == null;
 		    var timeMode = TimeMode(Properties ?? TweakProperties);
 		    var zenmode = ZenMode(Properties ?? TweakProperties);
-		    if (timeMode && zenmode)
+			var steadymode = SteadyMode(Properties ?? TweakProperties);
+			if (timeMode && zenmode)
 			    throw new Exception("Unsupported game mode");
 		    if (timeMode)
 			    return GameModes.TimeMode;
 		    if (zenmode)
 			    return GameModes.ZenMode;
+			if (steadymode)
+				return GameModes.SteadyMode;
 		    return GameModes.NormalMode;
 	    }
 
@@ -112,7 +121,18 @@ namespace Assets.Scripts
 	        properties["ZenMode"] = on;
         }
 
-	    public static int TimeModeTimeLimit(int time = 300, bool force = false)
+		private static bool SteadyMode(IDictionary<string, object> properties)
+		{
+			return properties != null && properties.ContainsKey("SteadyMode") && ((bool) properties["SteadyMode"]);
+		}
+
+		private static void SetSteadyMode(IDictionary<string, object> properties, bool on)
+		{
+			if (properties == null || !properties.ContainsKey("SteadyMode")) return;
+			properties["SteadyMode"] = on;
+		}
+
+		public static int TimeModeTimeLimit(int time = 300, bool force = false)
 	    {
 		    return TimeModeTimeLimit(Properties ?? TweakProperties, Properties == null, time, force);
 	    }
@@ -178,6 +198,7 @@ namespace Assets.Scripts
 	{
 		NormalMode,
 		TimeMode,
-		ZenMode
+		ZenMode,
+		SteadyMode
 	}
 }

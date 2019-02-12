@@ -230,6 +230,9 @@ public class BombCreator : MonoBehaviour
 				case GameModes.TimeMode:
 					TwitchPlays.SetGameMode(GameModes.ZenMode);
 					break;
+				case GameModes.ZenMode:
+					TwitchPlays.SetGameMode(GameModes.SteadyMode);
+					break;
 				default:
 					TwitchPlays.SetGameMode(GameModes.NormalMode);
 					break;
@@ -346,6 +349,11 @@ public class BombCreator : MonoBehaviour
 			case GameModes.ZenMode:
 				if (TwitchModeLabel.text == "Zen Mode") return;
 				TwitchModeLabel.text = "Zen Mode";
+				UpdateDisplay();
+				break;
+			case GameModes.SteadyMode:
+				if (TwitchModeLabel.text == "Steady Mode") return;
+				TwitchModeLabel.text = "Steady Mode";
 				UpdateDisplay();
 				break;
 	    }
