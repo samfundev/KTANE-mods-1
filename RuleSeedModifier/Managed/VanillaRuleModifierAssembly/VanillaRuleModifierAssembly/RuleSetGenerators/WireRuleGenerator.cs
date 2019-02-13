@@ -213,8 +213,8 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 list.Add(wireQueries);
                 if(CommonReflectedTypeInfo.IsModdedSeed)
                     list.Add(portQueries);
-                this.queryPropertyWeights.Clear();
-                this.solutionWeights.Clear();
+                queryPropertyWeights.Clear();
+                solutionWeights.Clear();
                 int numRules = GetNumRules();
                 for (int j = 0; j < numRules; j++)
                 {
@@ -226,17 +226,15 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     for (int k = 0; k < numQueriesForRule; k++)
                     {
                         bool compoundQueriesAllowed = k > 0;
-                        List<QueryableProperty> possibleQueryableProperties = this.CalculatePossibleQueryableProperties(list, num, compoundQueriesAllowed);
+                        List<QueryableProperty> possibleQueryableProperties = CalculatePossibleQueryableProperties(list, num, compoundQueriesAllowed);
                         QueryableProperty queryableProperty = SelectQueryableProperty(possibleQueryableProperties);
-                        Query query = new Query();
-                        query.Property = queryableProperty;
-                        if (queryableProperty is QueryableWireProperty)
+                        Query query = new Query {Property = queryableProperty};
+                        if (queryableProperty is QueryableWireProperty queryableWireProperty)
                         {
-                            QueryableWireProperty queryableWireProperty = (QueryableWireProperty)queryableProperty;
                             num -= queryableWireProperty.WiresInvolvedInQuery;
                             if (queryableWireProperty.UsesColor)
                             {
-                                WireColor wireColor = listOfWireColors[this.rand.Next(0, listOfWireColors.Count)];
+                                WireColor wireColor = listOfWireColors[rand.Next(0, listOfWireColors.Count)];
                                 listOfWireColors.Remove(wireColor);
                                 query.Args.Add("color", wireColor);
                                 if (queryableWireProperty.ColorAvailableForSolution)
@@ -247,12 +245,12 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                         }
                         rule.Queries.Add(query);
                     }
-                    List<Solution> possibleSolutions = this.CalculatePossibleSolutions(i, rule);
+                    List<Solution> possibleSolutions = CalculatePossibleSolutions(i, rule);
                     Solution solution = SelectSolution(possibleSolutions);
                     rule.Solution = solution;
                     if (list3.Count > 0)
                     {
-                        rule.SolutionArgs.Add("color", list3[this.rand.Next(0, list3.Count)]);
+                        rule.SolutionArgs.Add("color", list3[rand.Next(0, list3.Count)]);
                     }
                     if (CommonReflectedTypeInfo.IsVanillaSeed || IsWireQueryValid(rule))
                         list2.Add(rule);
@@ -262,13 +260,12 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 }
                 list2 = list2.OrderByDescending(x => x.Queries.Count).ToList();
                 Rule rule2 = new Rule();
-                Query query2 = new Query();
-                query2.Property = QueryableProperty.Otherwise;
+                Query query2 = new Query {Property = QueryableProperty.Otherwise};
                 rule2.Queries.Add(query2);
-                List<Solution> list4 = this.CalculatePossibleSolutions(i, rule2);
+                List<Solution> list4 = CalculatePossibleSolutions(i, rule2);
                 if (CommonReflectedTypeInfo.IsModdedSeed)
                     list4.Remove(list2.Last().Solution);    //Enforce no redundant rules.
-                rule2.Solution = list4[this.rand.Next(0, list4.Count)];
+                rule2.Solution = list4[rand.Next(0, list4.Count)];
                 list2.Add(rule2);
                 wireRuleSet.RulesDictionary[i] = list2;
             }
@@ -282,33 +279,33 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             {
                 foreach (QueryableProperty queryableProperty in querySet.QueryableProperties)
                 {
-                    if (!queryableProperty.CompoundQueryOnly || compoundQueriesAllowed)
+                    if (queryableProperty.CompoundQueryOnly && !compoundQueriesAllowed) continue;
+                    if (!(queryableProperty is QueryableWireProperty queryableWireProperty) 
+                        || queryableWireProperty.WiresInvolvedInQuery <= wiresAvailableInQuery)
                     {
-                        QueryableWireProperty queryableWireProperty = queryableProperty as QueryableWireProperty;
-                        if (queryableWireProperty == null || queryableWireProperty.WiresInvolvedInQuery <= wiresAvailableInQuery)
-                        {
-                            list.Add(queryableProperty);
-                        }
+                        list.Add(queryableProperty);
                     }
                 }
             }
-            List<QueryableProperty> list2 = list.ToList<QueryableProperty>();
-            foreach (QueryableProperty key in list2)
+
+            foreach (QueryableProperty key in list)
             {
-                if (!this.queryPropertyWeights.ContainsKey(key))
+                if (!queryPropertyWeights.ContainsKey(key))
                 {
-                    this.queryPropertyWeights.Add(key, 1f);
+                    queryPropertyWeights.Add(key, 1f);
                 }
             }
-            return list2;
+            return list;
         }
 
         protected List<Solution> CalculatePossibleSolutions(int wireCount, Rule rule)
         {
-            List<Solution> list = new List<Solution>();
-            list.Add(WireSolutions.WireIndex0);
-            list.Add(WireSolutions.WireIndex1);
-            list.Add(WireSolutions.WireLast);
+            List<Solution> list = new List<Solution>
+            {
+                WireSolutions.WireIndex0,
+                WireSolutions.WireIndex1,
+                WireSolutions.WireLast
+            };
             if (wireCount >= 4)
             {
                 list.Add(WireSolutions.WireIndex2);
@@ -328,14 +325,51 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     list.AddRange(query.Property.AdditionalSolutions);
                 }
             }
+
+            int index = list.IndexOf(WireSolutions.WireColorExactlyOne);
+            if (index >= 0)
+            {
+                //UnityEngine.Debug.LogFormat("Replaced IsWireColor rule on seed #{0}", CommonReflectedTypeInfo.Seed);
+
+                list.RemoveAt(index);
+                list.Insert(index, WireColorExactlyOne);
+            }
+
             foreach (Solution key in list)
             {
-                if (!this.solutionWeights.ContainsKey(key))
+                if (!solutionWeights.ContainsKey(key))
                 {
-                    this.solutionWeights.Add(key, 1f);
+                    solutionWeights.Add(key, 1f);
                 }
             }
+
             return list;
         }
+
+        protected static Solution WireColorExactlyOne = new Solution
+        {
+            Text = "cut the {color} wire",
+            SolutionMethod = ((comp, args) =>
+            {
+                WireSetComponent wireSetComponent = (WireSetComponent) comp;
+                WireColor wireColor = (WireColor) args["color"];
+                List<SnippableWire> wires = wireSetComponent.wires;
+
+                int corect = wireSetComponent.GetFirstIndexOfColor(wireColor);
+
+                for (int i = 0; i < wires.Count; i++)
+                {
+                    if (!wires[i].Snipped || 
+                        wires[i].GetColor() != wireColor || 
+                        wires[i].transform.name.Equals("RuleModifierCorrectlySnipped"))
+                            continue;
+
+                    wires[i].transform.name = "RuleModifierCorrectlySnipped";
+                    return i;
+                }
+
+                return corect;
+            })
+        };
     }
 }

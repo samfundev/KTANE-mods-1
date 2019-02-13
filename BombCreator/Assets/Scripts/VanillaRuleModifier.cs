@@ -36,11 +36,23 @@ namespace Assets.Scripts
                 : 1;
         }
 
+	    public static bool GetRandomRuleSeed()
+	    {
+		    object value;
+		    return (Properties != null && Properties.TryGetValue(RandomRuleSeed, out value)) && (bool) value;
+	    }
+
         public static void SetRuleSeed(int seed, bool saveSettings = false)
         {
             if (Properties != null && Properties.ContainsKey(RuleSeed))
                 Properties[RuleSeed] = new object[] { seed, saveSettings };
         }
+
+	    public static void SetRandomRuleSeed(bool randomseed, bool saveSettings = false)
+	    {
+		    if (Properties != null && Properties.ContainsKey(RandomRuleSeed))
+			    Properties[RandomRuleSeed] = new object[] {randomseed, saveSettings};
+	    }
 
         public static string GetRuleManualDirectory()
         {
@@ -68,6 +80,7 @@ namespace Assets.Scripts
         }
 
         private const string RuleSeed = "RuleSeed";
+	    private const string RandomRuleSeed = "RandomRuleSeed";
         private const string SeedIsVanilla = "IsSeedVanilla";
         private const string SeedIsModded = "IsSeedModded";
         private const string GetRuleManual = "GetRuleManual";

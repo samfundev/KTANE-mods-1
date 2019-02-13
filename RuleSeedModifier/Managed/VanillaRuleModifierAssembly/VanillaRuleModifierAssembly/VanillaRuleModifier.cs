@@ -13,6 +13,30 @@ public class VanillaRuleModifier : MonoBehaviour
     private KMGameInfo _gameInfo = null;
     public Settings _modSettings;
 
+    public int CurrentSeed
+    {
+        get
+        {
+            if (CurrentState != KMGameInfo.State.Setup && CurrentState != KMGameInfo.State.PostGame)
+                return _currentSeed;
+            return _modSettings.Settings.RuleSeed;
+        }
+    }
+
+    private int _currentSeed;
+
+    public bool CurrentRandomSeed
+    {
+        get
+        {
+            if (CurrentState != KMGameInfo.State.Setup && CurrentState != KMGameInfo.State.PostGame)
+                return _currentRandomSeed;
+            return _modSettings.Settings.RandomRuleSeed;
+        }
+    }
+
+    private bool _currentRandomSeed;
+
     // Use this for initialization
     // ReSharper disable once UnusedMember.Local
     private static bool _fixesApplied = false;
@@ -81,6 +105,12 @@ public class VanillaRuleModifier : MonoBehaviour
         if (writeSettings) _modSettings.WriteSettings();
     }
 
+    public void SetRandomRuleSeed(bool setting, bool writeSettings)
+    {
+        _modSettings.Settings.RandomRuleSeed = setting;
+        if (writeSettings) _modSettings.WriteSettings();
+    }
+
     public string GenerateManual()
     {
         if(CurrentState == KMGameInfo.State.Setup || CurrentState == KMGameInfo.State.PostGame)
@@ -145,10 +175,17 @@ public class VanillaRuleModifier : MonoBehaviour
         {
             _modSettings.ReadSettings();
             var seed = _modSettings.Settings.RuleSeed;
+
+            if (_modSettings.Settings.RandomRuleSeed)
+                seed = new System.Random().Next();
+
+            _currentSeed = seed;
+            _currentRandomSeed = _modSettings.Settings.RandomRuleSeed;
+
             DebugLog("Generating Rules based on Seed {0}", seed);
             GenerateRules(seed);
             ManualGenerator.Instance.WriteManual(seed);
-            if(seed != 1)
+            if(seed != 1 || !_modSettings.Settings.RandomRuleSeed)
                 AddWidget = StartCoroutine(AddWidgetToBomb(RuleSeedWidget));
         }
         _prevState = CurrentState;

@@ -134,6 +134,25 @@ public class MorseAMaze : MonoBehaviour
 		}
 	}
 
+	private void Awake()
+	{
+		if (Random.value < 0.25f)
+		{
+			StatusLight.localPosition = new Vector3(StatusLight.localPosition.x, StatusLight.localPosition.y, StatusLight.localPosition.z * -1);
+			StatusLightCorner.localPosition = new Vector3(StatusLightCorner.localPosition.x, StatusLightCorner.localPosition.y, StatusLightCorner.localPosition.z * -1);
+		}
+		else if (Random.value < 0.5f)
+		{
+			StatusLight.localPosition = new Vector3(StatusLight.localPosition.x * -1, StatusLight.localPosition.y, StatusLight.localPosition.z * -1);
+			StatusLightCorner.localPosition = new Vector3(StatusLightCorner.localPosition.x * -1, StatusLightCorner.localPosition.y, StatusLightCorner.localPosition.z * -1);
+		}
+		else if (Random.value < 0.75f)
+		{
+			StatusLight.localPosition = new Vector3(StatusLight.localPosition.x * -1, StatusLight.localPosition.y, StatusLight.localPosition.z);
+			StatusLightCorner.localPosition = new Vector3(StatusLightCorner.localPosition.x * -1, StatusLightCorner.localPosition.y, StatusLightCorner.localPosition.z);
+		}
+	}
+
     // Use this for initialization
     private void Start()
     {

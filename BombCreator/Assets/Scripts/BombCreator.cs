@@ -654,7 +654,9 @@ public class BombCreator : MonoBehaviour
         if (!VanillaRuleModifier.Installed())
             yield break;
         var delay = endWhen == null ? StartDelay : MinDelay;
+	    bool randomSeed = VanillaRuleModifier.GetRandomRuleSeed();
         long currentSeed = VanillaRuleModifier.GetRuleSeed();
+	    if (randomSeed) currentSeed = -1;
         long startingSeed = currentSeed;
         long target = 10;
         long add = 10;
@@ -663,9 +665,11 @@ public class BombCreator : MonoBehaviour
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.FastestTimerBeep, transform);
 
             currentSeed += count;
+	        randomSeed = currentSeed < 0;
             if (currentSeed > int.MaxValue) currentSeed = int.MaxValue;
-            if (currentSeed < 0) currentSeed = 0;
-            VanillaRuleModifier.SetRuleSeed((int)currentSeed);
+	        if (currentSeed < 0) currentSeed = -1;
+	        VanillaRuleModifier.SetRandomRuleSeed(randomSeed);
+            VanillaRuleModifier.SetRuleSeed(randomSeed ? 0 : (int)currentSeed);
             UpdateDisplay();
 
             yield return new WaitForSeconds(Mathf.Max(delay, MinDelay));
@@ -793,16 +797,22 @@ public class BombCreator : MonoBehaviour
         PacingEventsText.text = Settings.PacingEvents ? "Pacing Events On" : "Pacing Events Off";
         FrontFaceText.text = Settings.FrontFaceOnly ? "Front Face Only" : "All Faces";
 
-        SeedText.text = VanillaRuleModifier.GetRuleSeed() < 0 ? "-" : "";
-        var seedDigits = VanillaRuleModifier.GetRuleSeed().ToString("D" + (_currentSeedDigit + 1)).Replace("-","").Select(x => x.ToString()).ToArray();
-        for (int i = 0; i < seedDigits.Length; i++)
-        {
-            SeedText.text += i == ((seedDigits.Length - 1) - _currentSeedDigit) 
-                ? "<color=\"red\">" + seedDigits[i] + "</color>" 
-                : seedDigits[i];
-        }
 
-        if(FactoryRoom.Installed())
+	    var randomSeed = VanillaRuleModifier.GetRandomRuleSeed();
+        SeedText.text = randomSeed ? "Random" : "";
+
+	    if (!randomSeed)
+	    {
+		    var seedDigits = VanillaRuleModifier.GetRuleSeed().ToString("D" + (_currentSeedDigit + 1)).Replace("-", "").Select(x => x.ToString()).ToArray();
+		    for (int i = 0; i < seedDigits.Length; i++)
+		    {
+			    SeedText.text += i == ((seedDigits.Length - 1) - _currentSeedDigit)
+				    ? "<color=\"red\">" + seedDigits[i] + "</color>"
+				    : seedDigits[i];
+		    }
+	    }
+
+	    if(FactoryRoom.Installed())
             FactoryModeText.text = FactoryRoom.GetFactoryModes()[Settings.FactoryMode];
     }
 
@@ -1468,7 +1478,8 @@ public class BombCreator : MonoBehaviour
         BombCreatorAllowedToChangeVanillaSeed,
 		BombCreatorAllowedToExceed199CombinedModules,
 		BombCreatorAllowedToChangeTimeModeTimeLimit,
-    }
+	    BombCreatorAllowedToHaveMoreNeedyThanSolvable,
+	}
 
     private static Dictionary<string, bool> _permissions = new Dictionary<string, bool>
     {
@@ -1477,6 +1488,7 @@ public class BombCreator : MonoBehaviour
         { Permissions.BombCreatorAllowedToChangeVanillaSeed.ToString(), false },
 	    { Permissions.BombCreatorAllowedToExceed199CombinedModules.ToString(), false },
 	    { Permissions.BombCreatorAllowedToChangeTimeModeTimeLimit.ToString(), false },
+	    { Permissions.BombCreatorAllowedToHaveMoreNeedyThanSolvable.ToString(), false },
     };
 
     private IEnumerator AllowBombCreator(bool front=true)
@@ -1627,6 +1639,14 @@ public class BombCreator : MonoBehaviour
 				                Settings.Modules, maxBombs, maxBombs == 1 ? "" : "s", 
 				                Settings.Bombs, Settings.Bombs == 1 ? "" : "s", maxModules));
 	                }
+
+	                if (Settings.NeedyModules > Settings.Modules)
+	                {
+		                yield return AllowPowerUsers(Permissions.BombCreatorAllowedToHaveMoreNeedyThanSolvable,
+			                PowerLevel.Streamer,
+			                "Only the streamer may start a bomb that has more needy modules than solvable modules.");
+	                }
+
 
                     Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
                     var mission = CreateMission();
@@ -1820,19 +1840,47 @@ public class BombCreator : MonoBehaviour
                     yield break;
                 case "seed":
                     int vanillaSeed;
+	                bool randomSeed = false;
                     if (!VanillaRuleModifier.Installed()) yield break;
-                    if (!int.TryParse(split[1], out vanillaSeed) || vanillaSeed < 0) yield break;
+
+	                if (!int.TryParse(split[1], out vanillaSeed))
+	                {
+		                if (split[1].ToLowerInvariant().Equals("random"))
+		                {
+			                randomSeed = true;
+		                }
+		                else
+		                {
+							yield break;
+		                }
+	                }
+	                else
+	                {
+		                if (vanillaSeed < 0) yield break;
+	                }
                     yield return AllowBombCreator();
                     yield return AllowPowerUsers(Permissions.BombCreatorAllowedToChangeVanillaSeed, PowerLevel.Admin, "Only those with admin access or higher may set the vanilla seed.");
 
                     if (Mathf.Abs(VanillaRuleModifier.GetRuleSeed() - vanillaSeed) > 300) yield return "elevator music";
-                    while (VanillaRuleModifier.GetRuleSeed() != vanillaSeed && !TwitchShouldCancelCommand)
-                    {
-                        yield return AddSeed(1, () => VanillaRuleModifier.GetRuleSeed() >= vanillaSeed || TwitchShouldCancelCommand);
-                        yield return AddSeed(-1, () => VanillaRuleModifier.GetRuleSeed() <= vanillaSeed || TwitchShouldCancelCommand);
-                        if (TwitchShouldCancelCommand) yield return "cancelled";
-                    }
-                    yield break;
+	                if (randomSeed && !TwitchShouldCancelCommand)
+	                {
+		                while (!VanillaRuleModifier.GetRandomRuleSeed() && !TwitchShouldCancelCommand)
+		                {
+			                yield return AddSeed(-1, () => VanillaRuleModifier.GetRandomRuleSeed() || TwitchShouldCancelCommand);
+			                if (TwitchShouldCancelCommand) yield return "cancelled";
+						}
+	                }
+	                else
+	                {
+		                while (VanillaRuleModifier.GetRuleSeed() != vanillaSeed && !TwitchShouldCancelCommand)
+		                {
+			                yield return AddSeed(1, () => VanillaRuleModifier.GetRuleSeed() >= vanillaSeed || TwitchShouldCancelCommand);
+			                yield return AddSeed(-1, () => VanillaRuleModifier.GetRuleSeed() <= vanillaSeed || TwitchShouldCancelCommand);
+			                if (TwitchShouldCancelCommand) yield return "cancelled";
+		                }
+	                }
+
+	                yield break;
                 case "minwidgets":
                 case "minimumwidgets":
                 case "min-widgets":

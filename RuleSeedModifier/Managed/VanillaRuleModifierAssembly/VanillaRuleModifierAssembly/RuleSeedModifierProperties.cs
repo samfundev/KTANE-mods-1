@@ -14,9 +14,39 @@ namespace VanillaRuleModifierAssembly
             AddProperty("IsSeedModded", new Property(IsSeedModded_Get, null));
             AddProperty("GetRuleManual",new Property(RuleManaul_Get, null));
             AddProperty("AddSupportedModule", new Property(null, SupportedModules_Set));
+            AddProperty("RandomRuleSeed", new Property(RandomRuleSeed_Get, RandomRuleSeed_Set));
         }
 
-		public static void AddSupportedModule(string moduleType)
+        private void RandomRuleSeed_Set(object value)
+        {
+            const string invalidArguments = "Arguments need to be either (bool randomseed) or (object[2] {bool randomseed, bool save}";
+            if (VanillaRuleModifer.CurrentState != KMGameInfo.State.Setup && VanillaRuleModifer.CurrentState != KMGameInfo.State.PostGame)
+                throw new Exception("Setting of Random seed is only allowed during Setup or Post game.");
+
+            bool saveSettings = false;
+            bool randomseed;
+            switch (value)
+            {
+                case object[] objects when objects.Length == 2 && objects[0] is bool randomSeed && objects[1] is bool save:
+                    randomseed = randomSeed;
+                    saveSettings = save;
+                    break;
+                case bool randomSeed:
+                    randomseed = randomSeed;
+                    break;
+                default:
+                    throw new ArgumentException(invalidArguments);
+            }
+
+            VanillaRuleModifer.SetRandomRuleSeed(randomseed, saveSettings);
+        }
+
+        private object RandomRuleSeed_Get()
+        {
+            return VanillaRuleModifer.CurrentRandomSeed;
+        }
+
+        public static void AddSupportedModule(string moduleType)
 	    {
 		    if (!VanillaRuleModifier.ModsThatSupportRuleSeedModifier.Contains(moduleType))
 			    VanillaRuleModifier.ModsThatSupportRuleSeedModifier.Add(moduleType);
@@ -35,15 +65,15 @@ namespace VanillaRuleModifierAssembly
         }
 
 	    private object RuleSeed_Get()
-        {
-            return VanillaRuleModifer._modSettings.Settings.RuleSeed;
-        }
+	    {
+	        return VanillaRuleModifer.CurrentSeed;
+	    }
 
         private void RuleSeed_Set(object seed)
         {
             const string invalidArguments = "Arguments need to be either (int seed) or (object[2] {int seed, bool save}";
             if (VanillaRuleModifer.CurrentState != KMGameInfo.State.Setup && VanillaRuleModifer.CurrentState != KMGameInfo.State.PostGame)
-                throw new Exception("Setting of Rule seed is only allowed duing Setup or Post game.");
+                throw new Exception("Setting of Rule seed is only allowed during Setup or Post game.");
 
             bool saveSettings = false;
             int ruleseed;

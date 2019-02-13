@@ -23,7 +23,11 @@ namespace VanillaRuleModifierAssembly
 
         public string HowToUse1 = "Sets the seed that will be used to generate the ruleset.";
         public string HowToUse2 = "1 = Vanilla";
-        public string HowToUse3 = DefaultSeed + " = VanillaRuleModifier Default Seed";        
+        public string HowToUse3 = DefaultSeed + " = VanillaRuleModifier Default Seed";
+
+        public bool RandomRuleSeed = false;
+
+        public string HowToUse4 = "If set to true, then a random rule seed will be used each bomb.";
     }
 
     public class ModSettings
