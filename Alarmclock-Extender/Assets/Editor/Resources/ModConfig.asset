@@ -36,5 +36,5 @@ MonoBehaviour:
     that tag, it will Loop that clip.  (This also applies to anything that may be
     in your music collection.)\r\n"
   version: 1.0
-  outputFolder: H:\SteamLibrary\SteamApps\common\Keep Talking and Nobody Explodes\mods
+  outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
   previewImage: {fileID: 2800000, guid: d256c5eb991ec4e4e872075bee14f84c, type: 3}

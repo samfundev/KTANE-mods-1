@@ -1,0 +1,12 @@
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\obj\Debug\AlarmclockExtenderAssembly.csproj.CoreCompileInputs.cache
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\bin\Debug\AlarmclockExtenderAssembly.dll
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\bin\Debug\AlarmclockExtenderAssembly.pdb
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\bin\Debug\NAudio.dll
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\bin\Debug\NAudio.pdb
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\bin\Debug\NAudio.xml
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\obj\Debug\AlarmclockExtenderAssembly.dll
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\obj\Debug\AlarmclockExtenderAssembly.pdb
+H:\KTANE-Mods\Alarmclock-Extender\Assets\Plugins\Managed\AlarmclockExtenderAssembly.dll
+H:\KTANE-Mods\Alarmclock-Extender\Assets\Plugins\Managed\AlarmclockExtenderAssembly.pdb
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\obj\Debug\AlarmclockExtenderAssembly.csprojAssemblyReference.cache
+H:\KTANE-Mods\Alarmclock-Extender\AlarmclockExtenderAssembly\AlarmclockExtenderAssembly\obj\Debug\AlarmclockExtenderAssembly.csproj.CopyComplete
