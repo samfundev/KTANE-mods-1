@@ -40,6 +40,15 @@
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\KMFramework.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\log4net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -48,6 +57,10 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
@@ -66,6 +79,7 @@
     <Compile Include="RuleSetGenerators\ModRuleGenerator.cs" />
     <Compile Include="RuleSetGenerators\ModRuleSetGenerator.cs" />
     <Compile Include="RuleSetGenerators\SimonRuleGenerator.cs" />
+    <Compile Include="RuleSetGenerators\SVGGenerator.cs" />
     <Compile Include="RuleSetGenerators\VennWireGenerator.cs" />
     <Compile Include="ModSettings.cs" />
     <Compile Include="RuleSetGenerators\MorseCodeRuleGenerator.cs" />
@@ -78,6 +92,7 @@
     </Compile>
     <Compile Include="ReplaceText.cs" />
     <Compile Include="RuleSetGenerators\WireRuleGenerator.cs" />
+    <Compile Include="RuleSetGenerators\WireSetRuleGenerator.cs" />
     <Compile Include="StringExtension.cs" />
     <Compile Include="VanillaRuleModifier.cs" />
     <Compile Include="RuleSeedModifierProperties.cs" />

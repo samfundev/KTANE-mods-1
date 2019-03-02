@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Assets.Scripts.Components.VennWire;
-using Assets.Scripts.Manual;
 using Assets.Scripts.Rules;
 using Assets.Scripts.Utility;
 using BombGame;
@@ -158,19 +157,26 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
         private void WriteComplicatedWiresManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
         {
 
-            var lineTypes = new List<string>
+            var strokeDashArrays = new List<float[]>
             {
-                "15,40,4,10",
-                string.Empty,
-                "3",
-                "8"
+                new [] {20f, 10f, 5f, 10f},
+                new float[0],
+                new [] {4f, 7f},
+                new [] {10f, 4f}
             };
             var labels = new List<string>
             {
-                "Wire has red\ncoloring",
-                "Wire has blue\ncoloring",
-                "Has ★ symbol",
-                "LED is on"
+                "Manual/venn.legendred",
+                "Manual/venn.legendblue",
+                "Manual/venn.legendsymbol",
+                "Manual/venn.legendled"
+            };
+            var strokeWidths = new List<float>
+            {
+                5f,
+                6f,
+                4f,
+                10f
             };
 
             var ruleset = _ruleManager.VennWireRuleSet;
@@ -203,19 +209,19 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     switch (enumerator.Current)
                     {
                         case CutInstruction.Cut:
-                            vennList.Add("C");
+                            vennList.Add("Manual/venn.symbolcut");
                             break;
                         case CutInstruction.DoNotCut:
-                            vennList.Add("D");
+                            vennList.Add("Manual/venn.symboldonotcut");
                             break;
                         case CutInstruction.CutIfSerialEven:
-                            vennList.Add("S");
+                            vennList.Add("Manual/venn.symbolserial");
                             break;
                         case CutInstruction.CutIfParallelPortPresent:
-                            vennList.Add("P");
+                            vennList.Add("Manual/venn.symbolparallel");
                             break;
                         case CutInstruction.CutIfTwoOrMoreBatteriesPresent:
-                            vennList.Add("B");
+                            vennList.Add("Manual/venn.symbolbattery");
                             break;
                     }
                 }
@@ -223,8 +229,8 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
             var vennSVG = new SVGGenerator(800, 650);
             var legendSVG = new SVGGenerator(275, 200);
-            vennSVG.Draw4SetVennDiagram(vennList, lineTypes);
-            legendSVG.DrawVennDiagramLegend(labels, lineTypes);
+            vennSVG.Draw4SetVennDiagram(vennList, strokeDashArrays, strokeWidths);
+            legendSVG.DrawVennDiagramLegend(labels, strokeDashArrays, strokeWidths);
             replacements.Add(new ReplaceText { Original = "VENNDIAGRAMSVGDATA", Replacement = vennSVG.ToString() });
             replacements.Add(new ReplaceText { Original = "VENNLEGENDSVGDATA", Replacement = legendSVG.ToString() });
             file.WriteFile(path, replacements);
@@ -259,7 +265,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         private void WritePasswordManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
         {
-            var passwordrules = _ruleManager.PasswordRuleSet.possibilities;
+            var passwordrules = _ruleManager.PasswordRuleSet.possibleWords;
             for (var i = 0; i < passwordrules.Count; i++)
             {
                 replacements.Add(new ReplaceText {Original = $"PASSWORD{i:00}", Replacement = passwordrules[i]});
@@ -343,7 +349,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         private void WriteWhosOnFirstManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
         {
-            var step1Precedentlist = _ruleManager.WhosOnFirstRuleSet.displayWordToButtonIndexMap;
+            var step1Precedentlist = _ruleManager.WhosOnFirstRuleSet.DisplayTermToButtonIndexMap;
 
             var replace = string.Empty;
             for (var i = 0; i < 5; i++)
@@ -355,14 +361,14 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 }
                 for (var j = 0; j < ((i == 4) ? 4 : 6); j++)
                 {
-                    var word = WhosOnFirstRuleSet.DisplayWords[(i * 6) + j];
+                    var word = WhosOnFirstRuleSet.DisplayTerms[(i * 6) + j];
                     var index = step1Precedentlist[word].ToString();
 
                     replace += "                                    <td>\n";
                     replace += "                                        <table>\n";
                     replace += "                                            <tr>\n";
                     replace += "                                                <th class=\"whos-on-first-look-at-display\" colspan=\"2\">";
-                    replace += word.Trim();
+                    replace += Localization.GetLocalizedString(word).Trim();
                     replace += "</th>\n";
                     replace += "                                            </tr>\n";
                     for (var k = 0; k < 3; k++)
@@ -390,14 +396,14 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             replacements.Add(new ReplaceText {Original = "LOOKATDISPLAYMAP", Replacement = replace});
             replace = string.Empty;
 
-            foreach (var map in _ruleManager.WhosOnFirstRuleSet.precedenceMap)
+            foreach (var map in _ruleManager.WhosOnFirstRuleSet.TermsPrecedenceMap)
             {
                 replace += "                                <tr>\n";
                 replace += "                                    <th>";
-                replace += map.Key;
+                replace += Localization.GetLocalizedString(map.Key);
                 replace += "</th>\n";
                 replace += "                                    <td>";
-                replace += string.Join(", ", map.Value.ToArray());
+                replace += string.Join(", ", map.Value.Select(Localization.GetLocalizedString).ToArray());
                 replace += "</td>";
                 replace += "                                </tr>\n";
             }
@@ -448,9 +454,9 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         private void WriteMorseCodeManaul(string path, ManualFileName file, ref List<ReplaceText> replacements)
         {
-            var worddict = _ruleManager.MorseCodeRuleSet.WordDict;
+            var worddict = _ruleManager.MorseCodeRuleSet.FrequencyTermMap;
             var validFreqs = _ruleManager.MorseCodeRuleSet.ValidFrequencies;
-            var morsecodetable = validFreqs.Aggregate(string.Empty, (current, freq) => current + $"<tr><td>{worddict[freq]}</td><td>3.{freq} MHz</td></tr>\n");
+            var morsecodetable = validFreqs.Aggregate(string.Empty, (current, freq) => current + $"<tr><td>{Localization.GetLocalizedString(worddict[freq]) ?? worddict[freq]}</td><td>3.{freq} MHz</td></tr>\n");
             replacements.Add(new ReplaceText {Original = "MORSECODELOOKUP", Replacement = morsecodetable});
             file.WriteFile(path, replacements);
         }
@@ -594,7 +600,12 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             //    return;
 
             DebugLog($"Printing the Rules for seed #{seed}");
-            _ruleManager.CurrentRules.PrintRules();
+
+            if (!PrintRules(_ruleManager.CurrentRules))
+            {
+                DebugLog("One or more of the rules failed to print - Writing of manual aborted");
+                return;
+            }
 
             if (_manualFileNames == null)
             {

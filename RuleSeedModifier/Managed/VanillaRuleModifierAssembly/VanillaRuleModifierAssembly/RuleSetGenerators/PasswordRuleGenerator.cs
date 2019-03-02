@@ -39,7 +39,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 }
 
                 words.Sort();
-                ruleset.possibilities = words;
+                ruleset.possibleWords = words;
             }
             return ruleset;
         }

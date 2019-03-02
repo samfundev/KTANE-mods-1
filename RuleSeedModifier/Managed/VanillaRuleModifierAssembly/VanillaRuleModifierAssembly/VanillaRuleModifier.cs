@@ -162,6 +162,7 @@ public class VanillaRuleModifier : MonoBehaviour
     public KMGameInfo.State CurrentState = KMGameInfo.State.Unlock;
     private KMGameInfo.State _prevState = KMGameInfo.State.Unlock;
     private Coroutine AddWidget;
+    private Coroutine FixMorseCode;
     private void OnStateChange(KMGameInfo.State state)
     {
         if (AddWidget != null)
@@ -170,14 +171,21 @@ public class VanillaRuleModifier : MonoBehaviour
             AddWidget = null;
         }
 
-        DebugLog("Transitioning from {1} to {0}", state, CurrentState);
-        if((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
+        if (FixMorseCode != null)
+        {
+            StopCoroutine(FixMorseCode);
+            FixMorseCode = null;
+        }
+
+        //DebugLog("Transitioning from {1} to {0}", state, CurrentState);
+        //if((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
+        if(CurrentState == KMGameInfo.State.Setup && state == KMGameInfo.State.Transitioning)
         {
             _modSettings.ReadSettings();
             var seed = _modSettings.Settings.RuleSeed;
 
             if (_modSettings.Settings.RandomRuleSeed)
-                seed = new System.Random().Next();
+                seed = new System.Random().Next(_modSettings.Settings.MaxRandomSeed < 0 ? int.MaxValue : _modSettings.Settings.MaxRandomSeed);
 
             _currentSeed = seed;
             _currentRandomSeed = _modSettings.Settings.RandomRuleSeed;
@@ -185,9 +193,17 @@ public class VanillaRuleModifier : MonoBehaviour
             DebugLog("Generating Rules based on Seed {0}", seed);
             GenerateRules(seed);
             ManualGenerator.Instance.WriteManual(seed);
-            if(seed != 1 || !_modSettings.Settings.RandomRuleSeed)
-                AddWidget = StartCoroutine(AddWidgetToBomb(RuleSeedWidget));
+            
         }
+        else if ((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
+        {
+            AddWidget = StartCoroutine(AddWidgetToBomb(RuleSeedWidget));
+        }
+        else if (state == KMGameInfo.State.Gameplay)
+        {
+            FixMorseCode = StartCoroutine(FixMorseCodeModule());
+        }
+
         _prevState = CurrentState;
         CurrentState = state;
     }
