@@ -222,20 +222,18 @@ public class BombCreator : MonoBehaviour
         TwitchModeButton.OnInteract += delegate
         {
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-	        switch (TwitchPlays.GetGameMode())
+	        var modes = ((GameModes[])Enum.GetValues(typeof(GameModes))).ToList();
+	        var mode = TwitchPlays.GetGameMode();
+	        var nextmode = mode;
+	        do
 	        {
-				case GameModes.NormalMode:
-					TwitchPlays.SetGameMode(GameModes.TimeMode);
-					break;
-				case GameModes.TimeMode:
-					TwitchPlays.SetGameMode(GameModes.ZenMode);
-					break;
-				case GameModes.ZenMode:
-					TwitchPlays.SetGameMode(GameModes.SteadyMode);
-					break;
-				default:
-					TwitchPlays.SetGameMode(GameModes.NormalMode);
-					break;
+		        nextmode = modes[(modes.IndexOf(nextmode) + 1) % modes.Count];
+				TwitchPlays.SetGameMode(nextmode);
+	        } while (TwitchPlays.GetGameMode() != nextmode);
+
+	        if (nextmode == mode)
+	        {
+		        DebugLog("Failed to change game mode from {0} to any other mode", mode);
 	        }
 
 	        UpdateDisplay();
