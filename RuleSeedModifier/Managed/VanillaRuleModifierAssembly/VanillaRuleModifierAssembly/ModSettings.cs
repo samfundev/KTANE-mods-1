@@ -32,6 +32,9 @@ namespace VanillaRuleModifierAssembly
         public int MaxRandomSeed = 10000;
 
         public string HowToUse5 = "Set this value to however high you wish the seed to be.  Use -1 to indicate no limit.";
+
+        public string Language = "en";
+        public string ValidLanguages = "English: en";
     }
 
     public class ModSettings

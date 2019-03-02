@@ -94,6 +94,7 @@
     <Compile Include="RuleSetGenerators\WireRuleGenerator.cs" />
     <Compile Include="RuleSetGenerators\WireSetRuleGenerator.cs" />
     <Compile Include="StringExtension.cs" />
+    <Compile Include="Ut.cs" />
     <Compile Include="VanillaRuleModifier.cs" />
     <Compile Include="RuleSeedModifierProperties.cs" />
   </ItemGroup>

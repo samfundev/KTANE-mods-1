@@ -11,7 +11,7 @@ using Settings = VanillaRuleModifierAssembly.ModSettings;
 public class VanillaRuleModifier : MonoBehaviour
 {
     private KMGameInfo _gameInfo = null;
-    public Settings _modSettings;
+    public static Settings _modSettings;
 
     public int CurrentSeed
     {
