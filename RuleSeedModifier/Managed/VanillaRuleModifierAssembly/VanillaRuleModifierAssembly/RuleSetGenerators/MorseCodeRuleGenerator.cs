@@ -74,12 +74,10 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                         return r == 0 ? Math.Sign(a.pref - b.pref) : r;
                     });
                     var howmany = Math.Min(Math.Min(rand.Next(1, 4), NumFrequenciesUsed - chosenWords.Count), toAdd.Count);
-                    Debug.LogFormat(@"[Password rule seed] From {0}, adding words: {1}", chosenWords[i], string.Join(", ", toAdd.Take(howmany).Select(w => string.Format("{0}/{1}/{2}", w.word, w.dist, w.pref)).ToArray()));
+                    Debug.LogFormat(@"[Morse Code Rule Seed Generator] From {0}, adding words: {1}", chosenWords[i], string.Join(", ", toAdd.Take(howmany).Select(w => string.Format("{0}/{1}/{2}", w.word, w.dist, w.pref)).ToArray()));
                     chosenWords.AddRange(toAdd.Take(howmany).Select(inf => inf.word));
                 }
-                //chosenWords = chosenWords.OrderBy(x => rand.NextDouble()).ToList();
-
-                return new MorseCodeRuleSet(Enumerable.Range(0, NumFrequenciesUsed).ToDictionary(i => freqs[i], i => chosenWords[i]));
+                dictionary = Enumerable.Range(0, NumFrequenciesUsed).ToDictionary(i => freqs[i], i => chosenWords[i]);
             }
             else
             {
@@ -93,8 +91,13 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     words.RemoveAt(ix);
                     dictionary.Add(freq, value);
                 }
-                return new MorseCodeRuleSet(dictionary);
             }
+            var ruleSet = new MorseCodeRuleSet(dictionary);
+            var morseCodes = ".-,-...,-.-.,-..,.,..-.,--.,....,..,.---,-.-,.-..,--,-.,---,.--.,--.-,.-.,...,-,..-,...-,.--,-..-,-.--,--..".Split(',');
+            ruleSet.SignalDict = new Dictionary<char, List<MorseCodeComponent.SignalEnum>>();
+            for (int i = 0; i < 26; i++)
+                ruleSet.SignalDict[(char) ('a' + i)] = morseCodes[i].Select(ch => ch == '.' ? MorseCodeComponent.SignalEnum.Dot : MorseCodeComponent.SignalEnum.Dash).ToList();
+            return ruleSet;
         }
 
         public MorseCodeRuleSet GenerateMorseCodeRuleSet(int seed)
