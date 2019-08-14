@@ -53,7 +53,7 @@ public class ColorBlindHelper : MonoBehaviour
 			foreach (var kvp in loadedMods.Values)
 			{
 				var go = (List<GameObject>) gameObjectsField.GetValue(kvp, null);
-				foreach (var g in go.Where(x => x.GetComponentsInChildren<Component>(true).Any(y => y.GetType().Name.Equals("KMColorblindMode"))))
+				foreach (var g in go.Where(x => x.GetComponentsInChildren<Component>(true).Any(y => y != null && y.GetType().Name.Equals("KMColorblindMode"))))
 				{
 					if (g.GetComponent<ColorBlindHelper>()) continue;
 					if (g.GetComponent<KMBombModule>())
