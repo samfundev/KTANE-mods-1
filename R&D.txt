@@ -1,0 +1,216 @@
+--------------------------- Empty BOMB Component layout
+ ---------------------------
+ Transform Name: EmptyComponent(Clone)
+ Position: X:-1.490116E-08 Y:0.07999998 Z:-0.2
+ Rotation: X:0 Y:0 Z:0
+ Scale: X:1 Y:1 Z:1
+ ---------------------------
+ Component Type: BombComponent
+IsSolvable: False
+ ---------------------------
+     ---------------------------
+     Transform Name: Component_empty
+     Position: X:0 Y:-0.0014899 Z:0
+     Rotation: X:270 Y:180 Z:0
+     Scale: X:1 Y:1 Z:1
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: ExcludeFromTexturePack
+     ---------------------------
+         ---------------------------
+         Transform Name: BackgroundOccluder
+         Position: X:0 Y:0 Z:0.0014899
+         Rotation: X:90 Y:-1.866933E-05 Z:0
+         Scale: X:1 Y:1 Z:1
+         ---------------------------
+         Component Type: BoxCollider
+         ---------------------------
+         Component Type: CrosshairOccluder
+         ---------------------------
+--------------------------- Timer BOMB Component layout
+ ---------------------------
+ Transform Name: TimerComponent(Clone)
+ Position: X:0.2 Y:-0.07999998 Z:0
+ Rotation: X:0 Y:0 Z:180
+ Scale: X:1 Y:1 Z:1
+ ---------------------------
+ Component Type: TimerComponent
+IsSolvable: False
+ ---------------------------
+ Component Type: StrikeIndicator
+ ---------------------------
+ Component Type: EventSounds
+ ---------------------------
+     ---------------------------
+     Transform Name: Strike1_Inactive
+     Position: X:0.01408781 Y:0.04332805 Z:0.05933567
+     Rotation: X:90 Y:-3.630248E-13 Z:0
+     Scale: X:1 Y:1 Z:1
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: BakeScale
+     ---------------------------
+     Component Type: ExcludeFromTexturePack
+     ---------------------------
+     Component Type: InstanceDestroyer
+     ---------------------------
+     ---------------------------
+     Transform Name: Strike0_Inactive
+     Position: X:-0.0107302 Y:0.04332805 Z:0.05933567
+     Rotation: X:90 Y:-3.630248E-13 Z:0
+     Scale: X:1 Y:1 Z:1
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: BakeScale
+     ---------------------------
+     Component Type: ExcludeFromTexturePack
+     ---------------------------
+     Component Type: InstanceDestroyer
+     ---------------------------
+     ---------------------------
+     Transform Name: Strike0_Active
+     Position: X:-0.01073062 Y:0.04332799 Z:0.05932617
+     Rotation: X:90 Y:-7.830295E-07 Z:0
+     Scale: X:1 Y:1 Z:1
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: VertexColor
+     ---------------------------
+     Component Type: ExcludeFromStaticBatch
+     ---------------------------
+     Component Type: BakeScale
+     ---------------------------
+     Component Type: ExcludeFromTexturePack
+     ---------------------------
+     Component Type: InstanceDestroyer
+     ---------------------------
+     ---------------------------
+     Transform Name: Strike1_Active
+     Position: X:0.01408744 Y:0.04332799 Z:0.05932617
+     Rotation: X:90 Y:-7.830295E-07 Z:0
+     Scale: X:1 Y:1 Z:1
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: VertexColor
+     ---------------------------
+     Component Type: ExcludeFromStaticBatch
+     ---------------------------
+     Component Type: BakeScale
+     ---------------------------
+     Component Type: ExcludeFromTexturePack
+     ---------------------------
+     Component Type: InstanceDestroyer
+     ---------------------------
+     ---------------------------
+     Transform Name: TimerText
+     Position: X:0.007260002 Y:0.0294 Z:0.0103775
+     Rotation: X:90 Y:0 Z:0
+     Scale: X:1 Y:1.547481 Z:1
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: ExcludeFromStaticBatch
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: ExcludeFromTexturePack
+     ---------------------------
+     Component Type: CanvasRenderer
+     ---------------------------
+     Component Type: TextMeshPro
+     ---------------------------
+         ---------------------------
+         Transform Name: TimerTextBack
+         Position: X:0 Y:0 Z:0.0004
+         Rotation: X:0 Y:0 Z:0
+         Scale: X:1 Y:1.000001 Z:1.000001
+         ---------------------------
+         Component Type: MeshRenderer
+         ---------------------------
+         Component Type: ExcludeFromStaticBatch
+         ---------------------------
+         Component Type: MeshFilter
+         ---------------------------
+         Component Type: ExcludeFromTexturePack
+         ---------------------------
+         Component Type: CanvasRenderer
+         ---------------------------
+         Component Type: TextMeshPro
+         ---------------------------
+         ---------------------------
+         Transform Name: TimerTextBack
+         Position: X:0 Y:0 Z:0.0004
+         Rotation: X:0 Y:0 Z:0
+         Scale: X:1 Y:1.000001 Z:1.000001
+         ---------------------------
+         Component Type: PlatformToggle
+         ---------------------------
+         Component Type: MeshRenderer
+         ---------------------------
+         Component Type: ExcludeFromStaticBatch
+         ---------------------------
+         Component Type: MeshFilter
+         ---------------------------
+         Component Type: ExcludeFromTexturePack
+         ---------------------------
+         Component Type: Note
+         ---------------------------
+         Component Type: CanvasRenderer
+         ---------------------------
+         Component Type: TextMeshPro
+         ---------------------------
+     ---------------------------
+     Transform Name: LightGlow
+     Position: X:0 Y:0.03277782 Z:-0.03512979
+     Rotation: X:90 Y:0 Z:0
+     Scale: X:0.2866523 Y:0.2866523 Z:0.2866523
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: VertexColor
+     ---------------------------
+     Component Type: BakeScale
+     ---------------------------
+     ---------------------------
+     Transform Name: Component_TimerNoStrikes
+     Position: X:-0.09690776 Y:-0.006776214 Z:-0.1006097
+     Rotation: X:270 Y:180 Z:0
+     Scale: X:1 Y:1 Z:1
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: ExcludeFromTexturePack
+     ---------------------------
+     ---------------------------
+     Transform Name: Component_Timer
+     Position: X:-0.09690776 Y:-0.006776214 Z:-0.1006097
+     Rotation: X:270 Y:180 Z:0
+     Scale: X:1 Y:1 Z:1
+     ---------------------------
+     Component Type: MeshFilter
+     ---------------------------
+     Component Type: MeshRenderer
+     ---------------------------
+     Component Type: Animator
+     ---------------------------
+     Component Type: ExcludeFromTexturePack
+     ---------------------------

@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
+using SerialNumberModifierAssembly;
 using UnityEngine;
 using static SerialNumberModifierAssembly.CommonReflectedTypeInfo;
 
@@ -14,6 +16,8 @@ public class SerialNumberWidget : Widget
 
     private string _serialNumber = string.Empty;
     private string _tagSerial = string.Empty;
+    private static List<string> _override = new List<string>();
+    private static int _overrideIndex = 0;
 
     private string GetAllowedCharacters(string characterset, string exclusions, string defaultset)
     {
@@ -23,6 +27,40 @@ public class SerialNumberWidget : Widget
                 ? characterset.Replace("O", exclusions.Contains("E") ? "" : "E")
                 : characterset.Replace(c.ToString(), "");
         return characterset == string.Empty ? defaultset : characterset;
+    }
+
+    private bool IsOverrideValid(string snOverride)
+    {
+        var allowedLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        var allowedNumbers = "0123456789";
+        var allowedCharacters = allowedLetters + allowedNumbers;
+
+        return snOverride != null &&
+               snOverride.Length == 6 && 
+               allowedCharacters.Contains(snOverride[0].ToString()) && 
+               allowedCharacters.Contains(snOverride[1].ToString()) && 
+               allowedNumbers.Contains(snOverride[2].ToString()) && 
+               allowedLetters.Contains(snOverride[3].ToString()) && 
+               allowedLetters.Contains(snOverride[4].ToString()) && 
+               allowedNumbers.Contains(snOverride[5].ToString());
+    }
+
+    private void RandomSerialNumber(ModuleSettings settings)
+    {
+        var letters = GetAllowedCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZ", settings.ForbiddenSerialNumberLettersNumbers + _tag.ForcedLetterNumberExclusions, "ABCDEFGHIJKLMNEPQRSTUVWXZ");
+        var digits = GetAllowedCharacters("0123456789", settings.ForbiddenSerialNumberLettersNumbers + _tag.ForcedLetterNumberExclusions, "0123456789");
+
+        letters = GetAllowedCharacters(letters, _tag.ForcedLetterNumberExclusions, letters);
+        digits = GetAllowedCharacters(digits, _tag.ForcedLetterNumberExclusions, digits);
+
+        var lettersDigits = letters + digits;
+
+        _serialNumber += lettersDigits.Substring(Random.Range(0, lettersDigits.Length), 1);
+        _serialNumber += lettersDigits.Substring(Random.Range(0, lettersDigits.Length), 1);
+        _serialNumber += digits.Substring(Random.Range(0, digits.Length), 1);
+        _serialNumber += letters.Substring(Random.Range(0, letters.Length), 1);
+        _serialNumber += letters.Substring(Random.Range(0, letters.Length), 1);
+        _serialNumber += digits.Substring(Random.Range(0, digits.Length), 1);
     }
 
     private void Awake()
@@ -38,20 +76,39 @@ public class SerialNumberWidget : Widget
 
         var settings = SerialNumberModifier.Settings.Settings;
 
-        var letters = GetAllowedCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZ", settings.ForbiddenSerialNumberLettersNumbers + _tag.ForcedLetterNumberExclusions, "ABCDEFGHIJKLMNEPQRSTUVWXZ");
-        var digits = GetAllowedCharacters("0123456789", settings.ForbiddenSerialNumberLettersNumbers + _tag.ForcedLetterNumberExclusions, "0123456789");
+        
+        if (settings.SerialNumberOverride == null)
+        {
+            DebugLog("Serial number override list is <NULL>, Generating a random serial number");
+            RandomSerialNumber(settings);
+        }
+        else
+        {
+            if (settings.SerialNumberOverride.Count != _override.Count ||
+                Enumerable.Range(0, _override.Count).Any(x => !settings.SerialNumberOverride[x].Equals(_override[x])))
+            {
+                _override = new List<string>(settings.SerialNumberOverride);
+                _overrideIndex = 0;
+            }
 
-        letters = GetAllowedCharacters(letters, _tag.ForcedLetterNumberExclusions, letters);
-        digits = GetAllowedCharacters(digits, _tag.ForcedLetterNumberExclusions, digits);
-
-        var lettersDigits = letters + digits;
-
-        _serialNumber += lettersDigits.Substring(Random.Range(0, lettersDigits.Length), 1);
-        _serialNumber += lettersDigits.Substring(Random.Range(0, lettersDigits.Length), 1);
-        _serialNumber += digits.Substring(Random.Range(0, digits.Length), 1);
-        _serialNumber += letters.Substring(Random.Range(0, letters.Length), 1);
-        _serialNumber += letters.Substring(Random.Range(0, letters.Length), 1);
-        _serialNumber += digits.Substring(Random.Range(0, digits.Length), 1);
+            DebugLog("Checking to see if the pre-determined list of Serial number is fully valid");
+            if (settings.SerialNumberOverride.Any(x => !IsOverrideValid(x)))
+            {
+                var invalidIndexes = settings.SerialNumberOverride.Select((x, ix) => ix).Where(x => !IsOverrideValid(settings.SerialNumberOverride[x])).ToArray();
+                DebugLog("The Following SerialNumberOverride indexes are invalid: {0}\nGenerating a random serial number", string.Join(", ", invalidIndexes.Select(x => x + ":\"" + settings.SerialNumberOverride[x] + "\":" + settings.SerialNumberOverride[x].Length).ToArray()));
+                RandomSerialNumber(settings);
+            }
+            else if (_overrideIndex >= settings.SerialNumberOverride.Count)
+            {
+                DebugLog("Ran out of pre-determined serial numbers, Generating a random serial number");
+                RandomSerialNumber(settings);
+            }
+            else
+            {
+                DebugLog("Using pre-determined serial number");
+                _serialNumber += _override[_overrideIndex++];
+            }
+        }
 
         _activated = settings.ShowSerialNumberBeforeLightsTurnOn;
 

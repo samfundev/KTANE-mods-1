@@ -91,6 +91,23 @@ public static class ReflectionHelper
         }
     }
 
+    public sealed class VoidMethodInfo
+    {
+        private readonly object _target;
+        public MethodInfo Method { get; }
+
+        public VoidMethodInfo(object target, MethodInfo method)
+        {
+            _target = target;
+            Method = method;
+        }
+
+        public void Invoke(params object[] arguments)
+        {
+            Method.Invoke(_target, arguments);
+        }
+    }
+
     public sealed class PropertyInfo<T>
     {
         private readonly object _target;
@@ -187,14 +204,25 @@ public static class ReflectionHelper
 
     public static MethodInfo<T> GetMethod<T>(object target, string name, int numParameters, bool isPublic = false)
     {
-        if (target == null)
-        {
-            DebugLog("Attempt to get {1} method {0} of return type {2} from a null object.", name, isPublic ? "public" : "non-public", typeof(T).FullName);
-            return null;
-        }
-        var bindingFlags = (isPublic ? BindingFlags.Public : BindingFlags.NonPublic) | BindingFlags.Instance;
-        var targetType = target.GetType();
-        var mths = targetType.GetMethods(bindingFlags).Where(m => m.Name == name && m.GetParameters().Length == numParameters && typeof(T).IsAssignableFrom(m.ReturnType)).Take(2).ToArray();
+        if (target != null)
+            return GetMethodImpl<T>(target, target.GetType(), name, numParameters, isPublic, BindingFlags.Instance);
+
+        DebugLog("Attempt to get {1} method {0} of return type {2} from a null object.", name, isPublic ? "public" : "non-public", typeof(T).FullName);
+        return null;
+    }
+
+    public static MethodInfo<T> GetStaticMethod<T>(Type targetType, string name, int numParameters, bool isPublic = false)
+    {
+        if (targetType != null)
+            return GetMethodImpl<T>(null, targetType, name, numParameters, isPublic, BindingFlags.Static);
+
+        DebugLog("Attempt to get {1} method {0} of return type {2} from a null type.", name, isPublic ? "public" : "non-public", typeof(T).FullName);
+        return null;
+    }
+
+    public static MethodInfo<T> GetMethodImpl<T>(object target, Type targetType, string name, int numParameters, bool isPublic, BindingFlags bindingFlags)
+    {
+        var mths = targetType.GetMethods((isPublic ? BindingFlags.Public : BindingFlags.NonPublic) | bindingFlags).Where(m => m.Name == name && m.GetParameters().Length == numParameters && typeof(T).IsAssignableFrom(m.ReturnType)).ToArray();
         switch (mths.Length)
         {
             case 0:
@@ -204,6 +232,40 @@ public static class ReflectionHelper
                 return new MethodInfo<T>(target, mths[0]);
             default:
                 DebugLog("Type {0} contains multiple {1} methods {2} with return type {3} and {4} parameters.", targetType, isPublic ? "public" : "non-public", name, typeof(T).FullName, numParameters);
+                return null;
+        }
+    }
+
+    public static VoidMethodInfo GetMethod(object target, string name, int numParameters, bool isPublic = false)
+    {
+        if (target != null)
+            return GetMethodImpl(target, target.GetType(), name, numParameters, isPublic, BindingFlags.Instance);
+
+        DebugLog("Attempt to get {1} method {0} of return type {2} from a null object.", name, isPublic ? "public" : "non-public", typeof(void).FullName);
+        return null;
+    }
+
+    public static VoidMethodInfo GetStaticMethod(Type targetType, string name, int numParameters, bool isPublic = false)
+    {
+        if (targetType != null)
+            return GetMethodImpl(null, targetType, name, numParameters, isPublic, BindingFlags.Static);
+
+        DebugLog("Attempt to get {1} method {0} of return type {2} from a null type.", name, isPublic ? "public" : "non-public", typeof(void).FullName);
+        return null;
+    }
+
+    public static VoidMethodInfo GetMethodImpl(object target, Type targetType, string name, int numParameters, bool isPublic, BindingFlags bindingFlags)
+    {
+        var mths = targetType.GetMethods((isPublic ? BindingFlags.Public : BindingFlags.NonPublic) | bindingFlags).Where(m => m.Name == name && m.GetParameters().Length == numParameters && typeof(void).IsAssignableFrom(m.ReturnType)).ToArray();
+        switch (mths.Length)
+        {
+            case 0:
+                DebugLog("Type {0} does not contain {1} method {2} with return type {3} and {4} parameters.", targetType, isPublic ? "public" : "non-public", name, typeof(void).FullName, numParameters);
+                return null;
+            case 1:
+                return new VoidMethodInfo(target, mths[0]);
+            default:
+                DebugLog("Type {0} contains multiple {1} methods {2} with return type {3} and {4} parameters.", targetType, isPublic ? "public" : "non-public", name, typeof(void).FullName, numParameters);
                 return null;
         }
     }

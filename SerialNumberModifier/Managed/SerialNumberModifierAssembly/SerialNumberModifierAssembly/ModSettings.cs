@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using UnityEngine;
@@ -8,10 +10,42 @@ namespace SerialNumberModifierAssembly
 {
     public class ModuleSettings
     {
-        public int SettingsVersion;
-        public string HowToUse0 = "Don't Touch this value. It is used by the mod internally to determine if there are new settings to be saved.";
+        private static readonly ModuleSettings Instance = new ModuleSettings();
 
-    
+        public static bool IsMatch(ref List<string> list1, List<string> list2)
+        {
+            if (list1 == null || list1.Count != list2.Count)
+            {
+                list1 = new List<string>(list2);
+                return false;
+            }
+
+            for (var i = 0; i < list1.Count; i++)
+            {
+                if (list1[i].Equals(list2[i])) continue;
+                list1 = new List<string>(list2);
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool AreUsageStringsClean()
+        {
+            var result = true;
+            result &= IsMatch(ref HowToUse0, Instance.HowToUse0);
+            result &= IsMatch(ref HowToUse1, Instance.HowToUse1);
+            result &= IsMatch(ref HowToUse2, Instance.HowToUse2);
+            result &= IsMatch(ref HowToUse3, Instance.HowToUse3);
+            result &= IsMatch(ref HowToUse4, Instance.HowToUse4);
+            result &= HowToReset.Equals(Instance.HowToReset);
+            HowToReset = Instance.HowToReset;
+            return result;
+        }
+
+        public int SettingsVersion;
+        public List<string> HowToUse0 = new List<string> {"Don't Touch this value. It is used by the mod internally to determine if there are new settings to be saved."};
+        
         public bool ResetToDefault = false;
         public string HowToReset = "Changing this setting to true will reset ALL your setting back to default.";
 
@@ -19,23 +53,43 @@ namespace SerialNumberModifierAssembly
         //Make sure those strings are JSON compliant.
         public bool Enabled = true;
 
-        public string HowToUse1 = "If disabled, the built in serial number widget will be used instead.";
+        public List<string> HowToUse1 = new List<string>
+        {
+            "If disabled, the built in serial number widget will be used instead."
+        };
 
         public string ForbiddenSerialNumberLettersNumbers = "OY";
 
-        public string HowToUse4 = "Serial number letters/digits specified here will be disallowed to appear";
-        public string HowToUse5 = "Note, at least one letter and one digit MUST be allowed.";
-        public string HowToUse6 = "If every letter/digit is marked as forbidden, the widget will silently forbid NONE of them.";
-        public string HowToUse7 = "The default letters that are forbidden are \"O\" and \"Y \"";
+        public List<string> HowToUse2 = new List<string>
+        {
+            "Serial number letters/digits specified here will be disallowed to appear",
+            "Note, at least one letter and one digit MUST be allowed.",
+            "If every letter/digit is marked as forbidden, the widget will silently forbid NONE of them.",
+            "The default letters that are forbidden are 'O' and 'Y'"
+        };
 
         public bool ShowSerialNumberBeforeLightsTurnOn = false;
 
-        public string HowToUse8 = "If Enabled, the serial number text is readable before the lights turn on for the first time.";
+        public List<string> HowToUse3 = new List<string>
+        {
+            "If Enabled, the serial number text is readable before the lights turn on for the first time."
+        };
+
+        public List<string> SerialNumberOverride = new List<string>();
+        public List<string> HowToUse4 = new List<string>
+        {
+            "Fill out the above list like this list is filled out.",
+            "If there are ANY entries in this list that are invalid according to the game rules",
+            "or if ALL of them get used in the current session, the mod will start using random serial numbers again.",
+            "The format is XXDAAD, where X = Any Letter or Digit, D = Any Digit, A = Any Letter",
+            "",
+            "000AA0","000AA1","000AA2"
+        };
     }
 
     public class ModSettings
     {
-        public readonly int ModSettingsVersion = 2;
+        public readonly int ModSettingsVersion = 3;
         public ModuleSettings Settings = new ModuleSettings();
 
         public string ModuleName { get; }
@@ -102,7 +156,7 @@ namespace SerialNumberModifierAssembly
                     var settings = File.ReadAllText(modSettings);
                     Settings = JsonConvert.DeserializeObject<ModuleSettings>(settings, new StringEnumConverter());
 
-                    if (Settings.SettingsVersion != ModSettingsVersion)
+                    if (Settings.SettingsVersion != ModSettingsVersion || !Settings.AreUsageStringsClean())
                         return WriteSettings();
                     if (!Settings.ResetToDefault) return true;
                     Settings = new ModuleSettings();

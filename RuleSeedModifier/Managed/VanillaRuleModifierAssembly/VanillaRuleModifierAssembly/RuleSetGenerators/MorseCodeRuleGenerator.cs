@@ -19,6 +19,17 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             }
         }
 
+        private static void AddCharacters()
+        {
+            var CreateSignalDictionaryMethod = ReflectionHelper.GetMethod(typeof(MorseCodeComponent), "CreateSignalDictionary", 0, false);
+            var AddCharacterSignalMethod = ReflectionHelper.GetMethod(typeof(MorseCodeComponent), "AddCharacterSignal", 2, false);
+            if (CreateSignalDictionaryMethod == null || AddCharacterSignalMethod == null) return;
+
+            CreateSignalDictionaryMethod.Invoke();
+            AddCharacterSignalMethod.Invoke();
+
+        }
+
         private static int LevenshteinDistance(string a, string b)
         {
             int lengthA = a.Length;
