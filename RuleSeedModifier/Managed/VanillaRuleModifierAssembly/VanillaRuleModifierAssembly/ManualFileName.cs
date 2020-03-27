@@ -33,17 +33,16 @@ namespace VanillaRuleModifierAssembly
 
         public void WriteFile(string path, List<ReplaceText> textReplacements = null)
         {
-            DebugLog("Writing Manaul file: {0}", Name);
             var manualpath = Path.Combine(path, Name);
             if (string.IsNullOrEmpty(manualpath))
             {
-                DebugLog("Manual path is empty or null");
+                DebugLog("Manual path {0} is empty or null", manualpath);
                 return;
             }
             var dirname = Path.GetDirectoryName(manualpath);
             if (string.IsNullOrEmpty(dirname))
             {
-                DebugLog("Directory name is empty or null");
+                DebugLog("Directory name {0} is empty or null", dirname);
                 return;
             }
 

@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 using System.IO;
+using UnityEngine;
 using VanillaRuleModifierAssembly;
 using VanillaRuleModifierAssembly.RuleSetGenerators;
 using static VanillaRuleModifierAssembly.CommonReflectedTypeInfo;
 using Settings = VanillaRuleModifierAssembly.ModSettings;
-
 
 // ReSharper disable once CheckNamespace
 public class VanillaRuleModifier : MonoBehaviour
@@ -47,55 +46,52 @@ public class VanillaRuleModifier : MonoBehaviour
         _fixesApplied = true;
     }
 
-	internal static RuleSeedModifierProperties[] PublicProperties = new RuleSeedModifierProperties[2];
-	internal static HashSet<string> ModsThatSupportRuleSeedModifier = new HashSet<string>
-	{
-		"WireSetComponentSolver","ButtonComponentSolver",
-		"WireSequenceComponentSolver","WhosOnFirstComponentSolver",
-		"VennWireComponentSolver","SimonComponentSolver",
-		"PasswordComponentSolver","NeedyKnobComponentSolver",
-		"MorseCodeComponentSolver","MemoryComponentSolver",
-		"KeypadComponentSolver","InvisibleWallsComponentSolver"
-	};
+    internal static RuleSeedModifierProperties[] PublicProperties = new RuleSeedModifierProperties[2];
+    internal static HashSet<string> ModsThatSupportRuleSeedModifier = new HashSet<string>
+    {
+        "WireSetComponentSolver","ButtonComponentSolver",
+        "WireSequenceComponentSolver","WhosOnFirstComponentSolver",
+        "VennWireComponentSolver","SimonComponentSolver",
+        "PasswordComponentSolver","NeedyKnobComponentSolver",
+        "MorseCodeComponentSolver","MemoryComponentSolver",
+        "KeypadComponentSolver","InvisibleWallsComponentSolver"
+    };
     private bool _started = false;
-    private void Start ()
+    private void Start()
     {
         _started = true;
-	    DebugLog("Service prefab Instantiated.");
-	    ApplyBugFixes();
+        ApplyBugFixes();
         //DestroyImmediate(GetComponent<KMService>()); //Hide from Mod Selector
         _modSettings = new Settings(GetComponent<KMModSettings>());
 
-	    if (!Initialize())
-	    {
-	        DebugLog("Failed to initialize the reflection component of Vanilla Rule Modifier. Aborting load");
-	        return;
-	    }
-	    if (!_modSettings.ReadSettings())
-	    {
-	        DebugLog("Failed to initialize Mod settings. Aborting load");
-	        return;
-	    }
+        if (!Initialize())
+        {
+            DebugLog("Failed to initialize the reflection component of Vanilla Rule Modifier. Aborting load");
+            return;
+        }
+        if (!_modSettings.ReadSettings())
+        {
+            DebugLog("Failed to initialize Mod settings. Aborting load");
+            return;
+        }
 
         GameObject infoObject = new GameObject("VanillaRuleModifierProperties");
         infoObject.transform.parent = gameObject.transform;
         PublicProperties[0] = infoObject.AddComponent<RuleSeedModifierProperties>();
         PublicProperties[0].VanillaRuleModifer = this;
 
-	    GameObject infoObject2 = new GameObject("RuleSeedModifierProperties");
-	    infoObject2.transform.parent = gameObject.transform;
-	    PublicProperties[1] = infoObject2.AddComponent<RuleSeedModifierProperties>();
-	    PublicProperties[1].VanillaRuleModifer = this;
+        GameObject infoObject2 = new GameObject("RuleSeedModifierProperties");
+        infoObject2.transform.parent = gameObject.transform;
+        PublicProperties[1] = infoObject2.AddComponent<RuleSeedModifierProperties>();
+        PublicProperties[1].VanillaRuleModifer = this;
 
-	    foreach (string mod in ModsThatSupportRuleSeedModifier)
-	    {
-		    RuleSeedModifierProperties.AddSupportedModule(mod);
-	    }
+        foreach (string mod in ModsThatSupportRuleSeedModifier)
+        {
+            RuleSeedModifierProperties.AddSupportedModule(mod);
+        }
 
-		_gameInfo = GetComponent<KMGameInfo>();
+        _gameInfo = GetComponent<KMGameInfo>();
         LoadMod();
-        
-	    DebugLog("Service started");
     }
 
     public void SetRuleSeed(int seed, bool writeSettings)
@@ -113,7 +109,7 @@ public class VanillaRuleModifier : MonoBehaviour
 
     public string GenerateManual()
     {
-        if(CurrentState == KMGameInfo.State.Setup || CurrentState == KMGameInfo.State.PostGame)
+        if (CurrentState == KMGameInfo.State.Setup || CurrentState == KMGameInfo.State.PostGame)
             GenerateRules(_modSettings.Settings.RuleSeed);
         ManualGenerator.Instance.WriteManual(_modSettings.Settings.RuleSeed);
         return Path.Combine(Application.persistentDataPath, Path.Combine("ModifiedManuals", _modSettings.Settings.RuleSeed.ToString()));
@@ -179,7 +175,7 @@ public class VanillaRuleModifier : MonoBehaviour
 
         //DebugLog("Transitioning from {1} to {0}", state, CurrentState);
         //if((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
-        if(CurrentState == KMGameInfo.State.Setup && state == KMGameInfo.State.Transitioning)
+        if (CurrentState == KMGameInfo.State.Setup && state == KMGameInfo.State.Transitioning)
         {
             _modSettings.ReadSettings();
             var seed = _modSettings.Settings.RuleSeed;
@@ -193,7 +189,6 @@ public class VanillaRuleModifier : MonoBehaviour
             DebugLog("Generating Rules based on Seed {0}", seed);
             GenerateRules(seed);
             ManualGenerator.Instance.WriteManual(seed);
-            
         }
         else if ((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
         {
@@ -209,4 +204,30 @@ public class VanillaRuleModifier : MonoBehaviour
     }
 
     public KMWidget RuleSeedWidget;
+
+    public static Dictionary<string, object>[] TweaksEditorSettings = new Dictionary<string, object>[]
+    {
+        new Dictionary<string, object>
+        {
+            { "Filename", "VanillaRuleModifier-settings.txt" },
+            { "Name", "Rule Seed Modifier" },
+            { "Listings", new List<Dictionary<string, object>>
+                {
+                    new Dictionary<string, object> { { "Key", "SettingsVersion" }, { "Text", "Settings Version" }, { "Description", "Don't touch this value. It is used by the mod internally to determine if\nthere are new settings to be saved." } },
+                    new Dictionary<string, object> { { "Key", "ResetToDefault" }, { "Text", "Reset To Default" }, { "Description", "Changing this setting to true will reset ALL your setting back to default." } },
+                    new Dictionary<string, object> { { "Key", "RuleSeed" }, { "Text", "Rule Seed" }, { "Description", "Sets the seed that will be used to generate the ruleset.\n1 = Vanilla. 6502 = Default Seed." } },
+                    new Dictionary<string, object> { { "Key", "RandomRuleSeed" }, { "Text", "Random Rule Seed" }, { "Description", "If enabled, then a random rule seed will be used each bomb." } },
+                    new Dictionary<string, object> { { "Key", "MaxRandomSeed" }, { "Text", "Max Random Seed" }, { "Description", "Set this value to however high you wish the seed to be.\nUse -1 to indicate no limit." } },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "Language" },
+                        { "Description", "Sets the language that manuals will be generated in.\nCurrently only \"en\" can be used." },
+                        { "Type", "Dropdown" },
+                        { "DropdownItems", new List<object> { "en" } }
+                    },
+                    new Dictionary<string, object> { { "Key", "ValidLanguages" }, { "Text", "Valid Languages" }, { "Description", "These are the languages that are currently supported." } },
+                }
+            }
+        }
+    };
 }

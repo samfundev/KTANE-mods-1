@@ -117,8 +117,8 @@ namespace VanillaRuleModifierAssembly
                 RhythmHeavenRuleSet = (RhythmHeavenRuleSet) RhythmHeavenRuleSetGenerator.GenerateRuleSet(seed),
                 MazeRuleSet = (MazeRuleSet) MazeRuleSetGenerator.GenerateRuleSet(seed),
                 SimonRuleSet = SimonRuleSetGenerator.GenerateSimonRuleSet(seed)
-			};
-	        ModRuleSetGenerator.Instance.CreateRules(seed);
+            };
+            ModRuleSetGenerator.Instance.CreateRules(seed);
 
             try
             {
@@ -169,8 +169,8 @@ namespace VanillaRuleModifierAssembly
 
                         var moduleLogger = (ILog) BombComponentLogger.GetValue(module);
 
-                        var chosenTerm = (string)MorseCodeModuleChosenTermField.GetValue(module);
-                        if(chosenTerm.Length < 5 || chosenTerm.Length > 6)
+                        var chosenTerm = (string) MorseCodeModuleChosenTermField.GetValue(module);
+                        if (chosenTerm.Length < 5 || chosenTerm.Length > 6)
                             continue;
 
                         MorseCodeModuleChosenWordField.SetValue(module, chosenTerm);
@@ -184,34 +184,28 @@ namespace VanillaRuleModifierAssembly
 
         public static IEnumerator AddWidgetToBomb(KMWidget widget)
         {
-            DebugLog("Started AddWidgetToBomb");
             var modwidget = widget.GetComponent<ModWidget>();
-            DebugLog("Tried to Get Modwidget");
             if (modwidget == null)
             {
                 DebugLog("Modwidget not defined. Creating it now.");
                 modwidget = widget.gameObject.AddComponent<ModWidget>();
             }
 
-            DebugLog("Definitely have mod widget");
             var generators = Object.FindObjectsOfType<WidgetGenerator>();
-            DebugLog($"{generators.Length} Widget Generators found");
             while (generators.Length == 0)
             {
                 yield return null;
                 generators = Object.FindObjectsOfType<WidgetGenerator>();
                 DebugLog($"{generators.Length} Widget Generators found");
             }
-            
-            foreach(var g in generators)
+
+            foreach (var g in generators)
             {
                 if (modwidget == null) break;
                 DebugLog("Adding required widget");
-                if(!g.RequiredWidgets.Contains(modwidget))
+                if (!g.RequiredWidgets.Contains(modwidget))
                     g.RequiredWidgets.Add(modwidget);
             }
-
-            yield break;
         }
 
         public static RuleManager GenerateRules(int seed)
@@ -220,7 +214,7 @@ namespace VanillaRuleModifierAssembly
             var bombRules = (BombRules) CurrentRulesProperty.GetValue(ruleManager, null);
 
             //If the official manual metadata has changed mid-game, grab the most current one.
-            if (OriginalBombRules == null || 
+            if (OriginalBombRules == null ||
                 bombRules.ManualMetaData.LanguageCode != OriginalBombRules.ManualMetaData.LanguageCode ||
                 bombRules.ManualMetaData.LockCode != OriginalBombRules.ManualMetaData.LockCode ||
                 bombRules.ManualMetaData.ManualVersion != OriginalBombRules.ManualMetaData.ManualVersion ||
@@ -295,7 +289,7 @@ namespace VanillaRuleModifierAssembly
 
         private static FieldInfo BombComponentLogger
         {
-            get; 
+            get;
         }
 
         private static readonly WireRuleGenerator WireRuleSetGenerator;

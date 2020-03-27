@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace VanillaRuleModifierAssembly
@@ -12,7 +10,7 @@ namespace VanillaRuleModifierAssembly
             AddProperty("RuleSeed", new Property(RuleSeed_Get, RuleSeed_Set));
             AddProperty("IsSeedVanilla", new Property(IsSeedVanilla_Get, null));
             AddProperty("IsSeedModded", new Property(IsSeedModded_Get, null));
-            AddProperty("GetRuleManual",new Property(RuleManaul_Get, null));
+            AddProperty("GetRuleManual", new Property(RuleManaul_Get, null));
             AddProperty("AddSupportedModule", new Property(null, SupportedModules_Set));
             AddProperty("RandomRuleSeed", new Property(RandomRuleSeed_Get, RandomRuleSeed_Set));
         }

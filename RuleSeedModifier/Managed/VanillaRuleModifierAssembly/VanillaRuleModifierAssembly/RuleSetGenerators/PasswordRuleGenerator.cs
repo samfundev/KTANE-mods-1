@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Assets.Scripts.Rules;
-using UnityEngine;
 
 namespace VanillaRuleModifierAssembly.RuleSetGenerators
 {
@@ -29,7 +28,8 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             }
 
             // ReSharper disable once StringLiteralTypo
-            alphabetField.Set(GetLocalizedAlphabet(language).ToCharArray().ToList());
+            var currentCulture = I2.Loc.LocalizationManager.CurrentCulture;
+            alphabetField.Set(GetLocalizedAlphabet(language).ToUpper(currentCulture).ToCharArray().ToList());
             var possibilities = GetLocalizedWordSet(language);
 
             if (CommonReflectedTypeInfo.IsModdedSeed)
@@ -37,7 +37,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 // Choose 17 base words
                 const int numBaseWords = 17;
                 const int maxWords = 35;
-                var words = possibilities.OrderBy(x => rand.Next()).Take(numBaseWords).ToList();
+                var words = possibilities.OrderBy(_ => rand.Next()).Take(numBaseWords).ToList();
 
                 // Find other words that are similar to these
                 for (int i = 0; i < numBaseWords && words.Count < maxWords; i++)
@@ -62,15 +62,15 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         private List<string> GetLocalizedWordSet(string language)
         {
-            return language != null && LocalizedPossibleWords.ContainsKey(language) 
-                ? LocalizedPossibleWords[language] 
+            return language != null && LocalizedPossibleWords.ContainsKey(language)
+                ? LocalizedPossibleWords[language]
                 : LocalizedPossibleWords["en"];
         }
 
         private string GetLocalizedAlphabet(string language)
         {
-            return language != null && LocalizedAlphabet.ContainsKey(language) 
-                ? LocalizedAlphabet[language] 
+            return language != null && LocalizedAlphabet.ContainsKey(language)
+                ? LocalizedAlphabet[language]
                 : LocalizedAlphabet["en"];
         }
 
@@ -190,6 +190,5 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 }
             }
         };
-
     }
 }

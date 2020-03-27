@@ -10,7 +10,6 @@ using BombGame;
 using Resources = VanillaRuleModifierAssembly.Properties.Resources;
 using static VanillaRuleModifierAssembly.CommonReflectedTypeInfo;
 
-
 namespace VanillaRuleModifierAssembly.RuleSetGenerators
 {
     public sealed class ManualGenerator
@@ -156,7 +155,6 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
         private void WriteComplicatedWiresManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
         {
-
             var strokeDashArrays = new List<float[]>
             {
                 new [] {20f, 10f, 5f, 10f},
@@ -310,10 +308,8 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 }
             }
 
-
             replacements.Add(new ReplaceText {Original = "NEEDYKNOBLIGHTCONFIGURATION", Replacement = replacement});
             file.WriteFile(path, replacements);
-
         }
 
         private void WriteKeypadsManual(string path, ManualFileName file, ref List<ReplaceText> replacements)
@@ -403,7 +399,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 replace += Localization.GetLocalizedString(map.Key);
                 replace += "</th>\n";
                 replace += "                                    <td>";
-                replace += string.Join(", ", map.Value.Select(Localization.GetLocalizedString).ToArray());
+                replace += string.Join(", ", map.Value.Select(term => Localization.GetLocalizedString(term)).ToArray());
                 replace += "</td>";
                 replace += "                                </tr>\n";
             }
@@ -486,7 +482,6 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 }
             }
 
-
             replacements.Add(new ReplaceText {Original = "WIRECUTTINGINSTRUCTIONS", Replacement = wirecuttinginstructions});
             file.WriteFile(path, replacements);
         }
@@ -517,8 +512,8 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
 
             foreach (var press in _ruleManager.ButtonRuleSet.RuleList)
             {
-                portsused = press.Queries.Aggregate(portsused, (current, query) => current | query.Property == QueryablePorts.EmptyPortPlate);
-                portsused = press.Queries.Aggregate(portsused, (current, query) => current | QueryablePorts.PortList.Contains(query.Property));
+                portsused = press.Queries.Aggregate(portsused, (current, query) => current || query.Property == QueryablePorts.EmptyPortPlate);
+                portsused = press.Queries.Aggregate(portsused, (current, query) => current || QueryablePorts.PortList.Contains(query.Property));
             }
 
             initial = _ruleManager.ButtonRuleSet.RuleList.Aggregate(initial, (current, press) => current + $"<li>If {press.GetQueryString()}, {press.GetSolutionString()}.</li>\n");
