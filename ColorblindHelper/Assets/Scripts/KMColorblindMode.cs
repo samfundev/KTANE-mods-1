@@ -8,8 +8,8 @@ public class KMColorblindMode : MonoBehaviour
 {
 	void Awake()
 	{
-		_settingsPath = Path.Combine(Path.Combine(Application.persistentDataPath, "Modsettings"), "ColorblindMode.json");
-		ReadSettings();
+		modConfig = new ModConfig<ColorblindModeSettings>("ColorblindMode");
+		_settings = modConfig.Settings;
 	}
 	
 
@@ -22,7 +22,7 @@ public class KMColorblindMode : MonoBehaviour
 		set
 		{
 			_settings.Enabled = value;
-			WriteSettings();
+			modConfig.Settings = _settings;
 		}
 	}
 
@@ -40,7 +40,7 @@ public class KMColorblindMode : MonoBehaviour
 		if (moduleID != null && !_settings.EnabledModules.TryGetValue(moduleID, out enabled) && addIfNotFound)
 		{
 			_settings.EnabledModules[moduleID] = null;
-			WriteSettings();
+			modConfig.Settings = _settings;
 		}
 		return enabled;
 	}
@@ -51,39 +51,12 @@ public class KMColorblindMode : MonoBehaviour
 		if (moduleID != null && _settings.EnabledModules.TryGetValue(moduleID, out temp))
 		{
 			_settings.EnabledModules[moduleID] = enable;
-			WriteSettings();
+			modConfig.Settings = _settings;
 		}
 	}
 
-	private static string _settingsPath;
+	private static ModConfig<ColorblindModeSettings> modConfig;
 	private static ColorblindModeSettings _settings = new ColorblindModeSettings();
-
-	static void WriteSettings()
-	{
-		try
-		{
-			File.WriteAllText(_settingsPath, JsonConvert.SerializeObject(_settings, Formatting.Indented));
-		}
-		catch
-		{
-			//
-		}
-	}
-
-	static void ReadSettings()
-	{
-		try
-		{
-			if (!File.Exists(_settingsPath)) WriteSettings();
-			_settings = JsonConvert.DeserializeObject<ColorblindModeSettings>(File.ReadAllText(_settingsPath));
-		}
-		catch
-		{
-			_settings = new ColorblindModeSettings();
-		}
-	}
-
-	
 }
 
 internal class ColorblindModeSettings
