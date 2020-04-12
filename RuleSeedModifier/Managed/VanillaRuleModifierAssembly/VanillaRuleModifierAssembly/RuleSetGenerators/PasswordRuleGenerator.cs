@@ -30,7 +30,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             // ReSharper disable once StringLiteralTypo
             var currentCulture = I2.Loc.LocalizationManager.CurrentCulture;
             alphabetField.Set(GetLocalizedAlphabet(language).ToUpper(currentCulture).ToCharArray().ToList());
-            var possibilities = GetLocalizedWordSet(language);
+            var possibilities = GetLocalizedWordSet(language).Select(word => word.ToUpper(currentCulture));
 
             if (CommonReflectedTypeInfo.IsModdedSeed)
             {
