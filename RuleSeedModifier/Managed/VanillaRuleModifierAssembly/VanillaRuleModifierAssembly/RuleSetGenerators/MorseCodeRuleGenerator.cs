@@ -88,7 +88,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     Debug.LogFormat(@"[Morse Code Rule Seed Generator] From {0}, adding words: {1}", chosenWords[i], string.Join(", ", toAdd.Take(howmany).Select(w => string.Format("{0}/{1}/{2}", w.word, w.dist, w.pref)).ToArray()));
                     chosenWords.AddRange(toAdd.Take(howmany).Select(inf => inf.word));
                 }
-                dictionary = Enumerable.Range(0, NumFrequenciesUsed).ToDictionary(i => freqs[i], i => chosenWords[i]);
+                dictionary = Enumerable.Range(0, NumFrequenciesUsed).ToDictionary(i => freqs[i], i => GetTermForWord(chosenWords[i]));
             }
             else
             {
@@ -100,7 +100,7 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                     ix = rand.Next(0, words.Count);
                     var value = words[ix];
                     words.RemoveAt(ix);
-                    dictionary.Add(freq, value);
+                    dictionary.Add(freq, GetTermForWord(value));
                 }
             }
             var ruleSet = new MorseCodeRuleSet(dictionary);
@@ -109,6 +109,14 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
             for (int i = 0; i < 26; i++)
                 ruleSet.SignalDict[(char) ('a' + i)] = morseCodes[i].Select(ch => ch == '.' ? MorseCodeComponent.SignalEnum.Dot : MorseCodeComponent.SignalEnum.Dash).ToList();
             return ruleSet;
+        }
+
+        private string GetTermForWord(string word)
+        {
+            var term = $"mod/VanillaRuleModifier_MorseCodeWord_{word}";
+            Localization.AddModTermData(term, word);
+
+            return term;
         }
 
         public MorseCodeRuleSet GenerateMorseCodeRuleSet(int seed)
