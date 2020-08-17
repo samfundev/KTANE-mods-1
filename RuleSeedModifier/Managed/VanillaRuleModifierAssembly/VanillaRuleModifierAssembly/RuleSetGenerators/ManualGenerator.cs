@@ -619,6 +619,13 @@ namespace VanillaRuleModifierAssembly.RuleSetGenerators
                 WriteHTML(path, manual, ref replacements);
             }
 	        ModRuleSetGenerator.Instance.WriteManuals(path);
+
+            var manuals = Path.Combine(Application.persistentDataPath, "ModifiedManuals");
+            foreach (string directoryPath in Directory.GetDirectories(manuals).OrderByDescending(directoryPath => new FileInfo(Path.Combine(directoryPath, "index.html")).LastWriteTime).Skip(10))
+            {
+                DebugLog("Deleting the manual for seed {0} because it's not one of the 10 recent manuals.", new DirectoryInfo(directoryPath).Name);
+                Directory.Delete(directoryPath, true);
+            }
         }
     }
 }
