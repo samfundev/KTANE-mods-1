@@ -215,7 +215,7 @@ public class VanillaRuleModifier : MonoBehaviour
                 {
                     new Dictionary<string, object> { { "Key", "SettingsVersion" }, { "Text", "Settings Version" }, { "Description", "Don't touch this value. It is used by the mod internally to determine if\nthere are new settings to be saved." } },
                     new Dictionary<string, object> { { "Key", "ResetToDefault" }, { "Text", "Reset To Default" }, { "Description", "Changing this setting to true will reset ALL your setting back to default." } },
-                    new Dictionary<string, object> { { "Key", "RuleSeed" }, { "Text", "Rule Seed" }, { "Description", "Sets the seed that will be used to generate the ruleset.\n1 = Vanilla. 6502 = Default Seed." } },
+                    new Dictionary<string, object> { { "Key", "RuleSeed" }, { "Text", "Rule Seed" }, { "Description", "Sets the seed that will be used to generate the ruleset.\n1 = Vanilla." } },
                     new Dictionary<string, object> { { "Key", "RandomRuleSeed" }, { "Text", "Random Rule Seed" }, { "Description", "If enabled, then a random rule seed will be used each bomb." } },
                     new Dictionary<string, object> { { "Key", "MaxRandomSeed" }, { "Text", "Max Random Seed" }, { "Description", "Set this value to however high you wish the seed to be.\nUse -1 to indicate no limit." } },
                     new Dictionary<string, object>

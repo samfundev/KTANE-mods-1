@@ -8,12 +8,11 @@ namespace VanillaRuleModifierAssembly
 {
     public class ModuleSettings
     {
-        private const int DefaultSeed = 6502;
+        private const int DefaultSeed = 1;
 
         public int SettingsVersion;
         public string HowToUse0 = "Don't Touch this value. It is used by the mod internally to determine if there are new settings to be saved.";
 
-    
         public bool ResetToDefault = false;
         public string HowToReset = "Changing this setting to true will reset ALL your setting back to default.";
 
@@ -23,7 +22,6 @@ namespace VanillaRuleModifierAssembly
 
         public string HowToUse1 = "Sets the seed that will be used to generate the ruleset.";
         public string HowToUse2 = "1 = Vanilla";
-        public string HowToUse3 = DefaultSeed + " = VanillaRuleModifier Default Seed";
 
         public bool RandomRuleSeed = false;
 
