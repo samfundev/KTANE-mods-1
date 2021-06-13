@@ -192,7 +192,8 @@ public class VanillaRuleModifier : MonoBehaviour
         }
         else if ((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
         {
-            AddWidget = StartCoroutine(AddWidgetToBomb(RuleSeedWidget));
+            if (_currentSeed != 1)
+                AddWidget = StartCoroutine(AddWidgetToBomb(RuleSeedWidget));
         }
         else if (state == KMGameInfo.State.Gameplay)
         {
