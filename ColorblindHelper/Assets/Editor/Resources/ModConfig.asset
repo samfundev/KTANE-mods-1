@@ -16,5 +16,6 @@ MonoBehaviour:
   description: This allows directly enabling/disabling Colorblind mode for each of
     the modules that support it.
   version: 1.0
-  outputFolder: H:\SteamLibrary\steamapps\common\Keep Talking and Nobody Explodes\mods
+  outputFolder: C:\Program Files (x86)\steam\steamapps\common\Keep Talking and Nobody
+    Explodes\mods
   previewImage: {fileID: 2800000, guid: c1a0391444526554b97064c0f4995e63, type: 3}
