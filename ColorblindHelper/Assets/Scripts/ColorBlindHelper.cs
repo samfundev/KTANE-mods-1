@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Assets.Scripts;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -20,12 +21,15 @@ public class ColorBlindHelper : MonoBehaviour
     public TextMesh GlobalEnableText;
     public KMSelectable GlobalEnableButton;
 
+	public KMSelectable ColorblindHoldable;
+
     public KMAudio Audio;
 
 	public KMColorblindMode ColorblindMode;
 
 	private List<string> _modules;
 	private int _moduleIndex;
+	private bool _isFocused;
 
     public static void DebugLog(string message, params object[] args)
     {
@@ -83,7 +87,11 @@ public class ColorBlindHelper : MonoBehaviour
 	    FindColorblindModules();
 
 	    _modules = ColorblindMode.ColorblindEnabledModules;
+		_modules.Sort();
         ChangeModuleDisableIndex(0);
+
+		ColorblindHoldable.OnInteract += () => _isFocused = true;
+		ColorblindHoldable.OnDefocus += () => _isFocused = false;
 
         ModuleDisableMinusButton.OnInteract += () => ChangeModuleDisableIndex(-1);
         ModuleDisablePlusButton.OnInteract += () => ChangeModuleDisableIndex(1);
@@ -101,7 +109,75 @@ public class ColorBlindHelper : MonoBehaviour
 
     private void Update()
     {
-       
+		if (_isFocused)
+		{
+			switch (MatchKey())
+			{
+				case KeyCode.UpArrow:
+					if (_moduleIndex > 10)
+						_moduleIndex -= 10;
+					else if (_moduleIndex == 0)
+						_moduleIndex = _modules.Count - 1;
+					else
+						_moduleIndex = 0;
+					Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+					UpdateDisplay();
+					break;
+				case KeyCode.DownArrow:
+					if ((_modules.Count > 10) && (_moduleIndex < (_modules.Count - 10)))
+						_moduleIndex += 10;
+					else if (_moduleIndex == (_modules.Count - 1))
+						_moduleIndex = 0;
+					else
+						_moduleIndex = _modules.Count - 1;
+					Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+					UpdateDisplay();
+					break;
+				case KeyCode.LeftArrow:
+					ModuleDisableMinusButton.OnInteract();
+					break;
+				case KeyCode.RightArrow:
+					ModuleDisablePlusButton.OnInteract();
+					break;
+				default:
+					if (Input.anyKeyDown)
+					{
+						int ix = -2;
+						foreach (char c in Input.inputString)
+						{
+							if (_modules[_moduleIndex].ToLowerInvariant()[0] == c)
+								_moduleIndex = (_moduleIndex + 1) % _modules.Count;
+							if (_modules[ix = _moduleIndex].ToLowerInvariant()[0] != c)
+								ix = _modules.FindIndex(s => Regex.IsMatch(s, "^" + c, RegexOptions.CultureInvariant | RegexOptions.IgnoreCase));
+							if (ix != -1)
+							{
+								_moduleIndex = ix;
+								UpdateDisplay();
+								Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+								Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
+								break;
+							}
+						}
+						if (ix == -1)
+							Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.Strike, transform);
+					}
+					break;
+			}
+		}
+    }
+
+	private KeyCode MatchKey()
+    {
+		KeyCode code;
+        if (Input.GetKeyDown(code = KeyCode.UpArrow))
+			return code;
+		else if (Input.GetKeyDown(code = KeyCode.LeftArrow))
+			return code;
+		else if (Input.GetKeyDown(code = KeyCode.RightArrow))
+			return code;
+		else if (Input.GetKeyDown(code = KeyCode.DownArrow))
+			return code;
+		return KeyCode.None;
     }
 
     private bool GlobalColorBlindEnable()

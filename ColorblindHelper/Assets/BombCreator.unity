@@ -152,20 +152,9 @@ Prefab:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: 114870855221517036, guid: 1c40d796f2e68694a9bc0f4e77ca8e90,
-        type: 2}
-      propertyPath: ColorblindHoldable
-      value: 
-      objectReference: {fileID: 988835077}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 1c40d796f2e68694a9bc0f4e77ca8e90, type: 2}
   m_IsPrefabParent: 0
---- !u!114 &988835077 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114946378150894200, guid: 1c40d796f2e68694a9bc0f4e77ca8e90,
-    type: 2}
-  m_PrefabInternal: {fileID: 650579754}
-  m_Script: {fileID: 1702003387, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
 --- !u!1 &1546797232
 GameObject:
   m_ObjectHideFlags: 0
