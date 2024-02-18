@@ -175,7 +175,7 @@ public class VanillaRuleModifier : MonoBehaviour
 
         //DebugLog("Transitioning from {1} to {0}", state, CurrentState);
         //if((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
-        if (CurrentState == KMGameInfo.State.Setup && state == KMGameInfo.State.Transitioning)
+        if (state == KMGameInfo.State.Gameplay)
         {
             _modSettings.ReadSettings();
             var seed = _modSettings.Settings.RuleSeed;
@@ -189,14 +189,10 @@ public class VanillaRuleModifier : MonoBehaviour
             DebugLog("Generating Rules based on Seed {0}", seed);
             GenerateRules(seed);
             ManualGenerator.Instance.WriteManual(seed);
-        }
-        else if ((_prevState == KMGameInfo.State.Setup || _prevState == KMGameInfo.State.PostGame) && CurrentState == KMGameInfo.State.Transitioning && state == KMGameInfo.State.Transitioning)
-        {
+        
             if (_currentSeed != 1)
                 AddWidget = StartCoroutine(AddWidgetToBomb(RuleSeedWidget));
-        }
-        else if (state == KMGameInfo.State.Gameplay)
-        {
+            
             FixMorseCode = StartCoroutine(FixMorseCodeModule());
         }
 
